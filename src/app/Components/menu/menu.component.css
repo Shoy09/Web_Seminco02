@@ -2,19 +2,19 @@
 
 @font-face {
     font-family: 'Medium';
-    src: url('/assets/fuentes/Medium.ttf') format('truetype');
+    src: url('/fuentes/Medium.ttf') format('truetype');
   }
   @font-face {
     font-family: 'Regular';
-    src: url('/assets/fuentes/Regular.ttf') format('truetype');
+    src: url('/fuentes/Regular.ttf') format('truetype');
   }
   @font-face {
     font-family: 'Semibold';
-    src: url('/assets/fuentes/SemiBold.ttf') format('truetype');
+    src: url('/fuentes/SemiBold.ttf') format('truetype');
   }
   @font-face {
     font-family: 'Bold';
-    src: url('/assets/fuentes/Bold.ttf') format('truetype');
+    src: url('/fuentes/Bold.ttf') format('truetype');
   }
   .layout-container {
     display: grid;
