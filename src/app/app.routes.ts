@@ -17,5 +17,5 @@ export const routes: Routes = [
     ],
   },
 
-  { path: '**', redirectTo: '/login' }, // Ruta de fallback
+  { path: '**', redirectTo: '/login' },
 ];
