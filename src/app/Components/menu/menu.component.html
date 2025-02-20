@@ -1,0 +1,53 @@
+
+<div class="layout-container">
+    <!-- Menú lateral -->
+    <aside class="sidebar">
+      <div class="logo-container">
+        <img src="login/lo.png" alt="Logo de la empresa" class="logo">
+      </div>
+      <div class="user">
+        <img src="lp.svg" alt="Logo de la empresa" class="logop">
+        <div class="user-info">
+            <p class="nombre"></p>
+            <p class="rol">Administrador</p>
+
+        </div>
+        <img src="down.svg" alt="Logo de la empresa" class="logodow">
+      </div>
+      <ul class="menu">
+        <li *ngFor="let menu of menus; let i = index">
+          <div class="menuopc" 
+               [ngClass]="{'show': menuOpenIndex === i, 'active': menuOpenIndex === i, 'home-item': menu.title === 'Home'}" 
+               (click)="AbrirCerrar(i, menu)">
+            <img [src]="menu.icon" alt="Icono" class="logosm">
+            <div class="menu-opci">
+              <button class="menu-item">{{ menu.title }}</button>
+            </div>
+            <img *ngIf="menu.title !== 'Home'" src="down.svg" alt="Flecha" class="logodow">
+          </div>
+      
+          <ul [ngClass]="{'submenu': true, 'show': menuOpenIndex === i && menu.title !== 'Home'}">
+            <li *ngFor="let subItem of menu.subItems">
+              <a [routerLink]="['/Dashboard', convertirRuta(subItem)]" routerLinkActive="selected">
+                {{ subItem }}
+              </a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+      
+    </aside>
+  <div class="main-container">
+    <!-- Barra superior -->
+    <header class="top-bar">
+      <div class="notifications">
+        <img src="bell.png" alt="Notificaciones" class="bell-icon">
+      </div>
+    </header>
+
+    <!-- Contenido de la página -->
+    <main class="content">
+        <ng-content></ng-content>
+    </main>
+  </div>
+</div>
