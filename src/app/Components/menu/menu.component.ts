@@ -8,12 +8,12 @@ import { Router, RouterModule } from '@angular/router';
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.css'
 })
-export class MenuComponent {
+export class MenuComponent { 
   menus = [
     {title: 'Home', icon: 'home.svg' },
     { title: 'Dashboard', icon: 'das.svg', subItems: ['Perforación Horizontal', 'Explosivos','Servicios Auxiliares','Sostenimiento','Mediciones','Aceros de Perforación','Acerreo','Carguio','Perforación de Taladros Largos'] },
     { title: 'Carga de Datos', icon: 'data.svg', subItems: ['estados', 'Perforación Horizontal', 'Explosivos','Servicios Auxiliares','Sostenimiento','Mediciones','Aceros de Perforación','Acerreo','Carguio','Perforación de Taladros Largos'] },
-    { title: 'Roles', icon: 'rol.svg', subItems: ['Subopción A', 'Subopción B'] },
+    { title: 'Roles', icon: 'rol.svg', subItems: ['usuarios', 'Subopción B'] },
   ];
 
   menuOpenIndex: number | null = null;

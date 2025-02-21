@@ -3,6 +3,7 @@ import { LoginComponent } from './Components/login/login.component';
 import { PrincipalComponent } from './Components/principal/principal.component';
 import { HomeComponent } from './Components/home/home.component';
 import { EstadosComponent } from './Components/estados/estados.component';
+import { UsuariosComponent } from './Components/usuarios/usuarios.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -14,6 +15,7 @@ export const routes: Routes = [
     children: [
       { path: 'Home', component: HomeComponent },
       { path: 'estados', component: EstadosComponent },
+      { path: 'usuarios', component: UsuariosComponent },
     ],
   },
 
