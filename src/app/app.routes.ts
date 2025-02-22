@@ -4,6 +4,7 @@ import { PrincipalComponent } from './Components/principal/principal.component';
 import { HomeComponent } from './Components/home/home.component';
 import { EstadosComponent } from './Components/estados/estados.component';
 import { UsuariosComponent } from './Components/usuarios/usuarios.component';
+import { CrearDataComponent } from './Components/crear-data/crear-data.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -16,6 +17,7 @@ export const routes: Routes = [
       { path: 'Home', component: HomeComponent },
       { path: 'estados', component: EstadosComponent },
       { path: 'usuarios', component: UsuariosComponent },
+      { path: 'crear-data', component: CrearDataComponent },
     ],
   },
 

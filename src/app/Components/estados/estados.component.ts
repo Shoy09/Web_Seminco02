@@ -11,6 +11,7 @@ import * as XLSX from 'xlsx';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { ReactiveFormsModule } from '@angular/forms';
+import { SeleccionProcesoEstatosDialogComponent } from '../seleccion-proceso-estatos-dialog/seleccion-proceso-estatos-dialog.component';
 
 @Component({
   selector: 'app-estados',
@@ -19,7 +20,7 @@ import { ReactiveFormsModule } from '@angular/forms';
   styleUrl: './estados.component.css'
 })
 export class EstadosComponent implements OnInit {
-  displayedColumns: string[] = ['estado_principal', 'codigo', 'tipo_estado', 'categoria', 'acciones'];
+  displayedColumns: string[] = ['estado_principal', 'codigo', 'tipo_estado', 'categoria', 'proceso', 'acciones'];
   dataSource = new MatTableDataSource<Estado>();
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -28,7 +29,13 @@ export class EstadosComponent implements OnInit {
 
   ngOnInit(): void {
     this.getEstados();
+    this.estadoService.getEstadoActualizado().subscribe(cambio => {
+      if (cambio) {
+        this.getEstados(); // Recargar la tabla cuando haya cambios
+      }
+    });
   }
+  
 
   getEstados(): void {
     this.estadoService.getEstados().subscribe(
@@ -47,19 +54,6 @@ export class EstadosComponent implements OnInit {
     );
   }
   
-
-  abrirDialogo() {
-    const dialogRef = this.dialog.open(EstadoFormComponent, {
-      width: '700px',
-      autoFocus: false
-    });
-
-    dialogRef.afterClosed().subscribe((nuevoEstado) => {
-      if (nuevoEstado) {
-        this.getEstados();
-      }
-    });
-  }
 
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();
@@ -101,102 +95,31 @@ export class EstadosComponent implements OnInit {
     });
   }
 
-  abrirDialogoOpciones() {
-    const dialogRef = this.dialog.open(OpcionesDialogComponent, {
+  abrirSeleccionProcesoDialogo() {
+    const dialogRef = this.dialog.open(SeleccionProcesoEstatosDialogComponent, {
       width: '400px'
     });
   
-    dialogRef.afterClosed().subscribe((opcion) => {
-      if (opcion === 'estado') {
-        this.abrirDialogo();
-      } else if (opcion === 'excel') {
-        this.abrirExploradorArchivos();
+    dialogRef.afterClosed().subscribe((procesoSeleccionado) => {
+      if (procesoSeleccionado) {
+        console.log('Proceso seleccionado:', procesoSeleccionado);
       }
     });
   }
   
-  abrirExploradorArchivos() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.xls, .xlsx';
-    input.style.display = 'none';
-  
-    input.addEventListener('change', async (event: any) => {
-      const archivo = event.target.files[0];
-      if (archivo) {
-        console.log('Archivo seleccionado:', archivo.name);
-        this.procesarArchivoExcel(archivo);
-      }
-    });
-  
-    document.body.appendChild(input);
-    input.click();
-    document.body.removeChild(input);
-  }
-  
-  async procesarArchivoExcel(archivo: File) {
-    const reader = new FileReader();
-  
-    reader.onload = async (e: any) => {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-  
-      const sheetName = 'ESTADOS';
-      const worksheet = workbook.Sheets[sheetName];
-  
-      if (!worksheet) {
-        console.error(`No se encontró la hoja llamada "${sheetName}"`);
-        return;
-      }
-  
-      const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-  
-      // Omitimos la primera fila (encabezados) y procesamos las siguientes
-      const estados: Estado2[] = jsonData.slice(1).map((fila) => ({
-        estado_principal: fila[0] || '',
-        codigo: fila[1] || '',
-        tipo_estado: fila[2] || '',
-        categoria: fila[3] || '',
-      }));
-  
-      if (estados.length === 0) {
-        console.warn('No hay estados para procesar.');
-        return;
-      }
-  
-      this.mostrarPantallaCarga();
-      await this.enviarEstadosALaBD(estados);
-      this.cerrarPantallaCarga();
-    };
-  
-    reader.readAsArrayBuffer(archivo);
-  }
-  
-  async enviarEstadosALaBD(estados: Estado2[]) {
-    let estadosInsertados = 0;
-  
-    for (const estado of estados) {
-      try {
-        await this.estadoService.createEstado2(estado).toPromise();
-        console.log(`Estado insertado: ${estado.estado_principal}`);
-        estadosInsertados++;
-      } catch (error) {
-        console.error('Error al insertar estado:', estado.estado_principal, error);
-      }
-    }
-  
-    console.log(`Importación completada. Total de estados insertados: ${estadosInsertados}`);
-    this.getEstados();
 
-  }
+  // abrirDialogoOpciones() {
+  //   const dialogRef = this.dialog.open(OpcionesDialogComponent, {
+  //     width: '400px'
+  //   });
   
-  mostrarPantallaCarga() {
-    this.dialog.open(LoadingDialogComponent, {
-      disableClose: true
-    });
-  }
+  //   dialogRef.afterClosed().subscribe((opcion) => {
+  //     if (opcion === 'estado') {
+  //       this.abrirDialogo();
+  //     } else if (opcion === 'excel') {
+  //       this.abrirExploradorArchivos();
+  //     }
+  //   });
+  // }
   
-  cerrarPantallaCarga() {
-    this.dialog.closeAll();
-  }
 }

@@ -18,10 +18,13 @@ export class EstadoFormComponent {
   constructor(
     private fb: FormBuilder,
     private estadoService: EstadoService,
-    public dialogRef: MatDialogRef<EstadoFormComponent>, // Referencia del diálogo
-    @Inject(MAT_DIALOG_DATA) public data: any // Datos que puedes recibir al abrir el diálogo
-  ) {
+    public dialogRef: MatDialogRef<EstadoFormComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { proceso: string } // 🔵 Recibimos el estado
+  )
+  {
+    console.log('Proceso recibido en EstadoFormComponent:', this.data.proceso); // 🔵 Confirmación en consola
     this.estadoForm = this.fb.group({
+      proceso: [{ value: this.data.proceso, disabled: true }], // 🟢 Campo de solo lectura
       estado_principal: ['', Validators.required],
       codigo: ['', Validators.required],
       tipo_estado: ['', Validators.required],
@@ -31,13 +34,15 @@ export class EstadoFormComponent {
 
   onSubmit() {
     if (this.estadoForm.valid) {
+      this.estadoForm.get('proceso')?.enable(); // Habilita el campo antes de obtener el valor
       const nuevoEstado: Estado = this.estadoForm.value;
-
+      this.estadoForm.get('proceso')?.disable(); // Lo vuelve a deshabilitar
+  
       this.estadoService.createEstado(nuevoEstado).subscribe({
         next: (response) => {
           this.mensaje = 'Estado creado exitosamente!';
           this.estadoForm.reset();
-          this.dialogRef.close(response); // Cierra el diálogo y devuelve el estado creado
+          this.dialogRef.close(response);
         },
         error: (error) => {
           console.error('Error al crear el estado:', error);
@@ -46,6 +51,7 @@ export class EstadoFormComponent {
       });
     }
   }
+  
 
   onCancel(): void {
     this.dialogRef.close(); // Cierra el diálogo sin hacer nada

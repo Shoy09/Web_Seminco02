@@ -4,12 +4,13 @@ export interface Estado {
   codigo: string;
   tipo_estado: string;
   categoria: string;
+  proceso: string; // Nuevo campo agregado
 }
 
-
-export interface Estado2{
+export interface Estado2 {
   estado_principal: string;
   codigo: string;
   tipo_estado: string;
   categoria: string;
+  proceso: string; // Nuevo campo agregado
 }
