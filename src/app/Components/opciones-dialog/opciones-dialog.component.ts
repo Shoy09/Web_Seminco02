@@ -5,7 +5,7 @@ import { EstadoFormComponent } from '../estado-form/estado-form.component';
 import { LoadingDialogComponent } from '../loading-dialog/loading-dialog.component';
 import { Estado2 } from '../../models/Estado';
 import * as XLSX from 'xlsx';
-import { EstadoService } from '../services/estado.service';
+import { EstadoService } from '../../services/estado.service';
 
 @Component({
   selector: 'app-opciones-dialog',

@@ -12,7 +12,7 @@ export class MenuComponent {
   menus = [
     {title: 'Home', icon: 'home.svg' },
     { title: 'Dashboard', icon: 'das.svg', subItems: ['Perforación Horizontal', 'Explosivos','Servicios Auxiliares','Sostenimiento','Mediciones','Aceros de Perforación','Acerreo','Carguio','Perforación de Taladros Largos'] },
-    { title: 'Carga de Datos', icon: 'data.svg', subItems: ['estados', 'crear-data' , 'Perforación Horizontal', 'Explosivos','Servicios Auxiliares','Sostenimiento','Mediciones','Aceros de Perforación','Acerreo','Carguio','Perforación de Taladros Largos'] },
+    { title: 'Carga de Datos', icon: 'data.svg', subItems: ['estados', 'crear-data' , 'plan-mensual', 'Perforación Horizontal', 'Explosivos','Servicios Auxiliares','Sostenimiento','Mediciones','Aceros de Perforación','Acerreo','Carguio','Perforación de Taladros Largos'] },
     { title: 'Roles', icon: 'rol.svg', subItems: ['usuarios', 'Subopción B'] },
   ];
 

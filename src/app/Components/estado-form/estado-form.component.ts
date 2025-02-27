@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { Estado } from '../../models/Estado';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { EstadoService } from '../services/estado.service';
+import { EstadoService } from '../../services/estado.service';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 

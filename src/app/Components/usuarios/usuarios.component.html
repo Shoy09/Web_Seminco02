@@ -5,6 +5,14 @@
     <button mat-raised-button color="primary" (click)="abrirDialogoCrear()">
       Nuevo Usuario
     </button>
+  
+    <button mat-raised-button color="warn" class="btn-masivo" (click)="seleccionarArchivo()">
+      Ingreso masivo
+    </button>
+    
+    <!-- Input de tipo file oculto -->
+    <input type="file" id="fileInput" (change)="cargarArchivo($event)" hidden>
+    
     <mat-form-field appearance="outline">
       <mat-label>Buscar Usuario</mat-label>
       <input matInput (keyup)="aplicarFiltro($event)" placeholder="Ingrese nombre, correo o DNI">

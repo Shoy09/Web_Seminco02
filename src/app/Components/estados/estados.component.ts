@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { Estado, Estado2 } from '../../models/Estado';
 import { MatDialog } from '@angular/material/dialog';
-import { EstadoService } from '../services/estado.service';
+import { EstadoService } from '../../services/estado.service';
 import { EstadoFormComponent } from '../estado-form/estado-form.component';
 import { EstadoFormEditarComponent } from '../estado-form-editar/estado-form-editar.component';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';

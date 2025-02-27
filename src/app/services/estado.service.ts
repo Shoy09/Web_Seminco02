@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service'; // Importamos ApiService
 import { BehaviorSubject, Observable, tap } from 'rxjs';
-import { Estado, Estado2 } from '../../models/Estado';
+import { Estado, Estado2 } from '../models/Estado';
 
 @Injectable({
   providedIn: 'root'

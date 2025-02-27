@@ -6,7 +6,7 @@ import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@a
 import { routes } from './app/app.routes';
 import { provideZoneChangeDetection } from '@angular/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { AuthInterceptor } from './app/Components/services/auth-interceptor.service';
+import { AuthInterceptor } from './app/services/auth-interceptor.service';
 
 bootstrapApplication(AppComponent, {
   providers: [
