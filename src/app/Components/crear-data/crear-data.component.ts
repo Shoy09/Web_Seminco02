@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TipoPerforacionService } from '../../services/tipo-perforacion.service';
+import { EquipoService } from '../../services/equipo.service';
+import { EmpresaService } from '../../services/empresa.service';
 
 @Component({
   selector: 'app-crear-data',
@@ -22,7 +24,9 @@ export class CrearDataComponent implements OnInit {
     { nombre: 'Reporte C', year: '2024', mes: 'Enero' }
   ];
 
-  constructor(private TipoPerforacionService: TipoPerforacionService) {} // Inyecta el servicio
+  constructor(private TipoPerforacionService: TipoPerforacionService, private EquipoService: EquipoService,
+    private EmpresaService: EmpresaService
+  ) {} // Inyecta el servicio
 
   ngOnInit() {
     this.generarAños();
@@ -55,12 +59,39 @@ export class CrearDataComponent implements OnInit {
   abrirModal(button: any) {
     this.modalAbierto = true;
     this.modalContenido = button;
-
-    // Si se hace clic en "Tipo de Perforación", hacer la petición GET
+  
     if (button.nombre === 'Tipo de Perforación') {
       this.obtenerTipoPerforacion();
+    } else if (button.nombre === 'Equipo') {
+      this.obtenerEquipos();
+    } else if (button.nombre === 'Empresa') {
+      this.obtenerEmpresas(); // Nueva función para obtener empresas
     }
   }
+  obtenerEmpresas() {
+    this.EmpresaService.getEmpresa().subscribe(
+      (response) => {
+        console.log('Empresas obtenidas:', response);
+        this.modalContenido.datos = response.map((item) => item.nombre);
+      },
+      (error) => {
+        console.error('Error al obtener empresas:', error);
+      }
+    );
+  }
+
+  obtenerEquipos() {
+    this.EquipoService.getEquipos().subscribe(
+      (response) => {
+        console.log('Equipos obtenidos:', response);
+        this.modalContenido.datos = response.map((item) => item.nombre);
+      },
+      (error) => {
+        console.error('Error al obtener equipos:', error);
+      }
+    );
+  }
+  
 
   cerrarModal() {
     this.modalAbierto = false;
@@ -76,20 +107,39 @@ export class CrearDataComponent implements OnInit {
 
   guardarDatos() {
     if (this.nuevoDato.trim()) {
-      const nuevoTipo = { nombre: this.nuevoDato };
+      const nuevoRegistro = { nombre: this.nuevoDato };
+  
       if (this.modalContenido.nombre === 'Tipo de Perforación') {
-        this.TipoPerforacionService.createTipoPerforacion(nuevoTipo).subscribe(
+        this.TipoPerforacionService.createTipoPerforacion(nuevoRegistro).subscribe(
           () => {
-            this.nuevoDato = ''; // Limpiar input
-            this.obtenerTipoPerforacion(); // Recargar lista desde la API
+            this.nuevoDato = '';
+            this.obtenerTipoPerforacion();
           },
-          (error) => {
-            console.error('Error al guardar el tipo de perforación:', error);
-          }
+          (error) => console.error('Error al guardar Tipo de Perforación:', error)
         );
+      } else if (this.modalContenido.nombre === 'Equipo') {
+        this.EquipoService.createEquipo(nuevoRegistro).subscribe(
+          () => {
+            this.nuevoDato = '';
+            this.obtenerEquipos();
+          },
+          (error) => console.error('Error al guardar Equipo:', error)
+        );
+      } else if (this.modalContenido.nombre === 'Empresa') {
+        this.guardarEmpresa(nuevoRegistro); // Nueva función para guardar empresa
       }
     }
   }
+  guardarEmpresa(nuevaEmpresa: { nombre: string }) {
+    this.EmpresaService.createEmpresa(nuevaEmpresa).subscribe(
+      () => {
+        this.nuevoDato = '';
+        this.obtenerEmpresas();
+      },
+      (error) => console.error('Error al guardar Empresa:', error)
+    );
+  }
+  
   
 
   obtenerTipoPerforacion() {
