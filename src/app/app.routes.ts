@@ -6,6 +6,8 @@ import { EstadosComponent } from './Components/estados/estados.component';
 import { UsuariosComponent } from './Components/usuarios/usuarios.component';
 import { CrearDataComponent } from './Components/crear-data/crear-data.component';
 import { PlanMensualListComponent } from './Components/plan-mensual-list/plan-mensual-list.component';
+import { PlanMetrajeListComponent } from './Components/plan-metraje-list/plan-metraje-list.component';
+import { PlanProduccionListComponent } from './Components/plan-produccion-list/plan-produccion-list.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -20,6 +22,8 @@ export const routes: Routes = [
       { path: 'usuarios', component: UsuariosComponent },
       { path: 'crear-data', component: CrearDataComponent },
       { path: 'plan-mensual', component: PlanMensualListComponent },
+      { path: 'plan-metraje', component: PlanMetrajeListComponent },
+      { path: 'plan-produccion', component: PlanProduccionListComponent },
     ],
   },
 

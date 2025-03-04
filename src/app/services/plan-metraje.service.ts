@@ -1,0 +1,42 @@
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { ApiService } from './api.service';
+import { PlanMetraje } from '../models/plan_metraje.model';
+ 
+@Injectable({
+  providedIn: 'root'
+})
+export class PlanMetrajeService {
+  private baseUrl = 'PlanMetraje'; // Asegúrate de que coincide con tu backend
+  private planesActualizados = new BehaviorSubject<boolean>(false);
+
+  constructor(private apiService: ApiService) {}
+
+  getPlanesMetrajes(): Observable<PlanMetraje[]> {
+    return this.apiService.getDatos(this.baseUrl); // Llamamos al endpoint para obtener todos los planes
+  }
+ 
+  getPlanMetrajeById(id: number): Observable<PlanMetraje> {
+    return this.apiService.getDatos(`${this.baseUrl}/${id}`); // Llamamos al endpoint para obtener un plan específico
+  }
+
+  createPlanMetraje(planMetraje: PlanMetraje): Observable<PlanMetraje> {
+    return this.apiService.postDatos(`${this.baseUrl}/`, planMetraje).pipe(
+      tap(() => {
+        this.planesActualizados.next(true); // Notificar que se creó un nuevo plan
+      })
+    );
+  }
+
+  updatePlanMetraje(id: number, planMetraje: PlanMetraje): Observable<PlanMetraje> {
+    return this.apiService.putDatos(`${this.baseUrl}/${id}`, planMetraje); // Llamamos al endpoint para actualizar un plan
+  }
+
+  deletePlanMetraje(id: number): Observable<any> {
+    return this.apiService.deleteDatos(`${this.baseUrl}/${id}`); // Llamamos al endpoint para eliminar un plan
+  }
+
+  getPlanMetrajeActualizado(): Observable<boolean> {
+    return this.planesActualizados.asObservable(); // Obtenemos el estado de actualización del plan
+  }
+}

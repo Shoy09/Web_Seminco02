@@ -70,8 +70,14 @@ export class PlanMensualListComponent implements OnInit {
     reader.onload = (e: any) => {
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: 'array' });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
+      const sheetName = "PLAN METRAJE AVANCES"; // Nombre específico de la hoja
+const sheet = workbook.Sheets[sheetName];
+
+if (!sheet) {
+  console.error(`La hoja "${sheetName}" no existe en el archivo.`);
+  return;
+}
+
   
       // Convertimos los datos en formato JSON
       const jsonData: any[] = XLSX.utils.sheet_to_json(sheet);
@@ -111,12 +117,12 @@ export class PlanMensualListComponent implements OnInit {
       // Mapeo dinámico de columnas 1A - 28B
       ...Object.fromEntries(
         Array.from({ length: 28 }, (_, i) => [
-          `col_${i + 1}A`, fila[`${i + 1}A`] || null
+          `col_${i + 1}A`, fila[`${i + 1}A`] !== undefined ? fila[`${i + 1}A`].toString().trim() : null
         ])
       ),
       ...Object.fromEntries(
         Array.from({ length: 28 }, (_, i) => [
-          `col_${i + 1}B`, fila[`${i + 1}B`] || null
+          `col_${i + 1}B`, fila[`${i + 1}B`] !== undefined ? fila[`${i + 1}B`].toString().trim() : null
         ])
       )
     };
