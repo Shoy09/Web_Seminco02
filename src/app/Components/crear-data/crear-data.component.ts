@@ -14,7 +14,7 @@ import { EmpresaService } from '../../services/empresa.service';
 export class CrearDataComponent implements OnInit {
   modalAbierto = false;
   modalContenido: any = null;
-  nuevoDato: string = '';
+  nuevoDato: string = ''; 
   formularioActivo: string = 'botones';  
   years: number[] = []; 
   meses: string[] = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];

@@ -11,7 +11,7 @@ import { Router, RouterModule } from '@angular/router';
 export class MenuComponent { 
   menus = [
     {title: 'Home', icon: 'home.svg' },
-    { title: 'Dashboard', icon: 'das.svg', subItems: ['Perforación Horizontal', 'Explosivos','Servicios Auxiliares','Sostenimiento','Mediciones','Aceros de Perforación','Acerreo','Carguio','Perforación de Taladros Largos'] },
+    { title: 'Dashboard', icon: 'das.svg', subItems: ['Perforación Horizontal', 'explosivos','Servicios Auxiliares','Sostenimiento','Mediciones','Aceros de Perforación','Acerreo','Carguio','Perforación de Taladros Largos'] },
     { title: 'Carga de Datos', icon: 'data.svg', subItems: ['estados', 'crear-data' , 'plan-mensual', 'plan-metraje', 'plan-produccion', 'Perforación Horizontal', 'Explosivos','Servicios Auxiliares','Sostenimiento','Mediciones','Aceros de Perforación','Acerreo','Carguio','Perforación de Taladros Largos'] },
     { title: 'Roles', icon: 'rol.svg', subItems: ['usuarios', 'Subopción B'] },
   ];
