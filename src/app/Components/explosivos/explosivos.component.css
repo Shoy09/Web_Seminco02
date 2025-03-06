@@ -320,14 +320,26 @@
   .modal {
     position: relative;
     background: white;
-    padding: 20px;
     border-radius: 8px;
     box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
-    max-width: 700px;
-    width: 400px;
-    
+    max-width: 1000px;
+    width: 600px;
     margin: auto;
   }
+  
+  .modal-content {
+    padding: 20px; /* Espaciado interno */
+    max-height: 80vh; /* Evita que el modal sea demasiado alto */
+    overflow-y: auto; /* Agrega scroll si es necesario */
+  }
+  
+  .tabla-scroll {
+    max-height: 300px; /* Ajusta la altura máxima de la tabla */
+    overflow-y: auto; /* Habilita el desplazamiento vertical */
+    border: 1px solid #ccc; /* Opcional: Añade un borde para mejor visualización */
+    padding: 5px; /* Espaciado interno */
+  }
+  
   
   /* Botón de cerrar en la esquina superior derecha */
   .close-icon {

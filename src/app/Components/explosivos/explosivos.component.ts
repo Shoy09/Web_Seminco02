@@ -123,9 +123,31 @@ export class ExplosivosComponent implements OnInit {
       this.nuevoDato = {};
     }
   }
+
+  eliminar(item: any): void {
+    if (!item || !this.modalContenido) return;
+  
+    if (this.modalContenido.tipo === 'explosivo') {
+      this.explosivoService.deleteExplosivo(item.id).subscribe({
+        next: () => {
+          this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
+          console.log('Explosivo eliminado:', item);
+        },
+        error: (err) => console.error('Error al eliminar explosivo:', err)
+      });
+    } else if (this.modalContenido.tipo === 'accesorio') {
+      this.accesorioService.deleteAccesorio(item.id).subscribe({
+        next: () => {
+          this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
+          console.log('Accesorio eliminado:', item);
+        },
+        error: (err) => console.error('Error al eliminar accesorio:', err)
+      });
+    }
+  }
+  
   
 
 descargar(item: any): void {}
-eliminar(item: any): void {}
 
 }
