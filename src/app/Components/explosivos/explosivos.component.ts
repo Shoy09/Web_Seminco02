@@ -3,7 +3,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ExplosivoService } from '../../services/explosivo.service';
 import { AccesorioService } from '../../services/accesorio.service';
-
+import { ExplosivosUniService } from '../../services/explosivos-uni.service';
+import { DestinatarioCorreoService } from '../../services/destinatario-correo.service';
 @Component({
   selector: 'app-explosivos',
   imports: [FormsModule, CommonModule],
@@ -25,7 +26,9 @@ export class ExplosivosComponent implements OnInit {
 
   constructor(
     private explosivoService: ExplosivoService,
-    private accesorioService: AccesorioService
+    private accesorioService: AccesorioService,
+    private ExplosivosUniService: ExplosivosUniService,
+    private DestinatarioCorreoService: DestinatarioCorreoService
   ) {} // Inyecta el servicio
 
   ngOnInit() {
@@ -48,7 +51,7 @@ export class ExplosivosComponent implements OnInit {
       nombre: 'Explosivos',
       icon: 'mas.svg',
       tipo: 'explosivo',
-      datos: [],
+      datos: [], 
       campos: [
         { nombre: 'tipo_explosivo', label: 'Tipo de Explosivo', tipo: 'text' },
         { nombre: 'cantidad_por_caja', label: 'Cantidad por Caja', tipo: 'number' },
@@ -64,6 +67,25 @@ export class ExplosivosComponent implements OnInit {
       campos: [
         { nombre: 'tipo_accesorio', label: 'Tipo de Accesorio', tipo: 'text' },
         { nombre: 'costo', label: 'Costo', tipo: 'number' },
+      ]
+    },
+    {
+      nombre: 'Explosivo uni',
+      icon: 'mas.svg',
+      tipo: 'Explosivo uni',
+      datos: [], // Aquí se almacenarán los datos dinámicos obtenidos del backend
+      campos: [
+        { nombre: 'dato', label: 'Dato', tipo: 'number' }, // Campo obligatorio según el modelo
+      ]
+    },
+    {
+      nombre: 'Destinatarios de Despacho',
+      icon: 'mas.svg',
+      tipo: 'Destinatarios de Despacho',
+      datos: [], // Aquí se almacenarán los datos dinámicos obtenidos del backend
+      campos: [
+        { nombre: 'nombre', label: 'Nombre', tipo: 'text' }, // Campo obligatorio
+        { nombre: 'correo', label: 'Correo Electrónico', tipo: 'email' } // Campo obligatorio
       ]
     }
   ];
@@ -83,6 +105,22 @@ export class ExplosivosComponent implements OnInit {
       });
     } else if (button.tipo === 'accesorio') {
       this.accesorioService.getAccesorios().subscribe({
+        next: (data) => {
+          this.modalContenido.datos = data; // Asigna los datos recibidos
+          console.log('Accesorios cargados:', data);
+        },
+        error: (err) => console.error('Error al cargar accesorios:', err)
+      });
+    }else if (button.tipo === 'Explosivo uni') {
+      this.ExplosivosUniService.getExplosivos().subscribe({
+        next: (data) => {
+          this.modalContenido.datos = data; // Asigna los datos recibidos
+          console.log('Accesorios cargados:', data);
+        },
+        error: (err) => console.error('Error al cargar accesorios:', err)
+      });
+    }else if (button.tipo === 'Destinatarios de Despacho') {
+      this.DestinatarioCorreoService.getDestinatarios().subscribe({
         next: (data) => {
           this.modalContenido.datos = data; // Asigna los datos recibidos
           console.log('Accesorios cargados:', data);
@@ -119,6 +157,26 @@ export class ExplosivosComponent implements OnInit {
           error: (err) => console.error('Error al guardar accesorio:', err)
         });
       }
+      else if (this.modalContenido.tipo === 'Explosivo uni') {
+        this.ExplosivosUniService.createExplosivo(nuevoRegistro).subscribe({
+
+          next: (data) => {
+            this.modalContenido.datos.push(data);
+            console.log('Accesorio guardado:', data);
+          },
+          error: (err) => console.error('Error al guardar accesorio:', err)
+        });
+      }
+      else if (this.modalContenido.tipo === 'Destinatarios de Despacho') {
+        this.DestinatarioCorreoService.createDestinatario(nuevoRegistro).subscribe({
+
+          next: (data) => {
+            this.modalContenido.datos.push(data);
+            console.log('Accesorio guardado:', data);
+          },
+          error: (err) => console.error('Error al guardar accesorio:', err)
+        });
+      }
 
       this.nuevoDato = {};
     }
@@ -131,17 +189,33 @@ export class ExplosivosComponent implements OnInit {
       this.explosivoService.deleteExplosivo(item.id).subscribe({
         next: () => {
           this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
-          console.log('Explosivo eliminado:', item);
+          console.log('y eliminado:', item);
         },
-        error: (err) => console.error('Error al eliminar explosivo:', err)
+        error: (err) => console.error('Error al eliminar :', err)
       });
     } else if (this.modalContenido.tipo === 'accesorio') {
       this.accesorioService.deleteAccesorio(item.id).subscribe({
         next: () => {
           this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
-          console.log('Accesorio eliminado:', item);
+          console.log(' eliminado:', item);
         },
-        error: (err) => console.error('Error al eliminar accesorio:', err)
+        error: (err) => console.error('Error al eliminar :', err)
+      });
+    }else if (this.modalContenido.tipo === 'Explosivo uni') {
+      this.ExplosivosUniService.deleteExplosivo(item.id).subscribe({
+        next: () => {
+          this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
+          console.log(' eliminado:', item);
+        },
+        error: (err) => console.error('Error al eliminar :', err)
+      });
+    }else if (this.modalContenido.tipo === 'Destinatarios de Despacho') {
+      this.DestinatarioCorreoService.deleteDestinatario(item.id).subscribe({
+        next: () => {
+          this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
+          console.log(' eliminado:', item);
+        },
+        error: (err) => console.error('Error al eliminar :', err)
       });
     }
   }

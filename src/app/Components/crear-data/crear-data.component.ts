@@ -4,6 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { TipoPerforacionService } from '../../services/tipo-perforacion.service';
 import { EquipoService } from '../../services/equipo.service';
 import { EmpresaService } from '../../services/empresa.service';
+import * as XLSX from 'xlsx';
+import { LoadingDialogComponent } from '../loading-dialog/loading-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
+import { Equipo } from '../../models/equipo.model';
 
 @Component({
   selector: 'app-crear-data',
@@ -14,7 +18,7 @@ import { EmpresaService } from '../../services/empresa.service';
 export class CrearDataComponent implements OnInit {
   modalAbierto = false;
   modalContenido: any = null;
-  nuevoDato: string = ''; 
+  nuevoDato: any = {}
   formularioActivo: string = 'botones';  
   years: number[] = []; 
   meses: string[] = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -24,9 +28,12 @@ export class CrearDataComponent implements OnInit {
     { nombre: 'Reporte C', year: '2024', mes: 'Enero' }
   ];
 
-  constructor(private TipoPerforacionService: TipoPerforacionService, private EquipoService: EquipoService,
-    private EmpresaService: EmpresaService
-  ) {} // Inyecta el servicio
+  constructor(
+    private tipoPerforacionService: TipoPerforacionService, 
+    private equipoService: EquipoService,
+    private empresaService: EmpresaService,
+    public dialog: MatDialog
+  ) {} // Inyecta los servicios
 
   ngOnInit() {
     this.generarAños();
@@ -44,118 +51,266 @@ export class CrearDataComponent implements OnInit {
   }
 
   buttonc = [
-    { nombre: 'Zona ', icon: 'mas.svg', datos: [] },
-    { nombre: 'Mina', icon: 'mas.svg' , datos: []},
-    { nombre: 'Estructura', icon: 'mas.svg', datos: [] },
-    { nombre: 'Material', icon: 'mas.svg', datos: [] },
-    { nombre: 'Turno', icon: 'mas.svg' , datos: []},
-    { nombre: 'Equipo', icon: 'mas.svg' , datos: []},
-    { nombre: 'Empresa', icon: 'mas.svg' , datos: []},
-    { nombre: 'Diametro', icon: 'mas.svg', datos: [] }, 
-    { nombre: 'Tipo de Perforación', icon: 'mas.svg' , datos: []},
-    { nombre: 'Estados', icon: 'mas.svg' , datos: []},
-  ];
-
-  abrirModal(button: any) {
-    this.modalAbierto = true;
-    this.modalContenido = button;
-  
-    if (button.nombre === 'Tipo de Perforación') {
-      this.obtenerTipoPerforacion();
-    } else if (button.nombre === 'Equipo') {
-      this.obtenerEquipos();
-    } else if (button.nombre === 'Empresa') {
-      this.obtenerEmpresas(); // Nueva función para obtener empresas
+    {
+      nombre: 'Tipo de Perforación',
+      icon: 'mas.svg',
+      tipo: 'Tipo de Perforación',
+      datos: [],
+      campos: [
+        { nombre: 'nombre', label: 'Tipo de Perforación', tipo: 'text' },
+      ]
+    }, 
+    {
+      nombre: 'Equipo',
+      icon: 'mas.svg',
+      tipo: 'Equipo',
+      datos: [],
+      campos: [
+        { nombre: 'nombre', label: 'Nombre', tipo: 'text' },
+        { nombre: 'proceso', label: 'Proceso', tipo: 'text' },
+        { nombre: 'codigo', label: 'Código', tipo: 'text' },
+        { nombre: 'marca', label: 'Marca', tipo: 'text' },
+        { nombre: 'modelo', label: 'Modelo', tipo: 'text' },
+        { nombre: 'serie', label: 'Serie', tipo: 'text' },
+        { nombre: 'anioFabricacion', label: 'Año de Fabricación', tipo: 'number' },
+        { nombre: 'fechaIngreso', label: 'Fecha de Ingreso', tipo: 'date' },
+        { nombre: 'capacidadYd3', label: 'Capacidad (Yd³)', tipo: 'number' },
+        { nombre: 'capacidadM3', label: 'Capacidad (m³)', tipo: 'number' }
+      ]
+    },
+    {
+      nombre: 'Empresa',
+      icon: 'mas.svg',
+      tipo: 'Empresa',
+      datos: [],
+      campos: [
+        { nombre: 'nombre', label: 'Empresa', tipo: 'text' },
+      ]
     }
-  }
-  obtenerEmpresas() {
-    this.EmpresaService.getEmpresa().subscribe(
-      (response) => {
-        console.log('Empresas obtenidas:', response);
-        this.modalContenido.datos = response.map((item) => item.nombre);
-      },
-      (error) => {
-        console.error('Error al obtener empresas:', error);
-      }
-    );
-  }
-
-  obtenerEquipos() {
-    this.EquipoService.getEquipos().subscribe(
-      (response) => {
-        console.log('Equipos obtenidos:', response);
-        this.modalContenido.datos = response.map((item) => item.nombre);
-      },
-      (error) => {
-        console.error('Error al obtener equipos:', error);
-      }
-    );
-  }
-  
+  ];  
 
   cerrarModal() {
     this.modalAbierto = false;
     this.modalContenido = null;
   }
 
-  guardarDatoss() {
-    if (this.nuevoDato.trim()) {
-      this.modalContenido.datos.push(this.nuevoDato);
-      this.nuevoDato = '';
+  triggerFileInput() {
+    // Simula el clic en el input de archivo cuando se hace clic en el botón "Importar Excel"
+    const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+    fileInput.click();
+  }
+  
+  importarExcel() {
+    if (this.modalContenido) {
+      this.cargarExcel(this.modalContenido.nombre);
+    } else {
+      console.log('No hay un modal activo.');
+    }
+  }
+  
+  cargarExcel(nombre: string) {
+    console.log('Cargando Excel para:', nombre, 'de tipo:', nombre);
+  
+    if (nombre === 'Tipo de Perforación') {
+      // this.procesarExcelTipoPerforacion();
+    } else if (nombre === 'Equipo') {
+      this.triggerFileInput(); // Activa la selección de archivo
+    } else if (nombre === 'Empresa') {
+      // this.procesarExcelEmpresa();
+    } else {
+      console.log('Tipo de modal no reconocido.');
+    }
+  }
+  
+  procesarExcelEquipo(event: any) {
+    const file = event.target.files[0];
+  
+    if (!file) {
+      console.log('❌ No se seleccionó ningún archivo.');
+      return;
+    }
+  
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+  
+      // Convertimos la hoja de Excel en JSON
+      const excelData: any[] = XLSX.utils.sheet_to_json(sheet, { raw: false });
+  
+      const equipos = excelData.map(row => ({
+        nombre: row["EQUIPO"] || null,
+        proceso: row["PROCESO"] || null,
+        codigo: row["CODIGO"] || null,
+        marca: row["MARCA"] || null,
+        modelo: row["MODELO"] || null,
+        serie: row["SERIE"] || null,
+        anioFabricacion: row["AÑO DE FABRICACIÓN "] ? Number(row["AÑO DE FABRICACIÓN "]) : null,
+        fechaIngreso: this.convertirFechaExcel(row["FECHA DE INGRESO"]),
+        capacidadYd3: row["CAPACIDAD (yd3)"] ? Number(row["CAPACIDAD (yd3)"]) : null,
+        capacidadM3: row["CAPACIDAD (m3)"] ? Number(row["CAPACIDAD (m3)"]) : null
+      }));
+  
+      console.log('✅ Datos listos para enviar:', JSON.stringify(equipos, null, 2));
+  
+      // 🔹 Cerrar el modal antes de enviar los datos
+      this.cerrarModal();
+  
+      // 🔹 Mostrar pantalla de carga
+      const dialogRef = this.mostrarPantallaCarga();
+  
+      // 🔹 Enviar los datos a la API
+      this.enviarEquipos(equipos)
+        .then(() => {
+          console.log('✅ Equipos enviados correctamente.');
+          this.dialog.closeAll();
+        })
+        .catch((error) => {
+          console.error('❌ Error al enviar datos:', error);
+          this.dialog.closeAll();
+        });
+    };
+  
+    reader.readAsArrayBuffer(file);
+  }
+  
+  convertirFechaExcel(valor: any): string | null {
+    if (!valor) return null;
+  
+    // Si la fecha ya está en formato texto, devolverla tal cual
+    if (typeof valor === "string") return valor;
+  
+    // Si la fecha es un número, convertirla usando XLSX
+    if (typeof valor === "number") {
+      const fecha = XLSX.SSF.parse_date_code(valor);
+      return `${fecha.y}-${String(fecha.m).padStart(2, '0')}-${String(fecha.d).padStart(2, '0')}`;
+    }
+  
+    return null;
+  }
+  
+  enviarEquipos(equipos: any[]): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const peticiones = equipos.map(nuevoRegistro => 
+        this.equipoService.createEquipo(nuevoRegistro).toPromise()
+      );
+  
+      Promise.all(peticiones)
+        .then((responses) => {
+          responses.forEach(data => this.modalContenido.datos.push(data));
+          console.log('✅ Todos los equipos fueron guardados.');
+          resolve();
+        })
+        .catch((error) => {
+          console.error('❌ Error en la carga de equipos:', error);
+          reject(error);
+        });
+    });
+  }
+  
+  mostrarPantallaCarga() {
+    this.dialog.open(LoadingDialogComponent, {
+      disableClose: true
+    });
+  }
+
+  
+  abrirModal(button: any) {
+    this.modalAbierto = true;
+    this.modalContenido = button;
+  
+    if (button.tipo === 'Tipo de Perforación') {
+      this.tipoPerforacionService.getTiposPerforacion().subscribe({
+        next: (data) => {
+          this.modalContenido.datos = data; // Asigna los datos recibidos
+          console.log('Tipo de Perforación cargados:', data);
+        },
+        error: (err) => console.error('Error al cargar Tipo de Perforación:', err)
+      });
+    } else if (button.tipo === 'Equipo') {
+      this.equipoService.getEquipos().subscribe({
+        next: (data) => {
+          this.modalContenido.datos = data; // Asigna los datos recibidos
+          console.log('Equipo cargados:', data);
+        },
+        error: (err) => console.error('Error al cargar Equipo:', err)
+      });
+    }else if (button.tipo === 'Empresa') {
+      this.empresaService.getEmpresa().subscribe({
+        next: (data) => {
+          this.modalContenido.datos = data; // Asigna los datos recibidos
+          console.log('Equipo cargados:', data);
+        },
+        error: (err) => console.error('Error al cargar Equipo:', err)
+      });
     }
   }
 
   guardarDatos() {
-    if (this.nuevoDato.trim()) {
-      const nuevoRegistro = { nombre: this.nuevoDato };
-  
-      if (this.modalContenido.nombre === 'Tipo de Perforación') {
-        this.TipoPerforacionService.createTipoPerforacion(nuevoRegistro).subscribe(
-          () => {
-            this.nuevoDato = '';
-            this.obtenerTipoPerforacion();
+    if (Object.values(this.nuevoDato).some(val => val !== '')) {
+      const nuevoRegistro = { ...this.nuevoDato };
+
+      if (this.modalContenido.tipo === 'Tipo de Perforación') {
+        this.tipoPerforacionService.createTipoPerforacion(nuevoRegistro).subscribe({
+          next: (data) => {
+            this.modalContenido.datos.push(data);
+            console.log('Tipo de Perforación guardado:', data);
           },
-          (error) => console.error('Error al guardar Tipo de Perforación:', error)
-        );
-      } else if (this.modalContenido.nombre === 'Equipo') {
-        this.EquipoService.createEquipo(nuevoRegistro).subscribe(
-          () => {
-            this.nuevoDato = '';
-            this.obtenerEquipos();
+          error: (err) => console.error('Error al guardar explosivo:', err)
+        });
+      } else if (this.modalContenido.tipo === 'Equipo') {
+        this.equipoService.createEquipo(nuevoRegistro).subscribe({
+          next: (data) => {
+            this.modalContenido.datos.push(data);
+            console.log('Equipo guardado:', data);
           },
-          (error) => console.error('Error al guardar Equipo:', error)
-        );
-      } else if (this.modalContenido.nombre === 'Empresa') {
-        this.guardarEmpresa(nuevoRegistro); // Nueva función para guardar empresa
+          error: (err) => console.error('Error al guardar Equipo:', err)
+        });
+      }else if (this.modalContenido.tipo === 'Empresa') {
+        this.empresaService.createEmpresa(nuevoRegistro).subscribe({
+          next: (data) => {
+            this.modalContenido.datos.push(data);
+            console.log('Empresa guardado:', data);
+          },
+          error: (err) => console.error('Error al guardar Empresa:', err)
+        });
       }
+
+      this.nuevoDato = {};
     }
   }
-  guardarEmpresa(nuevaEmpresa: { nombre: string }) {
-    this.EmpresaService.createEmpresa(nuevaEmpresa).subscribe(
-      () => {
-        this.nuevoDato = '';
-        this.obtenerEmpresas();
-      },
-      (error) => console.error('Error al guardar Empresa:', error)
-    );
+
+  eliminar(item: any): void {
+    if (!item || !this.modalContenido) return;
+  
+    if (this.modalContenido.tipo === 'Tipo de Perforación') {
+      this.tipoPerforacionService.deleteTipoPerforacion(item.id).subscribe({
+        next: () => {
+          this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
+          console.log('Tipo de Perforación eliminado:', item);
+        },
+        error: (err) => console.error('Error al eliminar Tipo de Perforación:', err)
+      });
+    } else if (this.modalContenido.tipo === 'Equipo') {
+      this.equipoService.deleteEquipo(item.id).subscribe({
+        next: () => {
+          this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
+          console.log('Equipo eliminado:', item);
+        },
+        error: (err) => console.error('Error al eliminar Equipo:', err)
+      });
+    }else if (this.modalContenido.tipo === 'Empresa') {
+      this.empresaService.deleteEmpresa(item.id).subscribe({
+        next: () => {
+          this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
+          console.log('Accesorio eliminado:', item);
+        },
+        error: (err) => console.error('Error al eliminar accesorio:', err)
+      });
+    }
   }
-  
-  
 
-  obtenerTipoPerforacion() {
-    this.TipoPerforacionService.getTiposPerforacion().subscribe(
-      (response) => {
-        console.log('Datos obtenidos:', response);
-        this.modalContenido.datos = response.map(item => item["nombre"]); // Acceso seguro a la propiedad
-      },
-      (error) => {
-        console.error('Error al obtener datos:', error);
-      }
-    );
-  }
-  
-
-descargar(item: any): void {}
-eliminar(item: any): void {}
-
+  descargar(item: any): void {}
 }

@@ -31,4 +31,14 @@ export class UsuarioService {
   eliminarUsuario(id: number): Observable<any> {
     return this.apiService.deleteDatos(`${this.endpoint}/${id}`);
   }
+
+  actualizarFirma(id: number, formData: FormData): Observable<any> {
+    return this.apiService.putDatos(`${this.endpoint}/${id}/firma`, formData);
+  }
+
+  obtenerPerfil(): Observable<Usuario> {
+    return this.apiService.getDatos('usuarios/perfil'); 
+  }
+
+  
 }

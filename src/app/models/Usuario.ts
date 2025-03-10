@@ -11,4 +11,5 @@ export interface Usuario {
   autorizado_equipo?: string;   // Opcional
   correo?: string;              // Opcional
   password?: string;            // Solo necesario en la creación
+  firma?: string;
 }

@@ -9,6 +9,7 @@ import { PlanMensualListComponent } from './Components/plan-mensual-list/plan-me
 import { PlanMetrajeListComponent } from './Components/plan-metraje-list/plan-metraje-list.component';
 import { PlanProduccionListComponent } from './Components/plan-produccion-list/plan-produccion-list.component';
 import { ExplosivosComponent } from './Components/explosivos/explosivos.component';
+import { UsuarioComponent } from './Components/usuario/usuario.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -26,6 +27,7 @@ export const routes: Routes = [
       { path: 'plan-metraje', component: PlanMetrajeListComponent },
       { path: 'plan-produccion', component: PlanProduccionListComponent },
       { path: 'explosivos', component: ExplosivosComponent },
+      { path: 'usuario', component: UsuarioComponent },
     ],
   },
 

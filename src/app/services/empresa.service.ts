@@ -30,6 +30,10 @@ export class EmpresaService {
     return this.apiService.putDatos(`${this.baseUrl}/${id}`, equipo);
   }
 
+  deleteEmpresa(id: number): Observable<any> {
+    return this.apiService.deleteDatos(`${this.baseUrl}/${id}`);
+  }
+
   getEmpresaActualizados(): Observable<boolean> {
     return this.EmpresaActualizados.asObservable();
   }

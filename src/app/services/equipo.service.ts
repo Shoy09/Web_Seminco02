@@ -27,7 +27,15 @@ export class EquipoService {
   }
 
   updateEquipo(id: number, equipo: Equipo): Observable<Equipo> {
-    return this.apiService.putDatos(`${this.baseUrl}/${id}`, equipo);
+    return this.apiService.putDatos(`${this.baseUrl}/${id}`, equipo).pipe(
+      tap(() => this.equiposActualizados.next(true))
+    );
+  }
+
+  deleteEquipo(id: number): Observable<any> {
+    return this.apiService.deleteDatos(`${this.baseUrl}/${id}`).pipe(
+      tap(() => this.equiposActualizados.next(true))
+    );
   }
 
   getEquiposActualizados(): Observable<boolean> {
