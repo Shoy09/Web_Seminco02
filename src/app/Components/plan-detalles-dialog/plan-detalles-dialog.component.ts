@@ -26,7 +26,7 @@ export class PlanDetallesDialogComponent {
         ![
           'id', 'anio', 'mes', 'minado_tipo', 'empresa', 'zona', 'area',
           'tipo_mineral', 'fase', 'estructura_veta', 'nivel', 'tipo_labor',
-          'labor', 'ala', 'avance_m', 'ancho_m', 'alto_m', 'tms'
+          'labor', 'ala', 'avance_m', 'ancho_m', 'alto_m', 'tms', 'programado'
         ].includes(key)
     );
   }

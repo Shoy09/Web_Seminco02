@@ -12,6 +12,7 @@ import { MatInputModule } from '@angular/material/input';
 import * as XLSX from 'xlsx';
 import { LoadingDialogComponent } from '../loading-dialog/loading-dialog.component';
 import { PlanDetallesDialogComponent } from '../plan-detalles-dialog/plan-detalles-dialog.component';
+import { FechasPlanMensualService } from '../../services/fechas-plan-mensual.service';
 
 @Component({
   selector: 'app-plan-mensual-list',
@@ -38,7 +39,7 @@ export class PlanMensualListComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private planMensualService: PlanMensualService, public dialog: MatDialog) {}
+  constructor(private planMensualService: PlanMensualService, public dialog: MatDialog, private fechasPlanMensualService: FechasPlanMensualService) {}
 
   ngOnInit(): void {
     this.obtenerPlanesMensuales();
@@ -50,6 +51,18 @@ export class PlanMensualListComponent implements OnInit {
       this.dataSource.paginator = this.paginator;
       this.dataSource.sort = this.sort;
     });
+  }
+
+  obtenerUltimaFecha(): void {
+    this.fechasPlanMensualService.getUltimaFecha().subscribe(
+      (ultimaFecha) => {
+        console.log('Última fecha obtenida:', ultimaFecha);
+        // Aquí puedes realizar alguna acción con la fecha, por ejemplo, guardarla en una variable
+      },
+      (error) => {
+        console.error('Error al obtener la última fecha:', error);
+      }
+    );
   }
 
   aplicarFiltro(event: Event) {

@@ -5,6 +5,7 @@ import { routes } from './app.routes';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { AuthInterceptor } from './services/auth-interceptor.service';
+import { provideToastr } from 'ngx-toastr';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -12,6 +13,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideAnimations(),
     provideHttpClient(withInterceptorsFromDi()), // Habilita el uso de interceptores
-    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+    provideToastr(),
   ]
 };

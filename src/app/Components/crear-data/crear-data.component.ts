@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { TipoPerforacionService } from '../../services/tipo-perforacion.service';
 import { EquipoService } from '../../services/equipo.service';
 import { EmpresaService } from '../../services/empresa.service';
+import { FechasPlanMensualService } from '../../services/fechas-plan-mensual.service';
 import * as XLSX from 'xlsx';
 import { LoadingDialogComponent } from '../loading-dialog/loading-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
@@ -32,6 +33,7 @@ export class CrearDataComponent implements OnInit {
     private tipoPerforacionService: TipoPerforacionService, 
     private equipoService: EquipoService,
     private empresaService: EmpresaService,
+    private FechasPlanMensualService: FechasPlanMensualService,
     public dialog: MatDialog
   ) {} // Inyecta los servicios
 
@@ -86,7 +88,17 @@ export class CrearDataComponent implements OnInit {
       campos: [
         { nombre: 'nombre', label: 'Empresa', tipo: 'text' },
       ]
+    },
+    {
+      nombre: 'Fechas Plan Mensual',
+      icon: 'mas.svg',
+      tipo: 'Fechas Plan Mensual',
+      datos: [],
+      campos: [
+        { nombre: 'mes', label: 'Mes', tipo: 'text' },
+      ]
     }
+    
   ];  
 
   cerrarModal() {
@@ -245,6 +257,14 @@ export class CrearDataComponent implements OnInit {
         },
         error: (err) => console.error('Error al cargar Equipo:', err)
       });
+    }else if (button.tipo === 'Fechas Plan Mensual') {
+      this.FechasPlanMensualService.getFechas().subscribe({
+        next: (data) => {
+          this.modalContenido.datos = data; // Asigna los datos recibidos
+          console.log(' cargados:', data);
+        },
+        error: (err) => console.error('Error al cargar:', err)
+      });
     }
   }
 
@@ -270,6 +290,14 @@ export class CrearDataComponent implements OnInit {
         });
       }else if (this.modalContenido.tipo === 'Empresa') {
         this.empresaService.createEmpresa(nuevoRegistro).subscribe({
+          next: (data) => {
+            this.modalContenido.datos.push(data);
+            console.log('Empresa guardado:', data);
+          },
+          error: (err) => console.error('Error al guardar Empresa:', err)
+        });
+      }else if (this.modalContenido.tipo === 'Fechas Plan Mensual') {
+        this.FechasPlanMensualService.createFecha(nuevoRegistro).subscribe({
           next: (data) => {
             this.modalContenido.datos.push(data);
             console.log('Empresa guardado:', data);
@@ -303,6 +331,14 @@ export class CrearDataComponent implements OnInit {
       });
     }else if (this.modalContenido.tipo === 'Empresa') {
       this.empresaService.deleteEmpresa(item.id).subscribe({
+        next: () => {
+          this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
+          console.log('Accesorio eliminado:', item);
+        },
+        error: (err) => console.error('Error al eliminar accesorio:', err)
+      });
+    }else if (this.modalContenido.tipo === 'Fechas Plan Mensual') {
+      this.FechasPlanMensualService.deleteFecha(item.id).subscribe({
         next: () => {
           this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
           console.log('Accesorio eliminado:', item);

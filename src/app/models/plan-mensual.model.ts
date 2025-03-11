@@ -17,6 +17,7 @@ export interface PlanMensual {
     ancho_m?: number;
     alto_m?: number;
     tms?: number;
+    programado?: 'Programado' | 'No Programado';
     // Campos 1A - 28B
     [key: string]: number | string | undefined;
   }

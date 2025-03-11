@@ -22,6 +22,7 @@ export interface PlanMetraje {
     burden?: number;
     espaciamiento?: number;
     longitud_perforacion?: number;
+    programado?: 'Programado' | 'No Programado';
   
     // Campos dinámicos 1A - 28B
     [key: string]: number | string | undefined;

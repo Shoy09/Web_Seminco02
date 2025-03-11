@@ -27,6 +27,7 @@ export interface PlanProduccion {
     vpt_final?: number;
     cut_off_1?: number;
     cut_off_2?: number;
+    programado?: 'Programado' | 'No Programado';
     
     // Campos dinámicos 1A - 28B
     [key: string]: number | string | undefined;
