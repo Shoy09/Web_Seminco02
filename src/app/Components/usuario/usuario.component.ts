@@ -163,7 +163,7 @@ cargarPerfil(): void {
           guardia: data.guardia || '',
           equipoAutorizado: data.autorizado_equipo || '',
           correo: data.correo || '',
-          firma: data.firma ? `http://localhost:3000${data.firma}` : '',
+          firma: data.firma || '',
           contraseña: data.password || '',
         };
       },
