@@ -75,9 +75,15 @@ export class ExplosivosComponent implements OnInit {
       tipo: 'Explosivo uni',
       datos: [], // Aquí se almacenarán los datos dinámicos obtenidos del backend
       campos: [
-        { nombre: 'dato', label: 'Dato', tipo: 'number' }, // Campo obligatorio según el modelo
+          { nombre: 'dato', label: 'Dato', tipo: 'number' }, // Campo obligatorio según el modelo
+          { 
+              nombre: 'tipo', 
+              label: 'Tipo', 
+              tipo: 'select', 
+              opciones: ['Milisegundo', 'Medio Segundo'] // Opciones disponibles en el select
+          }
       ]
-    },
+  },    
     {
       nombre: 'Destinatarios de Despacho',
       icon: 'mas.svg',

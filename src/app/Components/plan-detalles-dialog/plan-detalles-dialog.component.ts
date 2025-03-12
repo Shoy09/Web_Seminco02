@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
   selector: 'app-plan-detalles-dialog',
   imports: [MatDialogModule, CommonModule],
   templateUrl: './plan-detalles-dialog.component.html',
-  styleUrl: './plan-detalles-dialog.component.css'
+  styleUrls: ['./plan-detalles-dialog.component.css']
 })
 export class PlanDetallesDialogComponent {
 
@@ -23,11 +23,26 @@ export class PlanDetallesDialogComponent {
   obtenerCamposDinamicos(): string[] {
     return Object.keys(this.plan).filter(
       key =>
-        ![
+        ![  // Filtramos las claves que no deseamos mostrar
           'id', 'anio', 'mes', 'minado_tipo', 'empresa', 'zona', 'area',
           'tipo_mineral', 'fase', 'estructura_veta', 'nivel', 'tipo_labor',
           'labor', 'ala', 'avance_m', 'ancho_m', 'alto_m', 'tms', 'programado'
         ].includes(key)
     );
+  }
+
+  // Función para agrupar los campos col_XA y col_XB
+  obtenerCamposAgrupados(): any[] {
+    const campos = this.obtenerCamposDinamicos();
+    const camposAgrupados = [];
+    for (let i = 1; i <= Math.ceil(campos.length / 2); i++) {
+      // Agrupamos en pares: col_1A, col_1B, col_2A, col_2B, etc.
+      const colA = campos.find(field => field === `col_${i}A`);
+      const colB = campos.find(field => field === `col_${i}B`);
+      if (colA || colB) {
+        camposAgrupados.push([colA, colB]);
+      }
+    }
+    return camposAgrupados;
   }
 }

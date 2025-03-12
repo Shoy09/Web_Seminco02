@@ -1,5 +1,6 @@
 export interface PlanMetraje {
     id?: number;
+    anio?: number;
     mes?: string;
     semana?: string;
     mina?: string;

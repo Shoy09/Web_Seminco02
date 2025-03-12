@@ -12,7 +12,8 @@ import { PlanProduccionService } from '../../services/plan-produccion.service';
 import { LoadingDialogComponent } from '../loading-dialog/loading-dialog.component';
 import * as XLSX from 'xlsx';
 import { PlanProduccionDetallesDialogComponent } from '../plan-produccion-detalles-dialog/plan-produccion-detalles-dialog.component';
-
+import { FechasPlanMensualService } from '../../services/fechas-plan-mensual.service';
+import { ToastrService } from 'ngx-toastr';
 @Component({
   selector: 'app-plan-produccion-list',
   imports: [MatTableModule,
@@ -36,21 +37,54 @@ export class PlanProduccionListComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(
+  constructor(private _toastr: ToastrService,
     private planProduccionService: PlanProduccionService,
-    public dialog: MatDialog
+    public dialog: MatDialog,
+    private fechasPlanMensualService: FechasPlanMensualService
   ) {}
+  errorMessage: string = '';
+  anio: number | undefined;
+  mes: string | undefined;
 
   ngOnInit(): void {
-    this.obtenerPlanesProduccion();
+    this.obtenerUltimaFecha();
   }
 
-  obtenerPlanesProduccion(): void {
-    this.planProduccionService.getPlanesProduccion().subscribe((planes) => {
-      this.dataSource.data = planes;
-      this.dataSource.paginator = this.paginator;
-      this.dataSource.sort = this.sort;
-    });
+  obtenerUltimaFecha(): void {
+    this.fechasPlanMensualService.getUltimaFecha().subscribe(
+      (ultimaFecha) => {
+        console.log('Última fecha obtenida:', ultimaFecha);
+        
+        // Usar el operador de encadenamiento opcional y comprobar si es undefined
+        const anio: number | undefined = ultimaFecha.fecha_ingreso;
+        const mes: string = ultimaFecha.mes;
+  
+        // Verificar que 'anio' no sea undefined antes de llamar a la función
+        if (anio !== undefined) {
+          this.anio = anio;  // Asignamos el valor de anio a la propiedad del componente
+          this.mes = mes; 
+          this.obtenerPlanesMetraje(anio, mes);
+        } else {
+          console.error('Fecha de ingreso no válida');
+        }
+      },
+      (error) => {
+        console.error('Error al obtener la última fecha:', error);
+      }
+    );
+  }
+
+  obtenerPlanesMetraje(anio: number, mes: string): void {
+    this.planProduccionService.getPlanMensualByYearAndMonth(anio, mes).subscribe(
+      (planes) => {
+        this.dataSource.data = planes;
+        this.dataSource.paginator = this.paginator;
+        this.dataSource.sort = this.sort;
+      },
+      (error) => {
+        console.error('Error al obtener los planes mensuales:', error);
+      }
+    );
   }
 
   aplicarFiltro(event: Event): void {
@@ -81,10 +115,38 @@ export class PlanProduccionListComponent implements OnInit {
 
       // Convertimos los datos en formato JSON
       const jsonData: any[] = XLSX.utils.sheet_to_json(sheet);
-
-      // Convertir datos a modelo PlanProduccion
-      const planes: PlanProduccion[] = jsonData.map((fila: any) => this.mapearFilaAPlanProduccion(fila));
-
+const totalFilas = jsonData.length; // Contar filas del archivo
+      
+      // Almacenar errores de filas
+      const errores: string[] = [];
+  
+      // Convertir datos a modelo PlanMensual
+      const planes: PlanProduccion[] = jsonData.map((fila: any, index: number) => {
+        const anioFila = fila["AÑO"];
+        const mesFila = fila["MES"];
+  
+        // Verificar si el año y mes coinciden
+        if (anioFila !== this.anio || mesFila !== this.mes) {
+          errores.push(`Error en la fila ${index + 1}: El año y mes no coinciden. Año: ${anioFila}, Mes: ${mesFila}`);
+        }
+        
+        return this.mapearFilaAPlanProduccion(fila);
+      });
+  
+      // Si hay errores, mostrar la notificación usando toastr
+      if (errores.length > 0) {
+        this.errorMessage = errores.join('\n'); // Unir los errores en un solo mensaje
+        console.error(this.errorMessage);
+  
+        // Mostrar el mensaje de error usando toastr
+        this._toastr.error(this.errorMessage, 'Error en el archivo', {
+          closeButton: true,  // Agregar un botón para cerrar la notificación
+          progressBar: true,  // Mostrar una barra de progreso
+          timeOut: 5000       // Duración del mensaje
+        });
+        return;
+      }
+      
       // Enviar los datos al backend
       this.enviarDatosAlServidor(planes);
     };
@@ -94,6 +156,7 @@ export class PlanProduccionListComponent implements OnInit {
 
   mapearFilaAPlanProduccion(fila: any): PlanProduccion {
     return {
+      anio: fila["AÑO"],
       mes: fila['MES'],
       semana: fila['SEMANA'],
       mina: fila['MINA'],
@@ -157,7 +220,22 @@ export class PlanProduccionListComponent implements OnInit {
   verificarCargaCompleta(total: number, enviados: number, errores: number): void {
     if (enviados + errores === total) {
       this.dialog.closeAll(); // Cerrar la pantalla de carga
-      this.obtenerPlanesProduccion(); // Recargar la tabla con los nuevos datos
+      this.obtenerUltimaFecha(); // Recargar la tabla con los nuevos datos
+  
+      // Mostrar una notificación de éxito si todo salió correctamente
+      if (errores === 0) {
+        this._toastr.success('Los datos se cargaron correctamente', 'Carga exitosa', {
+          closeButton: true,
+          progressBar: true,
+          timeOut: 5000
+        });
+      } else {
+        this._toastr.error(`Hubo ${errores} errores durante la carga`, 'Error en la carga', {
+          closeButton: true,
+          progressBar: true,
+          timeOut: 5000
+        });
+      }
     }
   }
 
@@ -181,7 +259,7 @@ export class PlanProduccionListComponent implements OnInit {
 
   verPlan(plan: any): void {
     this.dialog.open(PlanProduccionDetallesDialogComponent, {
-      width: '400px', // Ajusta el tamaño según necesites
+      width: '450px', // Ajusta el tamaño según necesites
       data: plan
     });
   }

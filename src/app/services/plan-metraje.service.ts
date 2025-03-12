@@ -16,6 +16,10 @@ export class PlanMetrajeService {
     return this.apiService.getDatos(this.baseUrl); // Llamamos al endpoint para obtener todos los planes
   }
  
+    getPlanMensualByYearAndMonth(anio: number, mes: string): Observable<PlanMetraje[]> {
+      return this.apiService.getDatos(`${this.baseUrl}/anio/${anio}/mes/${mes}`);
+    }
+
   getPlanMetrajeById(id: number): Observable<PlanMetraje> {
     return this.apiService.getDatos(`${this.baseUrl}/${id}`); // Llamamos al endpoint para obtener un plan específico
   }

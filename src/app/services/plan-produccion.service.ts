@@ -16,6 +16,10 @@ export class PlanProduccionService {
     return this.apiService.getDatos(this.baseUrl); // Llamamos al endpoint para obtener todos los planes de producción
   }
 
+  getPlanMensualByYearAndMonth(anio: number, mes: string): Observable<PlanProduccion[]> {
+        return this.apiService.getDatos(`${this.baseUrl}/anio/${anio}/mes/${mes}`);
+      }
+
   getPlanProduccionById(id: number): Observable<PlanProduccion> {
     return this.apiService.getDatos(`${this.baseUrl}/${id}`); // Llamamos al endpoint para obtener un plan de producción específico
   }

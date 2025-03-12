@@ -18,16 +18,29 @@ export class PlanMetrajeDetallesDialogComponent {
 
   cerrarDialogo(): void {
     this.dialogRef.close();
-  }
+  } 
 
   obtenerCamposDinamicos(): string[] {
     return Object.keys(this.plan).filter(
       key =>
         ![
-          'id', 'mes', 'semana', 'mina', 'zona', 'area', 'fase', 'minado_tipo', 'tipo_labor',
+          'id', 'anio', 'mes', 'semana', 'mina', 'zona', 'area', 'fase', 'minado_tipo', 'tipo_labor',
           'tipo_mineral', 'estructura_veta', 'nivel', 'block', 'labor', 'ala',
-          'ancho_veta', 'ancho_minado_sem', 'ancho_minado_mes', 'burden', 'espaciamiento', 'longitud_perforacion'
+          'ancho_veta', 'ancho_minado_sem', 'ancho_minado_mes', 'burden', 'espaciamiento', 'longitud_perforacion', 'programado'
         ].includes(key)
     );
+  }
+
+  obtenerCamposAgrupados(): any[] {
+    const campos = this.obtenerCamposDinamicos();
+    const camposAgrupados = [];
+    for (let i = 1; i <= Math.ceil(campos.length / 2); i++) {
+      const colA = campos.find(field => field === `columna_${i}A`);
+      const colB = campos.find(field => field === `columna_${i}B`);
+      if (colA || colB) {
+        camposAgrupados.push([colA, colB]);
+      }
+    }
+    return camposAgrupados;
   }
 }

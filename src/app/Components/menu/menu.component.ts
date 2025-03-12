@@ -13,7 +13,7 @@ export class MenuComponent {
     {title: 'Home', icon: 'home.svg' },
     { title: 'Dashboard', icon: 'das.svg', subItems: ['Perforación Horizontal', 'explosivos','Servicios Auxiliares','Sostenimiento','Mediciones','Aceros de Perforación','Acerreo','Carguio','Perforación de Taladros Largos'] },
     { title: 'Carga de Datos', icon: 'data.svg', subItems: ['estados', 'crear-data' , 'plan-mensual', 'plan-metraje', 'plan-produccion', 'Perforación Horizontal', 'Explosivos','Servicios Auxiliares','Sostenimiento','Mediciones','Aceros de Perforación','Acerreo','Carguio','Perforación de Taladros Largos'] },
-    { title: 'Roles', icon: 'rol.svg', subItems: ['usuarios', 'usuario' , 'Subopción B'] },
+    { title: 'Roles', icon: 'rol.svg', subItems: ['usuarios', 'perfil' , 'Subopción B'] },
   ];
 
   menuOpenIndex: number | null = null;

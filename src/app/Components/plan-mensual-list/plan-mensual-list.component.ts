@@ -13,6 +13,7 @@ import * as XLSX from 'xlsx';
 import { LoadingDialogComponent } from '../loading-dialog/loading-dialog.component';
 import { PlanDetallesDialogComponent } from '../plan-detalles-dialog/plan-detalles-dialog.component';
 import { FechasPlanMensualService } from '../../services/fechas-plan-mensual.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-plan-mensual-list',
@@ -39,31 +40,53 @@ export class PlanMensualListComponent implements OnInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private planMensualService: PlanMensualService, public dialog: MatDialog, private fechasPlanMensualService: FechasPlanMensualService) {}
-
+  constructor(private _toastr: ToastrService, private planMensualService: PlanMensualService, public dialog: MatDialog, private fechasPlanMensualService: FechasPlanMensualService) {}
+  errorMessage: string = '';
+  anio: number | undefined;
+  mes: string | undefined;
   ngOnInit(): void {
-    this.obtenerPlanesMensuales();
-  }
-
-  obtenerPlanesMensuales(): void {
-    this.planMensualService.getPlanesMensuales().subscribe((planes) => {
-      this.dataSource.data = planes;
-      this.dataSource.paginator = this.paginator;
-      this.dataSource.sort = this.sort;
-    });
+    this.obtenerUltimaFecha();
   }
 
   obtenerUltimaFecha(): void {
     this.fechasPlanMensualService.getUltimaFecha().subscribe(
       (ultimaFecha) => {
         console.log('Última fecha obtenida:', ultimaFecha);
-        // Aquí puedes realizar alguna acción con la fecha, por ejemplo, guardarla en una variable
+        
+        // Asignar los valores de anio y mes
+        const anio: number | undefined = ultimaFecha.fecha_ingreso;
+        const mes: string = ultimaFecha.mes;
+  
+        // Verificar que 'anio' no sea undefined antes de llamar a la función
+        if (anio !== undefined) {
+          this.anio = anio;  // Asignamos el valor de anio a la propiedad del componente
+          this.mes = mes;    // Asignamos el valor de mes a la propiedad del componente
+          this.obtenerPlanesMensuales(anio, mes);
+        } else {
+          console.error('Fecha de ingreso no válida');
+        }
       },
       (error) => {
         console.error('Error al obtener la última fecha:', error);
       }
     );
   }
+  
+  
+  obtenerPlanesMensuales(anio: number, mes: string): void {
+    this.planMensualService.getPlanMensualByYearAndMonth(anio, mes).subscribe(
+      (planes) => {
+        this.dataSource.data = planes;
+        this.dataSource.paginator = this.paginator;
+        this.dataSource.sort = this.sort;
+      },
+      (error) => {
+        console.error('Error al obtener los planes mensuales:', error);
+      }
+    );
+  }
+  
+  
 
   aplicarFiltro(event: Event) {
     const filtroValor = (event.target as HTMLInputElement).value.trim().toLowerCase();
@@ -84,29 +107,54 @@ export class PlanMensualListComponent implements OnInit {
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: 'array' });
       const sheetName = "PLAN METRAJE AVANCES"; // Nombre específico de la hoja
-const sheet = workbook.Sheets[sheetName];
-
-if (!sheet) {
-  console.error(`La hoja "${sheetName}" no existe en el archivo.`);
-  return;
-}
-
+      const sheet = workbook.Sheets[sheetName];
+  
+      if (!sheet) {
+        console.error(`La hoja "${sheetName}" no existe en el archivo.`);
+        return;
+      }
   
       // Convertimos los datos en formato JSON
       const jsonData: any[] = XLSX.utils.sheet_to_json(sheet);
-  
       const totalFilas = jsonData.length; // Contar filas del archivo
+      
+      // Almacenar errores de filas
+      const errores: string[] = []; 
   
       // Convertir datos a modelo PlanMensual
-      const planes: PlanMensual[] = jsonData.map((fila: any) => this.mapearFilaAPlanMensual(fila));
+      const planes: PlanMensual[] = jsonData.map((fila: any, index: number) => {
+        const anioFila = fila["AÑO"];
+        const mesFila = fila["MES"];
   
+        // Verificar si el año y mes coinciden
+        if (anioFila !== this.anio || mesFila !== this.mes) {
+          errores.push(`Error en la fila ${index + 1}: El año y mes no coinciden. Año: ${anioFila}, Mes: ${mesFila}`);
+        }
+        
+        return this.mapearFilaAPlanMensual(fila);
+      });
   
-      // Enviar los datos al backend
+      // Si hay errores, mostrar la notificación usando toastr
+      if (errores.length > 0) {
+        this.errorMessage = errores.join('\n'); // Unir los errores en un solo mensaje
+        console.error(this.errorMessage);
+  
+        // Mostrar el mensaje de error usando toastr
+        this._toastr.error(this.errorMessage, 'Error en el archivo', {
+          closeButton: true,  // Agregar un botón para cerrar la notificación
+          progressBar: true,  // Mostrar una barra de progreso
+          timeOut: 5000       // Duración del mensaje
+        });
+        return;
+      }
+  
+      // Enviar los datos al backend si no hay errores
       this.enviarDatosAlServidor(planes);
     };
   
     reader.readAsArrayBuffer(archivo);
   }
+  
 
   mapearFilaAPlanMensual(fila: any): PlanMensual {
     return {
@@ -164,7 +212,22 @@ if (!sheet) {
   verificarCargaCompleta(total: number, enviados: number, errores: number): void {
     if (enviados + errores === total) {
       this.dialog.closeAll(); // Cerrar la pantalla de carga
-      this.obtenerPlanesMensuales(); // Recargar la tabla con los nuevos datos
+      this.obtenerUltimaFecha(); // Recargar la tabla con los nuevos datos
+  
+      // Mostrar una notificación de éxito si todo salió correctamente
+      if (errores === 0) {
+        this._toastr.success('Los datos se cargaron correctamente', 'Carga exitosa', {
+          closeButton: true,
+          progressBar: true,
+          timeOut: 5000
+        });
+      } else {
+        this._toastr.error(`Hubo ${errores} errores durante la carga`, 'Error en la carga', {
+          closeButton: true,
+          progressBar: true,
+          timeOut: 5000
+        });
+      }
     }
   }
   
@@ -192,5 +255,5 @@ verPlan(plan: any): void {
     data: plan
   });
 }
-  
+   
 }

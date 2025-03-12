@@ -14,6 +14,5 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     provideHttpClient(withInterceptorsFromDi()), // Habilita el uso de interceptores
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
-    provideToastr(),
   ]
 };

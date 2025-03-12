@@ -20,10 +20,12 @@
     <tr><td><strong>TMS:</strong></td><td>{{ plan.tms }}</td></tr>
     <tr><td><strong>Programacion:</strong></td><td>{{ plan.programado }}</td></tr>
 
-    <!-- Iterar sobre los campos dinámicos -->
-    <tr *ngFor="let key of obtenerCamposDinamicos()">
-      <td><strong>{{ key }}:</strong></td>
-      <td>{{ plan[key] }}</td>
+    <!-- Iterar sobre los campos agrupados -->
+    <tr *ngFor="let grupo of obtenerCamposAgrupados()">
+      <td><strong>{{ grupo[0] }}:</strong></td>
+      <td>{{ plan[grupo[0]] }}</td>
+      <td><strong>{{ grupo[1] }}:</strong></td>
+      <td>{{ plan[grupo[1]] }}</td>
     </tr>
   </table>
 </mat-dialog-content>

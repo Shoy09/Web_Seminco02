@@ -38,9 +38,13 @@
           <div class="form-group" *ngFor="let campo of modalContenido?.campos">
             <label>{{ campo.label }}</label>
             <div class="input-container">
-              <input [type]="campo.tipo" [(ngModel)]="nuevoDato[campo.nombre]" [name]="campo.nombre" required class="form-input">
+              <input *ngIf="campo.tipo !== 'select'" [type]="campo.tipo" [(ngModel)]="nuevoDato[campo.nombre]" [name]="campo.nombre" required class="form-input">
+              
+              <select *ngIf="campo.tipo === 'select'" [(ngModel)]="nuevoDato[campo.nombre]" [name]="campo.nombre" required class="form-input">
+                <option *ngFor="let opcion of campo.opciones" [value]="opcion">{{ opcion }}</option>
+              </select>
             </div>
-          </div>
+          </div>          
           <button type="submit" class="btn-submit">Guardar</button>
         </form>
   

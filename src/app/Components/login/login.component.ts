@@ -2,8 +2,8 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth-service.service';
 import { FormsModule } from '@angular/forms';
-import { ToastrService } from 'ngx-toastr';
 import { CommonModule } from '@angular/common';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-login',
@@ -21,7 +21,7 @@ export class LoginComponent {
   constructor(
     private readonly router: Router,
     private authService: AuthService,
-    private toastr: ToastrService
+    private _toastr: ToastrService // Inyecta ToastrService
   ) {}
 
   togglePassword() {
@@ -31,22 +31,27 @@ export class LoginComponent {
   login() {
     if (!this.codigo_dni || !this.password) {
       this.errorMessage = 'Por favor, ingresa todos los campos.';
+      this._toastr.warning(this.errorMessage, 'Advertencia'); // Muestra una notificación de advertencia
       return;
     }
+
+    this._toastr.info('Iniciando sesión...', 'Por favor espera'); // Muestra una notificación de espera
 
     this.authService.login(this.codigo_dni, this.password).subscribe(
       (response) => {
         if (response.token) {
           this.authService.setToken(response.token); // Guarda el token en localStorage
-          this.toastr.success('Inicio de sesión exitoso', 'Bienvenido');
           this.router.navigate(['/Dashboard']); // Redirige al dashboard
+          this._toastr.success('Sesión iniciada con éxito', 'Bienvenido'); // Muestra una notificación de éxito
         } else {
           this.errorMessage = 'Error en la autenticación. Token no recibido.';
+          this._toastr.error(this.errorMessage, 'Error'); // Muestra una notificación de error
         }
       },
       (error) => {
         console.error('Error en el login', error);
         this.errorMessage = 'Credenciales incorrectas o problema con el servidor.';
+        this._toastr.error(this.errorMessage, 'Error de autenticación'); // Muestra una notificación de error
       }
     );
   }

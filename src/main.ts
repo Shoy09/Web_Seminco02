@@ -7,6 +7,7 @@ import { routes } from './app/app.routes';
 import { provideZoneChangeDetection } from '@angular/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { AuthInterceptor } from './app/services/auth-interceptor.service';
+import { provideToastr } from 'ngx-toastr';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -14,6 +15,7 @@ bootstrapApplication(AppComponent, {
       provideRouter(routes),
       provideAnimations(),
       provideHttpClient(withInterceptorsFromDi()), // Habilita el uso de interceptores
-      { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+      { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+      provideToastr(),
     ]
 }).catch(err => console.error(err));

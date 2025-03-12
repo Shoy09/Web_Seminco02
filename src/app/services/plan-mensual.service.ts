@@ -14,6 +14,10 @@ export class PlanMensualService {
 
   getPlanesMensuales(): Observable<PlanMensual[]> {
     return this.apiService.getDatos(this.baseUrl);
+  } 
+
+  getPlanMensualByYearAndMonth(anio: number, mes: string): Observable<PlanMensual[]> {
+    return this.apiService.getDatos(`${this.baseUrl}/anio/${anio}/mes/${mes}`);
   }
 
   getPlanMensualById(id: number): Observable<PlanMensual> {

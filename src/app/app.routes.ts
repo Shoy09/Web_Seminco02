@@ -27,7 +27,7 @@ export const routes: Routes = [
       { path: 'plan-metraje', component: PlanMetrajeListComponent },
       { path: 'plan-produccion', component: PlanProduccionListComponent },
       { path: 'explosivos', component: ExplosivosComponent },
-      { path: 'usuario', component: UsuarioComponent },
+      { path: 'perfil', component: UsuarioComponent },
     ],
   },
 

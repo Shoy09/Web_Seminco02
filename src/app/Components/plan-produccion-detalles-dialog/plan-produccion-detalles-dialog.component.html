@@ -1,6 +1,7 @@
 <h2 mat-dialog-title>Detalles del Plan de Producción</h2>
 <mat-dialog-content>
   <table>
+    <tr><td><strong>Año:</strong></td><td>{{ plan.anio }}</td></tr>
     <tr><td><strong>Mes:</strong></td><td>{{ plan.mes }}</td></tr>
     <tr><td><strong>Semana:</strong></td><td>{{ plan.semana }}</td></tr>
     <tr><td><strong>Mina:</strong></td><td>{{ plan.mina }}</td></tr>
@@ -26,11 +27,13 @@
     <tr><td><strong>VPT Final:</strong></td><td>{{ plan.vpt_final }}</td></tr>
     <tr><td><strong>Cut Off 1:</strong></td><td>{{ plan.cut_off_1 }}</td></tr>
     <tr><td><strong>Cut Off 2:</strong></td><td>{{ plan.cut_off_2 }}</td></tr>
-
+    <tr><td><strong>Programacion:</strong></td><td>{{ plan.programado }}</td></tr>
     <!-- Iterar sobre los campos dinámicos -->
-    <tr *ngFor="let key of obtenerCamposDinamicos()">
-      <td><strong>{{ key }}:</strong></td>
-      <td>{{ plan[key] }}</td>
+    <tr *ngFor="let grupo of obtenerCamposAgrupados()">
+      <td><strong>{{ grupo[0] }}:</strong></td>
+      <td>{{ plan[grupo[0]] }}</td>
+      <td><strong>{{ grupo[1] }}:</strong></td>
+      <td>{{ plan[grupo[1]] }}</td>
     </tr>
   </table>
 </mat-dialog-content>
