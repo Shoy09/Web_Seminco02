@@ -57,6 +57,12 @@ export class ExplosivosComponent implements OnInit {
         { nombre: 'cantidad_por_caja', label: 'Cantidad por Caja', tipo: 'number' },
         { nombre: 'peso_unitario', label: 'Peso Unitario', tipo: 'number' },
         { nombre: 'costo_por_kg', label: 'Costo por KG', tipo: 'number' },
+        { 
+          nombre: 'unidad_medida', 
+          label: 'Unidad de Medida', 
+          tipo: 'select', 
+          opciones: ['kg', 'unidad', 'litros', 'metros'] 
+        }
       ]
     },
     {
@@ -67,8 +73,14 @@ export class ExplosivosComponent implements OnInit {
       campos: [
         { nombre: 'tipo_accesorio', label: 'Tipo de Accesorio', tipo: 'text' },
         { nombre: 'costo', label: 'Costo', tipo: 'number' },
+        { 
+          nombre: 'unidad_medida', 
+          label: 'Unidad de Medida', 
+          tipo: 'select', 
+          opciones: ['kg', 'unidad', 'litros', 'metros'] 
+        }
       ]
-    },
+    },    
     {
       nombre: 'Explosivo uni',
       icon: 'mas.svg',
