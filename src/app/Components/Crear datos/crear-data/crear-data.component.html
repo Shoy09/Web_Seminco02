@@ -39,9 +39,17 @@
   <div class="form-group" *ngFor="let campo of modalContenido?.campos">
     <label>{{ campo.label }}</label>
     <div class="input-container">
-      <input [type]="campo.tipo" [(ngModel)]="nuevoDato[campo.nombre]" [name]="campo.nombre" required class="form-input">
+      <ng-container *ngIf="campo.tipo === 'select'; else inputField">
+        <select [(ngModel)]="nuevoDato[campo.nombre]" [name]="campo.nombre" required class="form-input">
+          <option *ngFor="let opcion of campo.opciones" [value]="opcion">{{ opcion }}</option>
+        </select>
+      </ng-container>
+      <ng-template #inputField>
+        <input [type]="campo.tipo" [(ngModel)]="nuevoDato[campo.nombre]" [name]="campo.nombre" required class="form-input">
+      </ng-template>
     </div>
   </div>
+  
 
   <!-- Contenedor de botones -->
   <div class="button-group">

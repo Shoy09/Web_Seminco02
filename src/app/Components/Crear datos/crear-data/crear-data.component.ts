@@ -60,6 +60,18 @@ export class CrearDataComponent implements OnInit {
       datos: [],
       campos: [
         { nombre: 'nombre', label: 'Tipo de Perforación', tipo: 'text' },
+        { 
+          nombre: 'proceso', 
+          label: 'Proceso', 
+          tipo: 'select', 
+          opciones: [
+            'PERFORACIÓN TALADROS LARGOS',
+            'PERFORACIÓN HORIZONTAL',
+            'SOSTENIMIENTO',
+            'SERVICIOS AUXILIARES',
+            'CARGUÍO'
+          ]
+        }
       ]
     }, 
     {
