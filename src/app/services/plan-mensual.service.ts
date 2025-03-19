@@ -33,8 +33,14 @@ export class PlanMensualService {
   }
 
   updatePlanMensual(id: number, planMensual: PlanMensual): Observable<PlanMensual> {
-    return this.apiService.putDatos(`${this.baseUrl}/${id}`, planMensual);
-  }
+    return this.apiService.putDatos(`${this.baseUrl}/${id}`, planMensual).pipe(
+      tap(() => {
+        this.planesActualizados.next(true); // Notifica que hubo una actualización
+      })
+    );
+  } 
+  
+  
 
   deletePlanMensual(id: number): Observable<any> {
     return this.apiService.deleteDatos(`${this.baseUrl}/${id}`);

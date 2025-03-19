@@ -32,9 +32,13 @@ export class PlanMetrajeService {
     );
   }
 
-  updatePlanMetraje(id: number, planMetraje: PlanMetraje): Observable<PlanMetraje> {
-    return this.apiService.putDatos(`${this.baseUrl}/${id}`, planMetraje); // Llamamos al endpoint para actualizar un plan
-  }
+  updatePlanMetraje(id: number, planMensual: PlanMetraje): Observable<PlanMetraje> {
+      return this.apiService.putDatos(`${this.baseUrl}/${id}`, planMensual).pipe(
+        tap(() => {
+          this.planesActualizados.next(true); // Notifica que hubo una actualización
+        })
+      );
+    } 
 
   deletePlanMetraje(id: number): Observable<any> {
     return this.apiService.deleteDatos(`${this.baseUrl}/${id}`); // Llamamos al endpoint para eliminar un plan

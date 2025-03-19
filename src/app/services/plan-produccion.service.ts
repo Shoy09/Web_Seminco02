@@ -32,9 +32,13 @@ export class PlanProduccionService {
     );
   }
 
-  updatePlanProduccion(id: number, planProduccion: PlanProduccion): Observable<PlanProduccion> {
-    return this.apiService.putDatos(`${this.baseUrl}/${id}`, planProduccion); // Llamamos al endpoint para actualizar un plan de producción
-  }
+    updatePlanProduccion(id: number, planMensual: PlanProduccion): Observable<PlanProduccion> {
+      return this.apiService.putDatos(`${this.baseUrl}/${id}`, planMensual).pipe(
+        tap(() => {
+          this.planesActualizados.next(true); // Notifica que hubo una actualización
+        })
+      );
+    } 
 
   deletePlanProduccion(id: number): Observable<any> {
     return this.apiService.deleteDatos(`${this.baseUrl}/${id}`); // Llamamos al endpoint para eliminar un plan de producción
