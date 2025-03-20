@@ -12,7 +12,7 @@ import { OpcionesDialogComponent } from '../opciones-dialog/opciones-dialog.comp
   styleUrl: './seleccion-proceso-estatos-dialog.component.css'
 })
 export class SeleccionProcesoEstatosDialogComponent {
-  procesos = ['Perforacion taladro largo', 'Perforacion horizontal', 'Sostenimiento', 'Servicios auxiliares', 'Carguío', 'Acarreo'];
+  procesos = ['PERFORACIÓN TALADROS LARGOS', 'PERFORACIÓN HORIZONTAL', 'SOSTENIMIENTO', 'SERVICIOS AUXILIARES', 'CARGUÍO', 'ACARREO'];
 
   constructor(
     public dialogRef: MatDialogRef<SeleccionProcesoEstatosDialogComponent>,
