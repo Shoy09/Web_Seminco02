@@ -38,9 +38,17 @@ export class PlanProduccionDetallesDialogComponent {
       const colA = campos.find(field => field === `columna_${i}A`);
       const colB = campos.find(field => field === `columna_${i}B`);
       if (colA || colB) {
-        camposAgrupados.push([colA, colB]);
+        // Extraemos solo la parte después del "_" (1A, 1B, etc.)
+        const displayA = colA ? colA.split('_')[1] : null;
+        const displayB = colB ? colB.split('_')[1] : null;
+        camposAgrupados.push({
+          keyA: colA,
+          displayA: displayA,
+          keyB: colB,
+          displayB: displayB
+        });
       }
     }
     return camposAgrupados;
   }
-} 
+}

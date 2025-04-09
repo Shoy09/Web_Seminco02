@@ -12,7 +12,7 @@ import { LoadingDialogComponent } from '../../Reutilizables/loading-dialog/loadi
   imports: [MatDialogModule, MatIconModule],
   templateUrl: './opciones-dialog.component.html', 
   styleUrl: './opciones-dialog.component.css'
-})
+}) 
 export class OpcionesDialogComponent {
   constructor(
     private estadoService: EstadoService,

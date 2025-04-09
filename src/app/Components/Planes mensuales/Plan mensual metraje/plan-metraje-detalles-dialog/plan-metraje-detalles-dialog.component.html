@@ -25,12 +25,13 @@
     <tr><td><strong>Programación:</strong></td><td>{{ plan.programado }}</td></tr>
 
     <!-- Iterar sobre los campos dinámicos -->
-    <tr *ngFor="let grupo of obtenerCamposAgrupados()">
-      <td><strong>{{ grupo[0] }}:</strong></td>
-      <td>{{ plan[grupo[0]] }}</td>
-      <td><strong>{{ grupo[1] }}:</strong></td>
-      <td>{{ plan[grupo[1]] }}</td>
-    </tr>
+    <!-- Iterar sobre los campos dinámicos -->
+<tr *ngFor="let grupo of obtenerCamposAgrupados()">
+  <td *ngIf="grupo.keyA"><strong>{{ grupo.displayA }}:</strong></td>
+  <td *ngIf="grupo.keyA">{{ plan[grupo.keyA] }}</td>
+  <td *ngIf="grupo.keyB"><strong>{{ grupo.displayB }}:</strong></td>
+  <td *ngIf="grupo.keyB">{{ plan[grupo.keyB] }}</td>
+</tr>
   </table>
 </mat-dialog-content>
 

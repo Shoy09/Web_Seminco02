@@ -36,11 +36,18 @@ export class PlanDetallesDialogComponent {
     const campos = this.obtenerCamposDinamicos();
     const camposAgrupados = [];
     for (let i = 1; i <= Math.ceil(campos.length / 2); i++) {
-      // Agrupamos en pares: col_1A, col_1B, col_2A, col_2B, etc.
       const colA = campos.find(field => field === `col_${i}A`);
       const colB = campos.find(field => field === `col_${i}B`);
       if (colA || colB) {
-        camposAgrupados.push([colA, colB]);
+        // Extraemos solo la parte después del "_" (1A, 1B, etc.)
+        const displayA = colA ? colA.split('_')[1] : null;
+        const displayB = colB ? colB.split('_')[1] : null;
+        camposAgrupados.push({
+          keyA: colA,
+          displayA: displayA,
+          keyB: colB,
+          displayB: displayB
+        });
       }
     }
     return camposAgrupados;

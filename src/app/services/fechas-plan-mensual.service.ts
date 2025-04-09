@@ -19,7 +19,7 @@ export class FechasPlanMensualService {
 
   getUltimaFecha(): Observable<FechasPlanMensual> {
     return this.apiService.getDatos(`${this.baseUrl}/ultima`); // Nueva ruta
-  }
+  } 
 
 
   // Obtener una fecha específica por ID

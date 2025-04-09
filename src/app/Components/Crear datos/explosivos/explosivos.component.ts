@@ -82,9 +82,9 @@ export class ExplosivosComponent implements OnInit {
       ]
     },    
     {
-      nombre: 'Explosivo uni',
+      nombre: 'Retardos',
       icon: 'mas.svg',
-      tipo: 'Explosivo uni',
+      tipo: 'Retardos',
       datos: [], // Aquí se almacenarán los datos dinámicos obtenidos del backend
       campos: [
           { nombre: 'dato', label: 'Dato', tipo: 'number' }, // Campo obligatorio según el modelo
@@ -129,7 +129,7 @@ export class ExplosivosComponent implements OnInit {
         },
         error: (err) => console.error('Error al cargar accesorios:', err)
       });
-    }else if (button.tipo === 'Explosivo uni') {
+    }else if (button.tipo === 'Retardos') {
       this.ExplosivosUniService.getExplosivos().subscribe({
         next: (data) => {
           this.modalContenido.datos = data; // Asigna los datos recibidos
@@ -175,7 +175,7 @@ export class ExplosivosComponent implements OnInit {
           error: (err) => console.error('Error al guardar accesorio:', err)
         });
       }
-      else if (this.modalContenido.tipo === 'Explosivo uni') {
+      else if (this.modalContenido.tipo === 'Retardos') {
         this.ExplosivosUniService.createExplosivo(nuevoRegistro).subscribe({
 
           next: (data) => {
@@ -219,7 +219,7 @@ export class ExplosivosComponent implements OnInit {
         },
         error: (err) => console.error('Error al eliminar :', err)
       });
-    }else if (this.modalContenido.tipo === 'Explosivo uni') {
+    }else if (this.modalContenido.tipo === 'Retardos') {
       this.ExplosivosUniService.deleteExplosivo(item.id).subscribe({
         next: () => {
           this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);

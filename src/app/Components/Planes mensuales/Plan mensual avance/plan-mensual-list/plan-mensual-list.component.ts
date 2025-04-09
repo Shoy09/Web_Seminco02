@@ -35,7 +35,7 @@ import { CreatePlanAvanceComponent } from '../create-plan-avance/create-plan-ava
 export class PlanMensualListComponent implements OnInit {
   displayedColumns: string[] = [
     'anio', 'mes', 'minado_tipo', 'zona', 
-    'tipo_mineral', 'fase', 'labor', 'acciones'
+    'tipo_mineral', 'fase', 'tipo_labor', 'labor', 'acciones'
   ];
   dataSource = new MatTableDataSource<PlanMensual>();
 

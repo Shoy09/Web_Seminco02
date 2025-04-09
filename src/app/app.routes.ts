@@ -10,6 +10,7 @@ import { PlanMetrajeListComponent } from './Components/Planes mensuales/Plan men
 import { PlanProduccionListComponent } from './Components/Planes mensuales/Plan mensual produccion/plan-produccion-list/plan-produccion-list.component';
 import { ExplosivosComponent } from './Components/Crear datos/explosivos/explosivos.component';
 import { UsuarioComponent } from './Components/Usuario/usuario/usuario.component';
+import { MostrarGraficosComponent } from './Components/Dato Movil/mostrar-graficos/mostrar-graficos.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -28,6 +29,7 @@ export const routes: Routes = [
       { path: 'plan-produccion', component: PlanProduccionListComponent },
       { path: 'explosivos', component: ExplosivosComponent },
       { path: 'perfil', component: UsuarioComponent },
+      { path: 'graficos', component: MostrarGraficosComponent },
     ],
   },
 
