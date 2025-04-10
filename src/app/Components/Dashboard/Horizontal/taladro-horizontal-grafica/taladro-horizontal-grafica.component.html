@@ -1,0 +1,27 @@
+<button (click)="exportarAExcel()" class="btn btn-success">
+  Exportar a Excel
+</button>
+
+<div class="chart-container">
+  <div id="chart-longitud">
+    <h3>Longitud de Perforación</h3>
+    <apx-chart 
+      [series]="chartOptions.series"
+      [chart]="chartOptions.chart"
+      [xaxis]="chartOptions.xaxis"
+      [title]="chartOptions.title">
+    </apx-chart>
+  </div>
+
+  <div id="chart-taladros">
+    <h3>Número de Taladros</h3>
+    <apx-chart 
+      [series]="chartOptionsTaladros.series"
+      [chart]="chartOptionsTaladros.chart"
+      [xaxis]="chartOptionsTaladros.xaxis"
+      [title]="chartOptionsTaladros.title"
+      [plotOptions]="chartOptionsTaladros.plotOptions"
+      [dataLabels]="chartOptionsTaladros.dataLabels">
+    </apx-chart>
+  </div>
+</div>

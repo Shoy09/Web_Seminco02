@@ -26,15 +26,17 @@
             <img *ngIf="menu.title !== 'Home'" src="down.svg" alt="Flecha" class="logodow">
           </div>
       
+          <!-- 🔽 Aquí cambiamos subItem por subItem.title y subItem.path -->
           <ul [ngClass]="{'submenu': true, 'show': menuOpenIndex === i && menu.title !== 'Home'}">
             <li *ngFor="let subItem of menu.subItems">
-              <a [routerLink]="['/Dashboard', convertirRuta(subItem)]" routerLinkActive="selected">
-                {{ subItem }}
+              <a [routerLink]="['/Dashboard', subItem.path]" routerLinkActive="selected">
+                {{ subItem.title }}
               </a>
             </li>
           </ul>
         </li>
       </ul>
+      
       
     </aside>
   <div class="main-container">
