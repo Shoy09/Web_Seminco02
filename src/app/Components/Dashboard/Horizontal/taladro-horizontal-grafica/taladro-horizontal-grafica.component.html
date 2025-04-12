@@ -1,27 +1,77 @@
-<button (click)="exportarAExcel()" class="btn btn-success">
-  Exportar a Excel
-</button>
-
-<div class="chart-container">
-  <div id="chart-longitud">
-    <h3>Longitud de Perforación</h3>
-    <apx-chart 
-      [series]="chartOptions.series"
-      [chart]="chartOptions.chart"
-      [xaxis]="chartOptions.xaxis"
-      [title]="chartOptions.title">
-    </apx-chart>
+<div class="dashboard-container">
+    <!-- Filtros superiores -->
+    <div class="filtros-container">
+      <label>
+        Desde:
+        <input type="date" [(ngModel)]="fechaDesde">
+      </label>
+      <label>
+        Hasta:
+        <input type="date" [(ngModel)]="fechaHasta">
+      </label>
+      <label>
+        Turno:
+        <select [(ngModel)]="turnoSeleccionado">
+          <option value="">Todos</option>
+          <option *ngFor="let turno of turnos" [value]="turno">{{ turno }}</option>
+        </select>
+      </label>
+      <button (click)="aplicarFiltrosLocales()">Filtrar</button>
+      <button (click)="quitarFiltros()">Quitar filtros</button>
+    </div>
+  
+    <!-- Tarjetas con los gráficos -->
+    <div class="graficos-container">
+      <div class="card">
+        <h3>Metros perforados por equipo</h3>
+        <app-grafico-barras [datos]="datosGraficobarrasapiladas"></app-grafico-barras>
+      </div>
+    
+      <div class="card">
+        <h3>Metros perforados por labor</h3>
+        <app-grafico-barras-metros-labor [datos]="datosGraficobarrasapiladas"></app-grafico-barras-metros-labor>
+      </div>
+    
+      <div class="card">
+        <h3>Numero taladro por equipo</h3>
+        <app-grafico-barras-agrupada [datos]="datosGraficobarrasagrupadas"></app-grafico-barras-agrupada>
+      </div>
+    
+      <div class="card">
+        <h3>Numero taladro por labor</h3>
+        <app-grafico-barras-agrupada-num-labor [datos]="datosGraficobarrasagrupadas"></app-grafico-barras-agrupada-num-labor>
+      </div>
+    
+      <div class="card">
+        <h3>Promedio de numeros taladros por Sección</h3>
+        <app-promedio-taladros [datos]="paraPromedioTaladrosSeccion"></app-promedio-taladros>
+      </div>
+    
+      <div class="card">
+        <h3>promedio de numero taladros por tipo de sección</h3>
+        <app-prom-num-taladro-seccion [datos]="ParaPromediostaladrosnumtaladroSeccion"></app-prom-num-taladro-seccion>
+      </div>
+    
+      <div class="card">
+        <h3>Promedio de números Taladros por Tipo de Labor</h3>
+        <app-prom-num-taladro-tipo-labor [datos]="ParaPromediosPromnumtaladrotipolabor"></app-prom-num-taladro-tipo-labor>
+      </div>
+    
+      <div class="card">
+        <h3>promedio de metros perforados por tipo de sección</h3>
+        <app-prom-metros-perforados-seccion [datos]="ParaPromediostaladrosmetrosperforadosSeccion"></app-prom-metros-perforados-seccion>
+      </div>
+    
+      <div class="card">
+        <h3>Horómetros: diferencia entre lectura final e inicial</h3>
+        <app-grafico-horometros [datosHorometros]="datosHorometros"></app-grafico-horometros>
+      </div>
+    
+      <div class="card">
+        <h3>Tiempo por estado (suma de diferencias horarias)</h3>
+        <app-grafico-estados [datos]="datosGraficoEstados"></app-grafico-estados>
+      </div>
+    </div>
+    
   </div>
-
-  <div id="chart-taladros">
-    <h3>Número de Taladros</h3>
-    <apx-chart 
-      [series]="chartOptionsTaladros.series"
-      [chart]="chartOptionsTaladros.chart"
-      [xaxis]="chartOptionsTaladros.xaxis"
-      [title]="chartOptionsTaladros.title"
-      [plotOptions]="chartOptionsTaladros.plotOptions"
-      [dataLabels]="chartOptionsTaladros.dataLabels">
-    </apx-chart>
-  </div>
-</div>
+   
