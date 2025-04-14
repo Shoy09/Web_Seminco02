@@ -28,7 +28,7 @@ export type ChartOptions = {
   legend: ApexLegend;
 };
 
-
+ 
 @Component({
   selector: 'app-grafico-barras-metros-labor',
   imports: [CommonModule, NgApexchartsModule],
@@ -65,11 +65,22 @@ export class GraficoBarrasMetrosLaborComponent implements OnChanges {
         bar: {
           horizontal: false,
           borderRadius: 5,
-          endingShape: "rounded"
+          endingShape: "rounded",
+          dataLabels: {
+            position: 'top' // Muestra las etiquetas encima de las barras
+          }
         } as any
       },
       dataLabels: {
-        enabled: false
+        enabled: true, // Habilita las etiquetas de datos
+        formatter: (val: number) => {
+          return val.toFixed(1); // Formatea a 1 decimal
+        },
+        style: {
+          fontSize: '12px',
+          colors: ['#000'] // Color del texto
+        },
+        offsetY: -20 // Ajusta la posición vertical
       },
       stroke: {
         show: true,
@@ -88,12 +99,12 @@ export class GraficoBarrasMetrosLaborComponent implements OnChanges {
         }
       },
       yaxis: {
-        title: {
-          text: "Longitud de perforación por Labor",
-          style: {
-            fontSize: '12px'
-          }
-        },
+        // title: {
+        //   text: "Longitud de perforación por Labor",
+        //   style: {
+        //     fontSize: '12px'
+        //   }
+        // },
         labels: {
           formatter: (value: number) => {
             return value.toFixed(1);
@@ -124,7 +135,6 @@ export class GraficoBarrasMetrosLaborComponent implements OnChanges {
   
     const processedData = this.processData(this.datos);
   
-    console.log('Datos finales para el gráfico:', processedData);
   
     this.chartOptions = {
       ...this.chartOptions,
@@ -151,26 +161,19 @@ export class GraficoBarrasMetrosLaborComponent implements OnChanges {
   
   private processData(data: any[]): { series: any[], categories: string[] } {
     const laboresMap = new Map<string, number>();
-  
-    console.log('Datos brutos recibidos:', data);
-  
+
     data.forEach(item => {
-      const clave = `${item.tipo_labor} (${item.labor})`;
+      const clave = `${item.tipo_labor}-${item.labor}`;
       const longitud = item.longitud_perforacion || 0;
   
       const longitudActual = laboresMap.get(clave) || 0;
       laboresMap.set(clave, longitudActual + longitud);
   
-      console.log(`Procesando: ${clave} - Longitud: ${longitud}m - Total acumulado: ${longitudActual + longitud}m`);
     });
   
     const laboresOrdenadas = Array.from(laboresMap.entries())
       .sort((a, b) => a[0].localeCompare(b[0]));
   
-    console.log('Datos procesados para el gráfico:', {
-      series: laboresOrdenadas.map(([_, longitud]) => longitud),
-      categories: laboresOrdenadas.map(([clave, _]) => clave)
-    });
   
     return {
       series: [{

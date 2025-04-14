@@ -89,18 +89,18 @@ export class UsuarioComponent implements OnInit{
 
   guardarCambios() {
     if (this.formularioUsuario.valid) {
-      console.log("Formulario válido ✅");
-      console.log("Valores del formulario:", this.formularioUsuario.value);
+      
+      
   
       // Actualizar los datos sin perder otros atributos
       Object.assign(this.datosUsuario, this.formularioUsuario.value);
-      console.log("Datos del usuario después de actualizar:", this.datosUsuario,this.formularioUsuario.value.contraseña || this.datosUsuario.contraseña);
+      
       this.mensajeExito = true;
       setTimeout(() => this.mensajeExito = false, 3000);
       this.Edicion();
     }else {
       this.formularioUsuario.markAllAsTouched(); // Resalta errores si el formulario es inválido
-      console.log("Errores en el formulario");
+      
     }
 }
 
@@ -109,7 +109,7 @@ toggleContrasena() {
 }
 
 cambiarFirma() {
-  console.log("Cambiar firma");
+  
 
   const input = document.createElement('input');
   input.type = 'file';
@@ -125,7 +125,7 @@ cambiarFirma() {
 
       this.usuarioService.actualizarFirma(this.datosUsuario.id ?? 0, formData).subscribe({
         next: (response) => {
-          console.log("Firma actualizada en el servidor:", response);
+          
 
           // **Volver a cargar los datos del usuario para obtener la firma actualizada**
           this.cargarPerfil();
@@ -144,7 +144,7 @@ cambiarFirma() {
 
 eliminarFirma() {
   // Lógica para eliminar la firma
-  console.log("Eliminar firma");
+  
   const imgFirma = document.querySelector('.firma') as HTMLImageElement;
   if (imgFirma) {
       imgFirma.src = ''; // Elimina la imagen

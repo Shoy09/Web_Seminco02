@@ -53,7 +53,7 @@ export class PlanMensualListComponent implements OnInit {
   obtenerUltimaFecha(): void {
     this.fechasPlanMensualService.getUltimaFecha().subscribe(
       (ultimaFecha) => {
-        console.log('Última fecha obtenida:', ultimaFecha);
+        
         
         // Asignar los valores de anio y mes
         const anio: number | undefined = ultimaFecha.fecha_ingreso;
@@ -274,7 +274,7 @@ editarPlan(plan: PlanMensual): void {
 
 eliminarPlan(plan: any): void {
   if (confirm(`¿Está seguro de eliminar el plan del año ${plan.anio}?`)) {
-    console.log("Eliminar plan:", plan);
+    
     // Llamar al servicio para eliminar el plan
   }
 }

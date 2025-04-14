@@ -29,13 +29,12 @@ export type ChartOptions = {
 };
 
 @Component({
-  selector: 'app-grafico-barras',
-  standalone: true,
+  selector: 'app-barras-metro-perforados-labor',
   imports: [CommonModule, NgApexchartsModule],
-  templateUrl: './grafico-barras.component.html',
-  styleUrls: ['./grafico-barras.component.css']
+  templateUrl: './barras-metro-perforados-labor.component.html',
+  styleUrl: './barras-metro-perforados-labor.component.css'
 })
-export class GraficoBarrasComponent implements OnChanges { 
+export class BarrasMetroPerforadosLaborComponent implements OnChanges { 
   @Input() datos: any[] = [];
   @ViewChild("chart") chart!: ChartComponent;
   public chartOptions: ChartOptions;
@@ -93,7 +92,7 @@ export class GraficoBarrasComponent implements OnChanges {
       xaxis: {
         categories: [],
         title: {
-          text: 'Equipos'
+          text: 'Labores'
         },
         labels: {
           style: {
@@ -137,9 +136,7 @@ export class GraficoBarrasComponent implements OnChanges {
     }
     
     const processedData = this.processData(this.datos);
-    
-
-    
+        
     this.chartOptions = {
       ...this.chartOptions,
       series: processedData.series,
@@ -164,31 +161,31 @@ export class GraficoBarrasComponent implements OnChanges {
 }
 
 private processData(data: any[]): { series: any[], categories: string[] } {
-  const codigosMap = new Map<string, number>();
-
+  const laborsMap = new Map<string, number>();
 
   data.forEach(item => {
-    const codigo = item.codigo;
+    const labor = `${item.tipo_labor}-${item.labor}`;
     const ntaladro = Number(item.ntaladro) || 0;
     const ntaladrosRimados = Number(item.ntaladros_rimados) || 0;
     const longitud = Number(item.longitud_perforacion) || 0;
 
     const resultado = (ntaladro + ntaladrosRimados) * longitud;
 
-    const valorActual = codigosMap.get(codigo) || 0;
-    codigosMap.set(codigo, valorActual + resultado);
+    const valorActual = laborsMap.get(labor) || 0;
+    laborsMap.set(labor, valorActual + resultado);
 
+    
   });
 
-  const codigosOrdenados = Array.from(codigosMap.entries())
+  const laborsOrdenados = Array.from(laborsMap.entries())
     .sort((a, b) => a[0].localeCompare(b[0]));
 
   return {
     series: [{
-      name: "Total por equipo",
-      data: codigosOrdenados.map(([_, total]) => Number(total.toFixed(2)))
+      name: "Total por labores",
+      data: laborsOrdenados.map(([_, total]) => Number(total.toFixed(2)))
     }],
-    categories: codigosOrdenados.map(([codigo, _]) => codigo)
+    categories: laborsOrdenados.map(([labor, _]) => labor)
   };
 }
 

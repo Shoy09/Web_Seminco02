@@ -5,7 +5,6 @@ import { GraficoBarrasComponent } from "../Graficos/grafico-barras/grafico-barra
 import { CommonModule } from '@angular/common';
 import { OperacionService } from '../../../../services/OperacionService .service';
 import { GraficoBarrasAgrupadaComponent } from "../Graficos/grafico-barras-agrupada/grafico-barras-agrupada.component";
-import { PromedioTaladrosComponent } from "../Graficos/promedio-taladros/promedio-taladros.component";
 import { PromNumTaladroTipoLaborComponent } from "../Graficos/prom-num-taladro-tipo-labor/prom-num-taladro-tipo-labor.component";
 import { PromMetrosPerforadosSeccionComponent } from "../Graficos/prom-metros-perforados-seccion/prom-metros-perforados-seccion.component";
 import { PromNumTaladroSeccionComponent } from "../Graficos/prom-num-taladro-seccion/prom-num-taladro-seccion.component";
@@ -14,11 +13,13 @@ import { GraficoBarrasMetrosLaborComponent } from "../Graficos/grafico-barras-me
 import { GraficoBarrasAgrupadaNumLaborComponent } from "../Graficos/grafico-barras-agrupada-num-labor/grafico-barras-agrupada-num-labor.component";
 import { GraficoEstadosComponent } from "../Graficos/grafico-estados/grafico-estados.component";
 import { FormsModule } from '@angular/forms';
+import { PromedioTaladrosComponent } from "../Graficos/promedio-taladros/promedio-taladros.component";
+import { BarrasMetroPerforadosLaborComponent } from "../Graficos/barras-metro-perforados-labor/barras-metro-perforados-labor.component";
 
 @Component({
   selector: 'app-taladro-horizontal-grafica',
   standalone: true,
-  imports: [FormsModule, GraficoBarrasComponent, CommonModule, GraficoBarrasAgrupadaComponent, PromedioTaladrosComponent, PromNumTaladroTipoLaborComponent, PromMetrosPerforadosSeccionComponent, PromNumTaladroSeccionComponent, GraficoHorometrosComponent, GraficoBarrasMetrosLaborComponent, GraficoBarrasAgrupadaNumLaborComponent, GraficoEstadosComponent],
+  imports: [FormsModule, GraficoBarrasComponent, CommonModule, GraficoBarrasAgrupadaComponent, PromNumTaladroTipoLaborComponent, PromMetrosPerforadosSeccionComponent, GraficoHorometrosComponent, GraficoBarrasMetrosLaborComponent, GraficoBarrasAgrupadaNumLaborComponent, GraficoEstadosComponent, PromedioTaladrosComponent, BarrasMetroPerforadosLaborComponent],
   templateUrl: './taladro-horizontal-grafica.component.html',
   styleUrl: './taladro-horizontal-grafica.component.css'
 }) 
@@ -141,6 +142,8 @@ turnos: string[] = ['DÍA', 'NOCHE'];
           longitud_perforacion: inter.longitud_perforacion,
           tipo_labor: perforacion.tipo_labor,
           labor: perforacion.labor,
+          ntaladro: inter.ntaladro,
+          ntaladros_rimados: inter.ntaladros_rimados,
         })) || [];
       }) || [];
     });
@@ -170,7 +173,7 @@ prepararDatosParaPromediostaladrosSeccion(): void {
       })) || []
     ) || []
   );
-}
+} 
 
 prepararDatosParaPromnumtaladrotipolabor(): void {
   this.ParaPromediosPromnumtaladrotipolabor = this.datosOperaciones.flatMap(operacion => 
@@ -178,7 +181,8 @@ prepararDatosParaPromnumtaladrotipolabor(): void {
       perforacion.inter_perforaciones_horizontal?.map(inter => ({
         ntaladro: inter.ntaladro || 0,
         ntaladros_rimados: inter.ntaladros_rimados || 0,
-        tipo_labor: perforacion.tipo_labor, // Viene de perforacion_horizontal
+        tipo_labor: perforacion.tipo_labor,
+        labor: perforacion.labor,
       })) || []
     ) || []
   );
@@ -190,6 +194,8 @@ prepararDatosParaPromediostaladrosmetrosperforadosSeccion(): void {
       perforacion.inter_perforaciones_horizontal?.map(inter => ({
         seccion_la_labor: inter.seccion_la_labor,
         longitud_perforacion: inter.longitud_perforacion,
+        ntaladro: inter.ntaladro,
+        ntaladros_rimados: inter.ntaladros_rimados,
       })) || []
     ) || []
   );
@@ -211,6 +217,7 @@ prepararDatosHorometros(): void {
     operacion.horometros?.map(horometro => ({
       operacionId: operacion.id,
       equipo: operacion.equipo,
+      codigo: operacion.codigo,
       turno: operacion.turno,
       fecha: operacion.fecha,
       nombreHorometro: horometro.nombre,
@@ -226,9 +233,10 @@ prepararDatosHorometros(): void {
 prepararDatosGraficoEstados(): void {
   this.datosGraficoEstados = this.datosOperaciones.flatMap(operacion => 
     operacion.estados?.map(estado => ({
+      codigoOperacion: operacion.codigo,
       turno: operacion.turno,
       estado: estado.estado,
-      codigo: estado.codigo,
+      codigoEstado: estado.codigo,
       hora_inicio: estado.hora_inicio,
       hora_final: estado.hora_final
     })) || []

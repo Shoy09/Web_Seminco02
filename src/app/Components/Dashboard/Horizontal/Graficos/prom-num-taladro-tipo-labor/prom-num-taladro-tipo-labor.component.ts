@@ -11,7 +11,7 @@ import { NgApexchartsModule } from 'ng-apexcharts';
 })
 export class PromNumTaladroTipoLaborComponent implements OnInit {
   @Input() datos: any[] = [];
-  
+
   // Configuración del gráfico de barras horizontales
   public chartOptions: any = {
     series: [],
@@ -33,7 +33,7 @@ export class PromNumTaladroTipoLaborComponent implements OnInit {
     },
     dataLabels: {
       enabled: true,
-      formatter: function(val: number) {
+      formatter: function (val: number) {
         return val.toFixed(1);
       },
       style: {
@@ -42,10 +42,6 @@ export class PromNumTaladroTipoLaborComponent implements OnInit {
       },
       offsetX: 0
     },
-    // title: {
-    //   text: 'Promedio de Taladros por Tipo de Labor',
-    //   align: 'center'
-    // },
     colors: ['#3f51b5'],
     xaxis: {
       categories: [],
@@ -71,7 +67,7 @@ export class PromNumTaladroTipoLaborComponent implements OnInit {
     },
     tooltip: {
       y: {
-        formatter: function(val: number) {
+        formatter: function (val: number) {
           return 'Promedio: ' + val.toFixed(1);
         }
       }
@@ -93,39 +89,42 @@ export class PromNumTaladroTipoLaborComponent implements OnInit {
       return;
     }
 
-    // Agrupar datos por tipo de labor
-    const laborMap = new Map<string, { total: number, count: number }>();
+    // Agrupar datos por tipo de labor y labor específica
+    const laborMap = new Map<string, Map<string, { total: number, count: number }>>();
 
     this.datos.forEach(item => {
       const tipoLabor = item.tipo_labor;
+      const labor = item.labor || "Sin labor";  // Asegurarse de que cada labor esté correctamente identificada
       const totalTaladros = (item.ntaladro || 0) + (item.ntaladros_rimados || 0);
-      
-      if (laborMap.has(tipoLabor)) {
-        const current = laborMap.get(tipoLabor)!;
-        laborMap.set(tipoLabor, {
-          total: current.total + totalTaladros,
-          count: current.count + 1
-        });
-      } else {
-        laborMap.set(tipoLabor, {
-          total: totalTaladros,
-          count: 1
-        });
+
+      // Si no existe el tipo de labor en el mapa, crearlo
+      if (!laborMap.has(tipoLabor)) {
+        laborMap.set(tipoLabor, new Map<string, { total: number, count: number }>());
       }
+
+      const laborMapInner = laborMap.get(tipoLabor)!;
+
+      // Si no existe la labor dentro del tipo de labor, crearla
+      if (!laborMapInner.has(labor)) {
+        laborMapInner.set(labor, { total: 0, count: 0 });
+      }
+
+      const current = laborMapInner.get(labor)!;
+      laborMapInner.set(labor, {
+        total: current.total + totalTaladros,
+        count: current.count + 1
+      });
     });
 
     // Ordenar por promedio (de mayor a menor)
-    const sortedEntries = Array.from(laborMap.entries()).sort((a, b) => {
-      return (b[1].total / b[1].count) - (a[1].total / a[1].count);
-    });
-
-    // Preparar datos para el gráfico
     const categorias: string[] = [];
     const promedios: number[] = [];
 
-    sortedEntries.forEach(([key, value]) => {
-      categorias.push(key);
-      promedios.push(value.total / value.count);
+    laborMap.forEach((laborInnerMap, tipoLabor) => {
+      laborInnerMap.forEach((value, labor) => {
+        categorias.push(`${tipoLabor} - ${labor}`);
+        promedios.push(value.total / value.count);
+      });
     });
 
     // Actualizar las opciones del gráfico

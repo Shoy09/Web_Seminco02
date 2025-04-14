@@ -23,47 +23,52 @@
     <!-- Tarjetas con los gráficos -->
     <div class="graficos-container">
       <div class="card">
-        <h3>Metros perforados por equipo</h3>
+        <h3>METROS PERFORADOS - EQUIPO</h3>
         <app-grafico-barras [datos]="datosGraficobarrasapiladas"></app-grafico-barras>
       </div>
-    
+
       <div class="card">
-        <h3>Metros perforados por labor</h3>
-        <app-grafico-barras-metros-labor [datos]="datosGraficobarrasapiladas"></app-grafico-barras-metros-labor>
+        <h3>METROS PERFORADOS - LABOR</h3>
+        <app-barras-metro-perforados-labor [datos]="datosGraficobarrasapiladas"></app-barras-metro-perforados-labor>
       </div>
     
       <div class="card">
-        <h3>Numero taladro por equipo</h3>
+        <h3>LONGITUD DE PERFORACION</h3>
+        <app-grafico-barras-metros-labor [datos]="datosGraficobarrasapiladas"></app-grafico-barras-metros-labor>
+      </div>
+
+      <div class="card">
+        <h3>CANTIDAD DE TALADROS - EQUIPO</h3>
         <app-grafico-barras-agrupada [datos]="datosGraficobarrasagrupadas"></app-grafico-barras-agrupada>
       </div>
     
       <div class="card">
-        <h3>Numero taladro por labor</h3>
+        <h3>CANTIDAD DE TALADROS - LABOR</h3>
         <app-grafico-barras-agrupada-num-labor [datos]="datosGraficobarrasagrupadas"></app-grafico-barras-agrupada-num-labor>
       </div>
     
       <div class="card">
-        <h3>Promedio de numeros taladros por Sección</h3>
+        <h3>PROMEDIO DE TALADROS - SECCION</h3>
         <app-promedio-taladros [datos]="paraPromedioTaladrosSeccion"></app-promedio-taladros>
       </div>
     
-      <div class="card">
+      <!-- <div class="card">
         <h3>promedio de numero taladros por tipo de sección</h3>
         <app-prom-num-taladro-seccion [datos]="ParaPromediostaladrosnumtaladroSeccion"></app-prom-num-taladro-seccion>
-      </div>
+      </div> -->
     
       <div class="card">
-        <h3>Promedio de números Taladros por Tipo de Labor</h3>
+        <h3>PROMEDIO DE TALADROS - LABOR</h3>
         <app-prom-num-taladro-tipo-labor [datos]="ParaPromediosPromnumtaladrotipolabor"></app-prom-num-taladro-tipo-labor>
       </div>
     
       <div class="card">
-        <h3>promedio de metros perforados por tipo de sección</h3>
+        <h3>PROMEDIO DE METROS PERFORADOS - SECCION</h3>
         <app-prom-metros-perforados-seccion [datos]="ParaPromediostaladrosmetrosperforadosSeccion"></app-prom-metros-perforados-seccion>
       </div>
     
       <div class="card">
-        <h3>Horómetros: diferencia entre lectura final e inicial</h3>
+        <h3>DIFERECIA (INICIO Y FINAL ) DE HOROMETROS</h3>
         <app-grafico-horometros [datosHorometros]="datosHorometros"></app-grafico-horometros>
       </div>
     

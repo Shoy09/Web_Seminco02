@@ -128,7 +128,7 @@ export class UsuariosComponent implements OnInit {
   
         // Convertir hoja a JSON
         const datosExcel: any[] = XLSX.utils.sheet_to_json(sheet);
-        // console.log("Datos extraídos del Excel:", datosExcel);
+        // 
   
         let usuariosValidos: Usuario[] = [];
         let usuariosInvalidos: { nombre: string, dni: string }[] = [];
@@ -162,8 +162,8 @@ export class UsuariosComponent implements OnInit {
           }
         });
   
-        // console.log("Usuarios válidos:", usuariosValidos);
-        // console.log("Usuarios inválidos:", usuariosInvalidos);
+        // 
+        // 
   
         if (usuariosValidos.length > 0) {
           this.mostrarPantallaCarga();
@@ -190,7 +190,7 @@ export class UsuariosComponent implements OnInit {
     usuarios.forEach(usuario => {
       this.usuarioService.crearUsuario(usuario).subscribe({
         next: (response) => {
-          // console.log("Usuario creado:", response);
+          // 
           usuariosProcesados++;
   
           if (usuariosProcesados === totalUsuarios) {

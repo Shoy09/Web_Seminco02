@@ -23,7 +23,6 @@ export class EstadoFormComponent {
     @Inject(MAT_DIALOG_DATA) public data: { proceso: string } // 🔵 Recibimos el estado
   )
   {
-    console.log('Proceso recibido en EstadoFormComponent:', this.data.proceso); // 🔵 Confirmación en consola
     this.estadoForm = this.fb.group({
       proceso: [{ value: this.data.proceso, disabled: true }], // 🟢 Campo de solo lectura
       estado_principal: ['', Validators.required],

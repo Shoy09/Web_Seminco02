@@ -78,11 +78,22 @@ export class GraficoBarrasAgrupadaComponent implements OnChanges {
         bar: {
           horizontal: false,
           borderRadius: 5,
-          endingShape: "rounded"
+          endingShape: "rounded",
+          dataLabels: {
+            position: 'top' // Muestra las etiquetas encima de las barras
+          }
         } as any
       },
       dataLabels: {
-        enabled: false
+        enabled: true, // Habilita las etiquetas de datos
+        formatter: (val: number) => {
+          return val.toFixed(1); // Formatea a 1 decimal
+        },
+        style: {
+          fontSize: '12px',
+          colors: ['#000'] // Color del texto
+        },
+        offsetY: -20 // Ajusta la posición vertical
       },
       stroke: {
         show: true,
@@ -96,9 +107,9 @@ export class GraficoBarrasAgrupadaComponent implements OnChanges {
         }
       },
       yaxis: {
-        title: {
-          text: 'Número de Taladros'
-        },
+        // title: {
+        //   text: 'Número de Taladros'
+        // },
         min: 0
       },
       fill: {
@@ -115,14 +126,47 @@ export class GraficoBarrasAgrupadaComponent implements OnChanges {
   }
 
   private processData(data: any[]): { series: any[], categories: string[] } {
+    
+
+    // Objeto para acumular los valores por código
+    const acumulado: {[codigo: string]: number} = {};
+  
+    // Sumar los valores para cada código
+    
+    data.forEach((item, index) => {
+      const codigo = item.codigo;
+      const valor = item.ntaladro;
+      
+      
+  
+      if (!acumulado[codigo]) {
+        
+        acumulado[codigo] = 0;
+      } else {
+        
+      }
+  
+      acumulado[codigo] += valor;
+      
+    });
+  
+
+  
+    // Preparar los arrays finales
     const categories: string[] = [];
     const values: number[] = [];
   
-    data.forEach(item => {
-      const clave = `${item.equipo} (${item.codigo})`;
-      categories.push(clave);
-      values.push(item.ntaladro);
+    // Llenar los arrays ordenados
+    
+    Object.keys(acumulado).sort().forEach(codigo => {
+      
+      categories.push(codigo);
+      values.push(acumulado[codigo]);
     });
+  
+    // Mostrar el resultado final
+    
+  
   
     return {
       series: [
@@ -135,7 +179,6 @@ export class GraficoBarrasAgrupadaComponent implements OnChanges {
     };
   }
   
-
   constructor() {
     // Inicializar con datos vacíos
     this.chartOptions = {

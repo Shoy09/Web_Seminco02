@@ -68,17 +68,22 @@ export class GraficoEstadosComponent implements OnChanges {
           endingShape: "rounded",
           dataLabels: {
             total: {
-              enabled: true,
+              enabled: true,  // Activar solo los totales
               style: {
                 fontSize: '13px',
                 fontWeight: 900
+              },
+              formatter: (val: number) => {
+                const horas = Math.floor(val);
+                const minutos = Math.round((val - horas) * 60);
+                return `${horas}h ${minutos}m`;  // Formatear las horas totales
               }
             }
           }
-        } as any
-      },
+        }
+      } as any,
       dataLabels: {
-        enabled: false
+        enabled: false  // Desactivar dataLabels dentro de las barras
       },
       stroke: {
         show: true,
@@ -86,14 +91,13 @@ export class GraficoEstadosComponent implements OnChanges {
         colors: ["#fff"]
       },
       xaxis: {
-        categories: [],
-        title: {
-          text: 'Horas'
-        },
         labels: {
-          formatter: (value: string) => {  // Cambiado a recibir string
+          formatter: (value: string) => {
             const numValue = parseFloat(value);
-            return !isNaN(numValue) ? numValue.toFixed(2) + 'h' : value;
+            if (isNaN(numValue)) return value;
+            const horas = Math.floor(numValue);
+            const minutos = Math.round((numValue - horas) * 60);
+            return `${horas}h ${minutos}m`;
           }
         }
       },
@@ -111,7 +115,9 @@ export class GraficoEstadosComponent implements OnChanges {
       tooltip: {
         y: {
           formatter: (val: number) => {
-            return `${val.toFixed(2)} horas`;
+            const horas = Math.floor(val);
+            const minutos = Math.round((val - horas) * 60);
+            return `${horas}h ${minutos}m`;  // Formatear el tooltip también
           }
         }
       },
@@ -121,6 +127,7 @@ export class GraficoEstadosComponent implements OnChanges {
       }
     };
   }
+  
 
   private updateChart(): void {
     if (!this.datos || this.datos.length === 0) {
@@ -148,78 +155,42 @@ export class GraficoEstadosComponent implements OnChanges {
   }
 
   private processData(data: any[]): { series: any[], categories: string[] } {
-    // Calcular duración en horas para cada registro
+    // Calcular duración
     const datosConDuracion = data.map(item => {
       const inicio = this.parseHora(item.hora_inicio).getTime();
       const fin = this.parseHora(item.hora_final).getTime();
       let duracionHoras = (fin - inicio) / (1000 * 60 * 60);
-      
-      // Manejar casos donde la hora final es del día siguiente (ej. 23:00 a 01:00)
-      if (duracionHoras < 0) {
-        duracionHoras += 24;
-      }
-      
-      const itemConDuracion = {
+      if (duracionHoras < 0) duracionHoras += 24;
+  
+      return {
         ...item,
         duracion: duracionHoras > 0 ? duracionHoras : 0
       };
-      
-      // Ver los datos con duración calculada
-      console.log('Datos con duración:', itemConDuracion);
-  
-      return itemConDuracion;
     });
   
-    // Agrupar por estado y turno
-    const estadosTurnosMap = new Map<string, Map<string, number>>();
-    const estadosUnicos = Array.from(new Set(data.map(item => item.estado)));
-    const turnosUnicos = Array.from(new Set(data.map(item => item.turno)));
+    // Obtener operaciones y estados únicos
+    const operacionesUnicas = Array.from(new Set(datosConDuracion.map(item => item.codigoOperacion)));
+    const estadosUnicos = Array.from(new Set(datosConDuracion.map(item => item.estado)));
   
-    // Inicializar estructura de datos
-    estadosUnicos.forEach(estado => {
-      estadosTurnosMap.set(estado, new Map<string, number>());
-      turnosUnicos.forEach(turno => {
-        estadosTurnosMap.get(estado)?.set(turno, 0);
+    // Inicializar series por estado
+    const series = estadosUnicos.map(estado => {
+      const data = operacionesUnicas.map(operacion => {
+        const items = datosConDuracion.filter(item =>
+          item.codigoOperacion === operacion && item.estado === estado
+        );
+        const duracionTotal = items.reduce((sum, item) => sum + item.duracion, 0);
+        return parseFloat(duracionTotal.toFixed(2));
       });
-    });
   
-    // Acumular duraciones
-    datosConDuracion.forEach(item => {
-      const estadoMap = estadosTurnosMap.get(item.estado);
-      if (estadoMap) {
-        const duracionActual = estadoMap.get(item.turno) || 0;
-        estadoMap.set(item.turno, duracionActual + item.duracion);
-      }
-    });
-  
-    // Ver el estado de la acumulación de duraciones
-    console.log('Estados y turnos acumulados:', estadosTurnosMap);
-  
-    // Preparar series (una por turno)
-    const series = turnosUnicos.map(turno => {
-      const turnoData = {
-        name: turno,
-        data: estadosUnicos.map(estado => {
-          const value = estadosTurnosMap.get(estado)?.get(turno) || 0;
-          const valueFixed = parseFloat(value.toFixed(2));  // Redondear a 2 decimales
-          // Ver los valores de cada serie
-          console.log(`Valor para turno ${turno} y estado ${estado}:`, valueFixed);
-          return valueFixed;
-        })
+      return {
+        name: estado,
+        data: data
       };
-  
-      // Ver los datos de cada serie
-      console.log('Serie para turno', turno, turnoData);
-      return turnoData;
     });
-  
-    // Ver las categorías y las series finalizadas
-    console.log('Categorías:', estadosUnicos);
-    console.log('Series finalizadas:', series);
   
     return {
       series: series,
-      categories: estadosUnicos
+      categories: operacionesUnicas
     };
   }
   

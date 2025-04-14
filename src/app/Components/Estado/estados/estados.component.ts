@@ -101,7 +101,7 @@ export class EstadosComponent implements OnInit {
   
     dialogRef.afterClosed().subscribe((procesoSeleccionado) => {
       if (procesoSeleccionado) {
-        console.log('Proceso seleccionado:', procesoSeleccionado);
+        
       }
     });
   }

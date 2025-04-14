@@ -72,12 +72,12 @@ export class PromMetrosPerforadosSeccionComponent implements OnInit {
       }
     },
     yaxis: {
-      title: {
-        text: 'Metros (promedio)',
-        style: {
-          fontSize: '12px'
-        }
-      },
+      // title: {
+      //   text: 'Metros (promedio)',
+      //   style: {
+      //     fontSize: '12px'
+      //   }
+      // },
       labels: {
         formatter: function(val: number) {
           return val.toFixed(1) + ' m';
@@ -114,43 +114,47 @@ export class PromMetrosPerforadosSeccionComponent implements OnInit {
       this.chartOptions.xaxis.categories = [];
       return;
     }
-
-    // Agrupar datos por sección
+  
+    // Agrupar datos por sección con nueva lógica de cálculo
     const seccionMap = new Map<string, { total: number, count: number }>();
-
+  
     this.datos.forEach(item => {
       const seccion = item.seccion_la_labor;
-      const metros = parseFloat(item.longitud_perforacion) || 0;
-      
+      const longitud = parseFloat(item.longitud_perforacion) || 0;
+      const ntaladro = parseInt(item.ntaladro) || 0;
+      const rimados = parseInt(item.ntaladros_rimados) || 0;
+  
+      const metrosPerforados = (ntaladro + rimados) * longitud;
+  
       if (seccionMap.has(seccion)) {
         const current = seccionMap.get(seccion)!;
         seccionMap.set(seccion, {
-          total: current.total + metros,
+          total: current.total + metrosPerforados,
           count: current.count + 1
         });
       } else {
         seccionMap.set(seccion, {
-          total: metros,
+          total: metrosPerforados,
           count: 1
         });
       }
     });
-
-    // Ordenar alfabéticamente por sección para mejor visualización en líneas
+  
+    // Ordenar alfabéticamente por sección
     const sortedEntries = Array.from(seccionMap.entries()).sort((a, b) => {
       return a[0].localeCompare(b[0]);
     });
-
+  
     // Preparar datos para el gráfico
     const categorias: string[] = [];
     const promedios: number[] = [];
-
+  
     sortedEntries.forEach(([key, value]) => {
       categorias.push(key);
-      promedios.push(value.total / value.count);
+      promedios.push(value.total / value.count); // Promedio por sección
     });
-
-    // Actualizar las opciones del gráfico
+  
+    // Actualizar opciones del gráfico
     this.chartOptions = {
       ...this.chartOptions,
       series: [{
@@ -162,5 +166,5 @@ export class PromMetrosPerforadosSeccionComponent implements OnInit {
         categories: categorias
       }
     };
-  }
+  }  
 } 

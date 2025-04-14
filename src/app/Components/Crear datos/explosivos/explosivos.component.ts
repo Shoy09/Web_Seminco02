@@ -117,7 +117,7 @@ export class ExplosivosComponent implements OnInit {
       this.explosivoService.getExplosivos().subscribe({
         next: (data) => {
           this.modalContenido.datos = data; // Asigna los datos recibidos
-          console.log('Explosivos cargados:', data);
+          
         },
         error: (err) => console.error('Error al cargar explosivos:', err)
       });
@@ -125,7 +125,7 @@ export class ExplosivosComponent implements OnInit {
       this.accesorioService.getAccesorios().subscribe({
         next: (data) => {
           this.modalContenido.datos = data; // Asigna los datos recibidos
-          console.log('Accesorios cargados:', data);
+          
         },
         error: (err) => console.error('Error al cargar accesorios:', err)
       });
@@ -133,7 +133,7 @@ export class ExplosivosComponent implements OnInit {
       this.ExplosivosUniService.getExplosivos().subscribe({
         next: (data) => {
           this.modalContenido.datos = data; // Asigna los datos recibidos
-          console.log('Accesorios cargados:', data);
+          
         },
         error: (err) => console.error('Error al cargar accesorios:', err)
       });
@@ -141,7 +141,7 @@ export class ExplosivosComponent implements OnInit {
       this.DestinatarioCorreoService.getDestinatarios().subscribe({
         next: (data) => {
           this.modalContenido.datos = data; // Asigna los datos recibidos
-          console.log('Accesorios cargados:', data);
+          
         },
         error: (err) => console.error('Error al cargar accesorios:', err)
       });
@@ -162,7 +162,7 @@ export class ExplosivosComponent implements OnInit {
         this.explosivoService.createExplosivo(nuevoRegistro).subscribe({
           next: (data) => {
             this.modalContenido.datos.push(data);
-            console.log('Explosivo guardado:', data);
+            
           },
           error: (err) => console.error('Error al guardar explosivo:', err)
         });
@@ -170,7 +170,7 @@ export class ExplosivosComponent implements OnInit {
         this.accesorioService.createAccesorio(nuevoRegistro).subscribe({
           next: (data) => {
             this.modalContenido.datos.push(data);
-            console.log('Accesorio guardado:', data);
+            
           },
           error: (err) => console.error('Error al guardar accesorio:', err)
         });
@@ -180,7 +180,7 @@ export class ExplosivosComponent implements OnInit {
 
           next: (data) => {
             this.modalContenido.datos.push(data);
-            console.log('Accesorio guardado:', data);
+            
           },
           error: (err) => console.error('Error al guardar accesorio:', err)
         });
@@ -190,7 +190,7 @@ export class ExplosivosComponent implements OnInit {
 
           next: (data) => {
             this.modalContenido.datos.push(data);
-            console.log('Accesorio guardado:', data);
+            
           },
           error: (err) => console.error('Error al guardar accesorio:', err)
         });
@@ -207,7 +207,7 @@ export class ExplosivosComponent implements OnInit {
       this.explosivoService.deleteExplosivo(item.id).subscribe({
         next: () => {
           this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
-          console.log('y eliminado:', item);
+          
         },
         error: (err) => console.error('Error al eliminar :', err)
       });
@@ -215,7 +215,7 @@ export class ExplosivosComponent implements OnInit {
       this.accesorioService.deleteAccesorio(item.id).subscribe({
         next: () => {
           this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
-          console.log(' eliminado:', item);
+          
         },
         error: (err) => console.error('Error al eliminar :', err)
       });
@@ -223,7 +223,7 @@ export class ExplosivosComponent implements OnInit {
       this.ExplosivosUniService.deleteExplosivo(item.id).subscribe({
         next: () => {
           this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
-          console.log(' eliminado:', item);
+          
         },
         error: (err) => console.error('Error al eliminar :', err)
       });
@@ -231,7 +231,7 @@ export class ExplosivosComponent implements OnInit {
       this.DestinatarioCorreoService.deleteDestinatario(item.id).subscribe({
         next: () => {
           this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
-          console.log(' eliminado:', item);
+          
         },
         error: (err) => console.error('Error al eliminar :', err)
       });

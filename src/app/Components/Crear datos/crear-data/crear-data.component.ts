@@ -128,12 +128,12 @@ export class CrearDataComponent implements OnInit {
     if (this.modalContenido) {
       this.cargarExcel(this.modalContenido.nombre);
     } else {
-      console.log('No hay un modal activo.');
+      
     }
   }
   
   cargarExcel(nombre: string) {
-    console.log('Cargando Excel para:', nombre, 'de tipo:', nombre);
+    
   
     if (nombre === 'Tipo de Perforación') {
       // this.procesarExcelTipoPerforacion();
@@ -142,7 +142,7 @@ export class CrearDataComponent implements OnInit {
     } else if (nombre === 'Empresa') {
       // this.procesarExcelEmpresa();
     } else {
-      console.log('Tipo de modal no reconocido.');
+      
     }
   }
   
@@ -150,7 +150,7 @@ export class CrearDataComponent implements OnInit {
     const file = event.target.files[0];
   
     if (!file) {
-      console.log('❌ No se seleccionó ningún archivo.');
+      
       return;
     }
   
@@ -176,8 +176,7 @@ export class CrearDataComponent implements OnInit {
         capacidadYd3: row["CAPACIDAD (yd3)"] ? Number(row["CAPACIDAD (yd3)"]) : null,
         capacidadM3: row["CAPACIDAD (m3)"] ? Number(row["CAPACIDAD (m3)"]) : null
       }));
-  
-      console.log('✅ Datos listos para enviar:', JSON.stringify(equipos, null, 2));
+
   
       // 🔹 Cerrar el modal antes de enviar los datos
       this.cerrarModal();
@@ -188,7 +187,7 @@ export class CrearDataComponent implements OnInit {
       // 🔹 Enviar los datos a la API
       this.enviarEquipos(equipos)
         .then(() => {
-          console.log('✅ Equipos enviados correctamente.');
+          
           this.dialog.closeAll();
         })
         .catch((error) => {
@@ -224,7 +223,7 @@ export class CrearDataComponent implements OnInit {
       Promise.all(peticiones)
         .then((responses) => {
           responses.forEach(data => this.modalContenido.datos.push(data));
-          console.log('✅ Todos los equipos fueron guardados.');
+          
           resolve();
         })
         .catch((error) => {
@@ -249,7 +248,7 @@ export class CrearDataComponent implements OnInit {
       this.tipoPerforacionService.getTiposPerforacion().subscribe({
         next: (data) => {
           this.modalContenido.datos = data; // Asigna los datos recibidos
-          console.log('Tipo de Perforación cargados:', data);
+          
         },
         error: (err) => console.error('Error al cargar Tipo de Perforación:', err)
       });
@@ -257,7 +256,7 @@ export class CrearDataComponent implements OnInit {
       this.equipoService.getEquipos().subscribe({
         next: (data) => {
           this.modalContenido.datos = data; // Asigna los datos recibidos
-          console.log('Equipo cargados:', data);
+          
         },
         error: (err) => console.error('Error al cargar Equipo:', err)
       });
@@ -265,7 +264,7 @@ export class CrearDataComponent implements OnInit {
       this.empresaService.getEmpresa().subscribe({
         next: (data) => {
           this.modalContenido.datos = data; // Asigna los datos recibidos
-          console.log('Equipo cargados:', data);
+          
         },
         error: (err) => console.error('Error al cargar Equipo:', err)
       });
@@ -273,7 +272,7 @@ export class CrearDataComponent implements OnInit {
       this.FechasPlanMensualService.getFechas().subscribe({
         next: (data) => {
           this.modalContenido.datos = data; // Asigna los datos recibidos
-          console.log(' cargados:', data);
+          
         },
         error: (err) => console.error('Error al cargar:', err)
       });
@@ -288,7 +287,7 @@ export class CrearDataComponent implements OnInit {
         this.tipoPerforacionService.createTipoPerforacion(nuevoRegistro).subscribe({
           next: (data) => {
             this.modalContenido.datos.push(data);
-            console.log('Tipo de Perforación guardado:', data);
+            
           },
           error: (err) => console.error('Error al guardar explosivo:', err)
         });
@@ -296,7 +295,7 @@ export class CrearDataComponent implements OnInit {
         this.equipoService.createEquipo(nuevoRegistro).subscribe({
           next: (data) => {
             this.modalContenido.datos.push(data);
-            console.log('Equipo guardado:', data);
+            
           },
           error: (err) => console.error('Error al guardar Equipo:', err)
         });
@@ -304,7 +303,7 @@ export class CrearDataComponent implements OnInit {
         this.empresaService.createEmpresa(nuevoRegistro).subscribe({
           next: (data) => {
             this.modalContenido.datos.push(data);
-            console.log('Empresa guardado:', data);
+            
           },
           error: (err) => console.error('Error al guardar Empresa:', err)
         });
@@ -312,7 +311,7 @@ export class CrearDataComponent implements OnInit {
         this.FechasPlanMensualService.createFecha(nuevoRegistro).subscribe({
           next: (data) => {
             this.modalContenido.datos.push(data);
-            console.log('Empresa guardado:', data);
+            
           },
           error: (err) => console.error('Error al guardar Empresa:', err)
         });
@@ -329,7 +328,7 @@ export class CrearDataComponent implements OnInit {
       this.tipoPerforacionService.deleteTipoPerforacion(item.id).subscribe({
         next: () => {
           this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
-          console.log('Tipo de Perforación eliminado:', item);
+          
         },
         error: (err) => console.error('Error al eliminar Tipo de Perforación:', err)
       });
@@ -337,7 +336,7 @@ export class CrearDataComponent implements OnInit {
       this.equipoService.deleteEquipo(item.id).subscribe({
         next: () => {
           this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
-          console.log('Equipo eliminado:', item);
+          
         },
         error: (err) => console.error('Error al eliminar Equipo:', err)
       });
@@ -345,7 +344,7 @@ export class CrearDataComponent implements OnInit {
       this.empresaService.deleteEmpresa(item.id).subscribe({
         next: () => {
           this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
-          console.log('Accesorio eliminado:', item);
+          
         },
         error: (err) => console.error('Error al eliminar accesorio:', err)
       });
@@ -353,7 +352,7 @@ export class CrearDataComponent implements OnInit {
       this.FechasPlanMensualService.deleteFecha(item.id).subscribe({
         next: () => {
           this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
-          console.log('Accesorio eliminado:', item);
+          
         },
         error: (err) => console.error('Error al eliminar accesorio:', err)
       });

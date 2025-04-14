@@ -77,11 +77,22 @@ export class GraficoBarrasAgrupadaNumLaborComponent implements OnChanges {
         bar: {
           horizontal: false,
           borderRadius: 5,
-          endingShape: "rounded"
+          endingShape: "rounded",
+          dataLabels: {
+            position: 'top' // Muestra las etiquetas encima de las barras
+          }
         } as any
       },
       dataLabels: {
-        enabled: false
+        enabled: true, // Habilita las etiquetas de datos
+        formatter: (val: number) => {
+          return val.toFixed(1); // Formatea a 1 decimal
+        },
+        style: {
+          fontSize: '12px',
+          colors: ['#000'] // Color del texto
+        },
+        offsetY: -20 // Ajusta la posición vertical
       },
       stroke: {
         show: true,
@@ -95,9 +106,9 @@ export class GraficoBarrasAgrupadaNumLaborComponent implements OnChanges {
         }
       },
       yaxis: {
-        title: {
-          text: 'Número de Taladros'
-        },
+        // title: {
+        //   text: 'Número de Taladros'
+        // },
         min: 0
       },
       fill: {
@@ -114,13 +125,26 @@ export class GraficoBarrasAgrupadaNumLaborComponent implements OnChanges {
   }
 
   private processData(data: any[]): { series: any[], categories: string[] } {
+    // Objeto para acumular los valores por labor
+    const acumulado: {[labor: string]: number} = {};
+  
+    // Sumar los valores para cada labor
+    data.forEach(item => {
+      const labor = `${item.tipo_labor}-${item.labor}`;;
+      if (!acumulado[labor]) {
+        acumulado[labor] = 0;
+      }
+      acumulado[labor] += item.ntaladro;
+    });
+  
+    // Preparar los arrays finales
     const categories: string[] = [];
     const values: number[] = [];
   
-    data.forEach(item => {
-      const clave = `${item.tipo_labor} (${item.labor})`;
-      categories.push(clave);
-      values.push(item.ntaladro);
+    // Llenar los arrays ordenados alfabéticamente por labor
+    Object.keys(acumulado).sort().forEach(labor => {
+      categories.push(labor);
+      values.push(acumulado[labor]);
     });
   
     return {

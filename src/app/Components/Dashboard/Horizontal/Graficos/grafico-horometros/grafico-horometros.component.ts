@@ -11,14 +11,21 @@ import { NgApexchartsModule } from 'ng-apexcharts';
 })
 export class GraficoHorometrosComponent implements OnInit {
   @Input() datosHorometros: any[] = [];
+  public totalesHorometros: {nombre: string, total: number}[] = [];
   
   public chartOptions: any = {
     series: [],
     chart: {
       type: 'bar',
       height: 350,
+      stacked: true,
       toolbar: {
         show: false
+      },
+      events: {
+        mounted: (chartContext: any, config: any) => {
+          // Este evento se dispara cuando el gráfico se monta
+        }
       }
     },
     plotOptions: {
@@ -28,124 +35,162 @@ export class GraficoHorometrosComponent implements OnInit {
         endingShape: 'rounded',
         borderRadius: 4,
         dataLabels: {
-          position: 'top'
+          position: 'center',
+          total: {
+            enabled: true,
+            style: {
+              fontSize: '10px',
+              fontWeight: 'bold'
+            }
+          }
         }
       }
     },
     dataLabels: {
       enabled: true,
-      formatter: (val: number) => val.toFixed(1),
+      formatter: (val: number) => val > 0 ? val.toFixed(1) : '',
       style: {
-        fontSize: '12px',
+        fontSize: '10px', // Tamaño de letra más pequeño
         colors: ['#000']
       },
-      offsetY: -20
+      offsetY: 0,
+      dropShadow: {
+        enabled: true,
+        top: 1,
+        left: 1,
+        blur: 1,
+        opacity: 0.7
+      }
     },
-
-    colors: ['#3f51b5', '#ff9800', '#4caf50', '#e91e63', '#00bcd4'],
+    colors: [],
     xaxis: {
       categories: [],
       title: {
-        text: 'Horómetros',
+        text: 'Códigos de Equipo',
         style: {
-          fontSize: '12px'
+          fontSize: '10px' // Tamaño de letra más pequeño
         }
       },
       labels: {
         style: {
-          fontSize: '12px'
+          fontSize: '10px' // Tamaño de letra más pequeño
         }
       }
     },
     yaxis: {
-      title: {
-        text: 'Diferencia (Final - Inicial)',
-        style: {
-          fontSize: '12px'
-        }
-      },
+      // title: {
+      //   text: 'Horas Totales',
+      //   style: {
+      //     fontSize: '10px' // Tamaño de letra más pequeño
+      //   }
+      // },
       labels: {
+        style: {
+          fontSize: '10px' // Tamaño de letra más pequeño
+        },
         formatter: (val: number) => val.toFixed(1)
       },
       min: 0
     },
     tooltip: {
       y: {
-        formatter: (val: number) => val.toFixed(2)
+        formatter: (val: number) => `${val.toFixed(2)}`
+      },
+      style: {
+        fontSize: '10px' // Tamaño de letra más pequeño en tooltips
       }
-    }
+    },
+    legend: {
+      position: 'top',
+      horizontalAlign: 'center',
+      fontSize: '10px', // Tamaño de letra más pequeño
+      itemMargin: {
+        horizontal: 5,
+        vertical: 2
+      }
+    },
+    // title: {
+    //   text: 'Resumen de Horómetros',
+    //   align: 'center',
+    //   style: {
+    //     fontSize: '12px' // Título un poco más grande pero discreto
+    //   }
+    // }
   };
 
   ngOnInit(): void {
-    console.log('ngOnInit - Datos iniciales recibidos:', this.datosHorometros);
     this.actualizarGrafico();
   }
 
   ngOnChanges(): void {
-    console.log('ngOnChanges - Datos actualizados recibidos:', this.datosHorometros);
     this.actualizarGrafico();
   }
 
   private actualizarGrafico(): void {
-    console.group('Iniciando actualización de gráfico');
-    
     if (!this.datosHorometros || this.datosHorometros.length === 0) {
       this.chartOptions.series = [];
       this.chartOptions.xaxis.categories = [];
+      this.totalesHorometros = [];
       return;
     }
-  
-  
-    // Agrupar datos por nombre de horómetro (suma total)
-    const horometrosMap = new Map<string, number>();
-  
-    this.datosHorometros.forEach((item, index) => {
-      const nombre = item.nombreHorometro;
-      const diferencia = item.final - item.inicial;
-      
-  
-      if (horometrosMap.has(nombre)) {
-        const acumulado = horometrosMap.get(nombre)!;
-        const nuevoAcumulado = acumulado + diferencia;
-        horometrosMap.set(nombre, nuevoAcumulado);
-      } else {
-        horometrosMap.set(nombre, diferencia);
+
+    // Agrupar datos por código y horómetro
+    const codigosMap = new Map<string, Map<string, number>>();
+    const horometrosSet = new Set<string>();
+    const totalesMap = new Map<string, number>(); // Para calcular los totales por horómetro
+
+    this.datosHorometros.forEach(item => {
+      const codigo = item.codigo;
+      const horometro = item.nombreHorometro;
+      const diferencia = item.diferencia;
+
+      // Acumular total por horómetro
+      const totalActual = totalesMap.get(horometro) || 0;
+      totalesMap.set(horometro, totalActual + diferencia);
+
+      // Agregar horómetro al conjunto
+      horometrosSet.add(horometro);
+
+      if (!codigosMap.has(codigo)) {
+        codigosMap.set(codigo, new Map<string, number>());
       }
+
+      const horometrosDelCodigo = codigosMap.get(codigo)!;
+      const acumulado = horometrosDelCodigo.get(horometro) || 0;
+      horometrosDelCodigo.set(horometro, acumulado + diferencia);
     });
-  
-    // Preparar datos para el gráfico (suma total)
-    const nombres: string[] = [];
-    const diferenciasTotales: number[] = [];
-  
-    horometrosMap.forEach((total, nombre) => {
-      nombres.push(nombre);
-      diferenciasTotales.push(total);
+
+    // Preparar los totales para mostrar arriba del gráfico
+    this.totalesHorometros = Array.from(totalesMap.entries()).map(([nombre, total]) => ({
+      nombre,
+      total: parseFloat(total.toFixed(2))
+    }));
+
+    // Ordenar los horómetros por nombre para consistencia
+    const horometros = Array.from(horometrosSet).sort();
+    const codigos = Array.from(codigosMap.keys()).sort();
+
+    // Crear series para cada horómetro
+    const series = horometros.map(horometro => {
+      const data = codigos.map(codigo => {
+        const horometrosDelCodigo = codigosMap.get(codigo)!;
+        return horometrosDelCodigo.get(horometro) || 0;
+      });
+
+      return {
+        name: horometro,
+        data: data
+      };
     });
-  
-  
+
     // Actualizar opciones del gráfico
     this.chartOptions = {
       ...this.chartOptions,
-      
-      series: [{
-        name: 'Diferencia',  // Actualizado
-        data: diferenciasTotales
-      }],
+      series: series,
       xaxis: {
         ...this.chartOptions.xaxis,
-        categories: nombres,
-        title: { text: 'Horómetros' }
-      },
-      yaxis: {
-        ...this.chartOptions.yaxis,
-        title: { text: 'Diferecia Totales (Final - Inicial)' }  // Actualizado
-      },
-      tooltip: {
-        y: {
-          formatter: (val: number) => `${val.toFixed(2)}`  // Más descriptivo
-        }
+        categories: codigos
       }
     };
-  
   }
 }

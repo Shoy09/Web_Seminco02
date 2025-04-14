@@ -20,7 +20,7 @@ export class OpcionesDialogComponent {
     private dialog: MatDialog, // 🟢 Inyectamos MatDialog para abrir otro diálogo
     @Inject(MAT_DIALOG_DATA) public data: { proceso: string } // 🟢 Recibimos el estado
   ) {
-    console.log('proceso recibido:', this.data.proceso);
+    
   }
 
   seleccionar(opcion: string) {
@@ -46,7 +46,7 @@ export class OpcionesDialogComponent {
     input.addEventListener('change', async (event: any) => {
       const archivo = event.target.files[0];
       if (archivo) {
-        console.log('Archivo seleccionado:', archivo.name);
+        
         this.procesarArchivoExcel(archivo);
         this.dialogRef.close(); // 🔴 Cerramos el diálogo después de seleccionar el archivo
       }
@@ -102,7 +102,7 @@ export class OpcionesDialogComponent {
     for (const estado of estados) {
       try {
         await this.estadoService.createEstado2(estado).toPromise();
-        console.log(`Estado insertado: ${estado.estado_principal}`);
+        
         estadosInsertados++;
       } catch (error) {
         console.error('Error al insertar estado:', estado.estado_principal, error);

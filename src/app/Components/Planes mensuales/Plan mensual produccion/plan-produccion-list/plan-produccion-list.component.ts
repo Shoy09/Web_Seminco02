@@ -57,7 +57,7 @@ export class PlanProduccionListComponent implements OnInit {
   obtenerUltimaFecha(): void {
     this.fechasPlanMensualService.getUltimaFecha().subscribe(
       (ultimaFecha) => {
-        console.log('Última fecha obtenida:', ultimaFecha);
+        
         
         // Usar el operador de encadenamiento opcional y comprobar si es undefined
         const anio: number | undefined = ultimaFecha.fecha_ingreso;
@@ -274,7 +274,7 @@ editarPlan(plan: PlanProduccion): void {
 
   dialogRef.afterClosed().subscribe(result => {
     if (result) { // Solo actualizamos si la API confirmó los cambios
-      console.log("Plan actualizado:", result);
+      
       // Aquí puedes actualizar la lista localmente si es necesario
       this.obtenerUltimaFecha(); // Ejemplo: Recargar la lista de planes desde la API
     }
@@ -283,7 +283,7 @@ editarPlan(plan: PlanProduccion): void {
 
   eliminarPlan(plan: any): void {
     if (confirm(`¿Está seguro de eliminar el plan del mes ${plan.mes}?`)) {
-      console.log('Eliminar plan:', plan);
+      
       // Llamar al servicio para eliminar el plan
     }
   }
