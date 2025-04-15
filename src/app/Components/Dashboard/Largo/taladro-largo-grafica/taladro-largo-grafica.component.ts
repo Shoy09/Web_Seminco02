@@ -1,107 +1,205 @@
-import { Component, ViewChild } from "@angular/core";
-import { BrowserModule } from "@angular/platform-browser";
-import {
-  ApexAxisChartSeries,
-  ApexChart,
-  ChartComponent,
-  ApexDataLabels,
-  ApexPlotOptions,
-  ApexYAxis,
-  ApexLegend,
-  ApexStroke,
-  ApexXAxis,
-  ApexFill,
-  ApexTooltip,
-  NgApexchartsModule
-} from "ng-apexcharts";
+import { Component, OnInit } from '@angular/core';
 
-export type ChartOptions = {
-  series: ApexAxisChartSeries;
-  chart: ApexChart;
-  dataLabels: ApexDataLabels;
-  plotOptions: ApexPlotOptions;
-  yaxis: ApexYAxis;
-  xaxis: ApexXAxis;
-  fill: ApexFill;
-  tooltip: ApexTooltip;
-  stroke: ApexStroke;
-  legend: ApexLegend;
-};
+import { NubeOperacion } from '../../../../models/operaciones.models';
+import { NgApexchartsModule } from 'ng-apexcharts';
+import { OperacionService } from '../../../../services/OperacionService .service';
+import { FormsModule } from '@angular/forms';
+import { MetrosPerforadosEquipoComponent } from "../Graficos/metros-perforados-equipo/metros-perforados-equipo.component";
+import { MetrosPerforadosLaborComponent } from "../Graficos/metros-perforados-labor/metros-perforados-labor.component";
+import { CommonModule } from '@angular/common';
+import { LongitudDePerforacionComponent } from "../Graficos/longitud-de-perforacion/longitud-de-perforacion.component";
+import { HorometrosComponent } from "../Graficos/horometros/horometros.component";
+import { GraficoEstadosComponent } from "../Graficos/grafico-estados/grafico-estados.component";
+import { PromedioDeEstadosGeneralComponent } from "../Graficos/promedio-de-estados-general/promedio-de-estados-general.component";
+
 
 @Component({
   selector: 'app-taladro-largo-grafica',
-  imports: [NgApexchartsModule],
+  imports: [NgApexchartsModule, CommonModule, FormsModule, MetrosPerforadosEquipoComponent, MetrosPerforadosLaborComponent, LongitudDePerforacionComponent, HorometrosComponent, GraficoEstadosComponent, PromedioDeEstadosGeneralComponent],
   templateUrl: './taladro-largo-grafica.component.html',
   styleUrl: './taladro-largo-grafica.component.css'
 })
-export class TaladroLargoGraficaComponent {
-  @ViewChild("chart") chart!: ChartComponent;
-  public chartOptions: Partial<ChartOptions>;
+export class TaladroLargoGraficaComponent implements OnInit {
+  datosOperaciones: NubeOperacion[] = [];
+  datosGraficobarrasapiladasLargo: any[] = [];
+  datosHorometros: any[] = [];
+  datosGraficoEstados: any[] = [];
+  datosOperacionesOriginal: NubeOperacion[] = [];
 
-  constructor() {
-    this.chartOptions = {
-      series: [
-        {
-          name: "Net Profit",
-          data: [44, 55, 57, 56, 61, 58, 63, 60, 66]
-        },
-        {
-          name: "Revenue",
-          data: [76, 85, 101, 98, 87, 105, 91, 114, 94]
-        },
-        {
-          name: "Free Cash Flow",
-          data: [35, 41, 36, 26, 45, 48, 52, 53, 41]
-        }
-      ],
-      chart: {
-        type: "bar",
-        height: 350
-      },
-      plotOptions: {
-        bar: {
-          borderRadius: 5,
-          endingShape: "rounded"
-        } as any
-      }
-      ,      
-      dataLabels: {
-        enabled: false
-      },
-      stroke: {
-        show: true,
-        width: 2,
-        colors: ["transparent"]
-      },
-      xaxis: {
-        categories: [
-          "Feb",
-          "Mar",
-          "Apr",
-          "May",
-          "Jun",
-          "Jul",
-          "Aug",
-          "Sep",
-          "Oct"
-        ]
-      },
-      yaxis: {
-        title: {
-          text: "$ (thousands)"
-        }
-      },
-      fill: {
-        opacity: 1
-      },
-      tooltip: {
-        y: {
-          formatter: function(val) {
-            return "$ " + val + " thousands";
-          }
-        }
-      }
-    };
+
+  fechaDesde: string = '';
+fechaHasta: string = '';
+turnoSeleccionado: string = '';
+turnos: string[] = ['DÍA', 'NOCHE'];
+
+
+  constructor(private operacionService: OperacionService) {}
+ 
+  ngOnInit(): void {
+    const fechaISO = this.obtenerFechaLocalISO();
+    this.fechaDesde = fechaISO;
+    this.fechaHasta = fechaISO;
+    this.turnoSeleccionado = this.obtenerTurnoActual();
+  
+    this.obtenerDatos();
   }
-}
 
+  obtenerTurnoActual(): string {
+    const ahora = new Date();
+    const hora = ahora.getHours();
+  
+    // Turno de día: 7:00 AM a 6:59 PM (07:00 - 18:59)
+    if (hora >= 7 && hora < 19) {
+      return 'DÍA';
+    } else {
+      // Turno de noche: 7:00 PM a 6:59 AM
+      return 'NOCHE';
+    }
+  }  
+  
+  quitarFiltros(): void {
+    const fechaISO = this.obtenerFechaLocalISO();
+    this.fechaDesde = fechaISO;
+    this.fechaHasta = fechaISO;
+    this.turnoSeleccionado = this.obtenerTurnoActual();
+  
+    const filtros = {
+      fechaDesde: this.fechaDesde,
+      fechaHasta: this.fechaHasta,
+      turnoSeleccionado: this.turnoSeleccionado
+    };
+  
+    this.datosOperaciones = this.filtrarDatos(this.datosOperacionesOriginal, filtros);
+    this.reprocesarTodosLosGraficos();
+  }
+
+  obtenerFechaLocalISO(): string {
+    const hoy = new Date();
+    const año = hoy.getFullYear();
+    const mes = (hoy.getMonth() + 1).toString().padStart(2, '0'); // meses comienzan en 0
+    const dia = hoy.getDate().toString().padStart(2, '0');
+    return `${año}-${mes}-${dia}`;
+  }
+
+  aplicarFiltrosLocales(): void {
+    // Crear objeto con los filtros actuales
+    const filtros = {
+      fechaDesde: this.fechaDesde,
+      fechaHasta: this.fechaHasta,
+      turnoSeleccionado: this.turnoSeleccionado
+    };
+  
+    // Aplicar filtros a los datos ORIGINALES (this.datosOperacionesOriginal)
+    const datosFiltrados = this.filtrarDatos(this.datosOperacionesOriginal, filtros);
+  
+    // Actualizar los datos filtrados
+    this.datosOperaciones = datosFiltrados;
+  
+    // Reprocesar los gráficos con los datos filtrados
+    this.reprocesarTodosLosGraficos();
+  }
+  
+  filtrarDatos(datos: NubeOperacion[], filtros: any): NubeOperacion[] {
+    return datos.filter(operacion => {
+      const fechaOperacion = new Date(operacion.fecha);
+      const fechaDesde = filtros.fechaDesde ? new Date(filtros.fechaDesde) : null;
+      const fechaHasta = filtros.fechaHasta ? new Date(filtros.fechaHasta) : null;
+  
+      // Verificar si la fecha de operación está dentro del rango
+      if (fechaDesde && fechaOperacion < fechaDesde) {
+        return false;
+      }
+  
+      if (fechaHasta && fechaOperacion > fechaHasta) {
+        return false;
+      }
+  
+      // Verificar si el turno de la operación coincide con el turno seleccionado
+      if (filtros.turnoSeleccionado && operacion.turno !== filtros.turnoSeleccionado) {
+        return false;
+      }
+  
+      return true;
+    });
+  }
+   
+  
+  reprocesarTodosLosGraficos(): void {
+    this.prepararDatosGraficoBarrasApilada();
+    this.prepararDatosHorometros();
+    this.prepararDatosGraficoEstados();
+
+  }
+
+  obtenerDatos(): void {
+    this.operacionService.getOperacionesLargo().subscribe({
+      next: (data) => {
+        this.datosOperacionesOriginal = data;
+  
+        // Aplicar filtros por fecha actual y turno automáticamente
+        const filtros = {
+          fechaDesde: this.fechaDesde,
+          fechaHasta: this.fechaHasta,
+          turnoSeleccionado: this.turnoSeleccionado
+        };
+  
+        this.datosOperaciones = this.filtrarDatos(this.datosOperacionesOriginal, filtros);
+  
+        // Procesar datos para los gráficos
+        this.prepararDatosGraficoBarrasApilada();
+        this.prepararDatosHorometros();
+        this.prepararDatosGraficoEstados();
+      },
+      error: (err) => {
+        console.error('❌ Error al obtener datos:', err);
+      }
+    });
+  }
+
+  prepararDatosGraficoBarrasApilada(): void {
+    this.datosGraficobarrasapiladasLargo = this.datosOperaciones.flatMap(operacion => {
+      return operacion.perforaciones?.flatMap(perforacion => {
+        return perforacion.inter_perforaciones?.map(inter => ({
+          equipo: operacion.equipo,
+          codigo: operacion.codigo,
+          longitud_perforacion: inter.longitud_perforacion,
+          tipo_labor: perforacion.tipo_labor,
+          labor: perforacion.labor,
+          ntaladro: inter.ntaladro,
+        })) || [];
+      }) || [];
+    });
+  }
+
+  prepararDatosHorometros(): void {
+    this.datosHorometros = this.datosOperaciones.flatMap(operacion => 
+      operacion.horometros?.map(horometro => ({
+        operacionId: operacion.id,
+        equipo: operacion.equipo,
+        codigo: operacion.codigo,
+        turno: operacion.turno,
+        fecha: operacion.fecha,
+        nombreHorometro: horometro.nombre,
+        inicial: horometro.inicial,
+        final: horometro.final,
+        diferencia: horometro.final - horometro.inicial,
+        EstaOP: horometro.EstaOP,
+        EstaINOP: horometro.EstaINOP
+      })) || []
+    );
+  }
+
+  prepararDatosGraficoEstados(): void {
+    this.datosGraficoEstados = this.datosOperaciones.flatMap(operacion => 
+      operacion.estados?.map(estado => ({
+        codigoOperacion: operacion.codigo,
+        turno: operacion.turno,
+        estado: estado.estado,
+        codigoEstado: estado.codigo,
+        hora_inicio: estado.hora_inicio,
+        hora_final: estado.hora_final
+      })) || []
+    );
+  }
+
+}

@@ -44,18 +44,18 @@ export class GraficoBarrasAgrupadaComponent implements OnChanges {
     if (this.datos && this.datos.length > 0) {
       this.updateChart();
     } else {
-    }
+    } 
   }
 
   private updateChart(): void {
     const processedData = this.processData(this.datos);
-      
+  
     this.chartOptions = {
       series: processedData.series,
       chart: {
         type: "bar",
         height: 350,
-        stacked: false,
+        stacked: true,
         toolbar: {
           show: true
         },
@@ -63,42 +63,39 @@ export class GraficoBarrasAgrupadaComponent implements OnChanges {
           enabled: true
         }
       },
-      // --- Agrega esta configuración ---
       legend: {
-        show: true,          // Habilita las leyendas
-        position: 'top',     // Posición: 'top', 'right', 'bottom', 'left'
-        horizontalAlign: 'center', // Alineación horizontal
+        show: true,
+        position: 'top',
+        horizontalAlign: 'center',
         markers: {
-          width: 12,         // Ancho del icono de la leyenda
-          height: 12         // Alto del icono de la leyenda
+          width: 12,
+          height: 12
         }
       },
-      // --------------------------------
       plotOptions: {
         bar: {
           horizontal: false,
           borderRadius: 5,
           endingShape: "rounded",
           dataLabels: {
-            position: 'top' // Muestra las etiquetas encima de las barras
+            total: {
+              enabled: true,  // Activar solo los totales
+              style: {
+                fontSize: '10px',
+                fontWeight: 900 
+              },
+            }
           }
-        } as any
-      },
+        }
+      } as any,
       dataLabels: {
-        enabled: true, // Habilita las etiquetas de datos
-        formatter: (val: number) => {
-          return val.toFixed(1); // Formatea a 1 decimal
-        },
-        style: {
-          fontSize: '12px',
-          colors: ['#000'] // Color del texto
-        },
-        offsetY: -20 // Ajusta la posición vertical
+        enabled: false // ❌ Desactivamos etiquetas dentro de las barras
+        
       },
       stroke: {
         show: true,
-        width: 2,
-        colors: ['transparent']
+        width: 1,
+        colors: ['#fff']
       },
       xaxis: {
         categories: processedData.categories,
@@ -107,89 +104,82 @@ export class GraficoBarrasAgrupadaComponent implements OnChanges {
         }
       },
       yaxis: {
-        // title: {
-        //   text: 'Número de Taladros'
-        // },
-        min: 0
+        min: 0,
+        title: {
+          text: 'Número de Taladros'
+        }
       },
       fill: {
         opacity: 1
       },
       tooltip: {
         y: {
-          formatter: function(val: number) {
-            return val + " taladro";
-          }
+          formatter: (val: number) => `${val} taladro(s)`
         }
+      },
+      annotations: {
+        points: processedData.annotations // ✅ Etiquetas personalizadas arriba de cada barra
       }
     };
   }
-
-  private processData(data: any[]): { series: any[], categories: string[] } {
-    
-
-    // Objeto para acumular los valores por código
-    const acumulado: {[codigo: string]: number} = {};
   
-    // Sumar los valores para cada código
-    
-    data.forEach((item, index) => {
+  private processData(data: any[]): { series: any[], categories: string[], annotations: any[] } {
+    const categorias: string[] = [];
+    const taladros: number[] = [];
+    const rimados: number[] = [];
+    const annotations: any[] = [];
+  
+    const agrupado = new Map<string, { ntaladro: number, ntaladros_rimados: number }>();
+  
+    data.forEach(item => {
       const codigo = item.codigo;
-      const valor = item.ntaladro;
-      
-      
   
-      if (!acumulado[codigo]) {
-        
-        acumulado[codigo] = 0;
-      } else {
-        
+      if (!agrupado.has(codigo)) {
+        agrupado.set(codigo, { ntaladro: 0, ntaladros_rimados: 0 });
       }
   
-      acumulado[codigo] += valor;
-      
+      const actual = agrupado.get(codigo)!;
+      actual.ntaladro += item.ntaladro || 0;
+      actual.ntaladros_rimados += item.ntaladros_rimados || 0;
     });
   
-
+    Array.from(agrupado.entries()).sort(([a], [b]) => a.localeCompare(b)).forEach(([codigo, valores], index) => {
+      categorias.push(codigo);
+      taladros.push(valores.ntaladro);
+      rimados.push(valores.ntaladros_rimados);
   
-    // Preparar los arrays finales
-    const categories: string[] = [];
-    const values: number[] = [];
+      const total = valores.ntaladro + valores.ntaladros_rimados;
   
-    // Llenar los arrays ordenados
-    
-    Object.keys(acumulado).sort().forEach(codigo => {
-      
-      categories.push(codigo);
-      values.push(acumulado[codigo]);
+      annotations.push({
+        x: codigo,
+        y: total,
+        label: {
+          text: `${total}`,
+          borderColor: 'transparent',
+          style: {
+            background: 'transparent',
+            color: '#000',
+            fontSize: '12px',
+            fontWeight: 'bold',
+            padding: 0 // 🔥 Elimina espacio interno
+          },
+          offsetY: -5
+        },
+        marker: {
+          size: 0,
+          fillColor: 'transparent', // 🔥 asegúrate que no pinta nada
+          strokeColor: 'transparent'
+        }
+      });           
     });
-  
-    // Mostrar el resultado final
-    
-  
   
     return {
+      categories: categorias,
       series: [
-        {
-          name: 'Taladros',
-          data: values
-        }
+        { name: 'Taladros', data: taladros },
+        { name: 'Rimados', data: rimados }
       ],
-      categories: categories
+      annotations
     };
   }
-  
-  constructor() {
-    // Inicializar con datos vacíos
-    this.chartOptions = {
-      series: [],
-      chart: {
-        type: "bar",
-        height: 350
-      },
-      xaxis: {
-        categories: []
-      }
-    };
-  }
-}
+}  

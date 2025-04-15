@@ -42,7 +42,7 @@ export class PromNumTaladroTipoLaborComponent implements OnInit {
       },
       offsetX: 0
     },
-    colors: ['#3f51b5'],
+    colors: ['#3B82F6'],
     xaxis: {
       categories: [],
       title: {

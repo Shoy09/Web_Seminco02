@@ -28,24 +28,14 @@ export class GraficoHorometrosComponent implements OnInit {
         }
       }
     },
-    plotOptions: {
+    plotOptions: { 
       bar: {
         horizontal: false,
-        columnWidth: '70%',
-        endingShape: 'rounded',
-        borderRadius: 4,
-        dataLabels: {
-          position: 'center',
-          total: {
-            enabled: true,
-            style: {
-              fontSize: '10px',
-              fontWeight: 'bold'
-            }
-          }
-        }
+        borderRadius: 5,
+        endingShape: "rounded",
+        
       }
-    },
+    } as any,
     dataLabels: {
       enabled: true,
       formatter: (val: number) => val > 0 ? val.toFixed(1) : '',

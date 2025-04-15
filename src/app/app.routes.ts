@@ -13,6 +13,7 @@ import { UsuarioComponent } from './Components/Usuario/usuario/usuario.component
 import { MostrarGraficosComponent } from './Components/Dato Movil/mostrar-graficos/mostrar-graficos.component';
 import { TaladroHorizontalGraficaComponent } from './Components/Dashboard/Horizontal/taladro-horizontal-grafica/taladro-horizontal-grafica.component';
 import { TaladroLargoGraficaComponent } from './Components/Dashboard/Largo/taladro-largo-grafica/taladro-largo-grafica.component';
+import { SostenimientoGraficosComponent } from './Components/Dashboard/Sostenimiento/sostenimiento-graficos/sostenimiento-graficos.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -34,6 +35,7 @@ export const routes: Routes = [
       { path: 'graficos', component: MostrarGraficosComponent },
       { path: 'taladro-largo-grafico', component: TaladroLargoGraficaComponent },
       { path: 'taladro-horizontal-grafico', component: TaladroHorizontalGraficaComponent },
+      { path: 'sostenimiento', component: SostenimientoGraficosComponent },
     ],
   },
 

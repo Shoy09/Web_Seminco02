@@ -15,20 +15,22 @@ export class MenuComponent {
       title: 'Dashboard',
       icon: 'das.svg',
       subItems: [
-        { title: 'Taladro Largo', path: 'taladro-largo-grafico' },
-        { title: 'Taladro Horizontal', path: 'taladro-horizontal-grafico' },
+        { title: 'Perforación Taladros Largos', path: 'taladro-largo-grafico' },
+        { title: 'Perforación Horizontal', path: 'taladro-horizontal-grafico' },
+        { title: 'Sostenimiento', path: 'sostenimiento' },
       ],
     },
     {
       title: 'Carga de Datos',
       icon: 'data.svg',
       subItems: [
+        { title: 'Explosivos', path: 'explosivos' },
         { title: 'Estados', path: 'estados' },
         { title: 'Crear Data', path: 'crear-data' },
         { title: 'Plan de Avance', path: 'plan-avance' },
         { title: 'Plan de Metraje', path: 'plan-metraje' },
         { title: 'Plan de Producción', path: 'plan-produccion' },
-        { title: 'Explosivos', path: 'explosivos' },
+        
       ],
     },
     {
