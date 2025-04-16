@@ -168,36 +168,35 @@ export class PromedioDeEstadosGeneralComponent implements OnChanges {
   }
 
   private processData(data: any[]): { dataPoints: any[], categories: string[], colors: string[] } {
+    // Procesar duraciones
     const datosConDuracion = data.map(item => {
       const inicio = this.parseHora(item.hora_inicio).getTime();
       const fin = this.parseHora(item.hora_final).getTime();
       let duracionHoras = (fin - inicio) / (1000 * 60 * 60);
       if (duracionHoras < 0) duracionHoras += 24;
-  
-      const duracionFinal = duracionHoras > 0 ? duracionHoras : 0;
-  
       return {
         ...item,
-        duracion: duracionFinal
+        duracion: duracionHoras > 0 ? duracionHoras : 0
       };
     });
   
+    // Calcular sumas por estado y códigos únicos
     const sumasPorEstado: { [estado: string]: number } = {};
-    const conteoPorEstado: { [estado: string]: number } = {};
+    const codigosUnicos = new Set<string>();
   
     datosConDuracion.forEach(item => {
       const estado = item.estado.toUpperCase();
-      if (!sumasPorEstado[estado]) {
-        sumasPorEstado[estado] = 0;
-        conteoPorEstado[estado] = 0;
-      }
-      sumasPorEstado[estado] += item.duracion;
-      conteoPorEstado[estado] += 1;
+      codigosUnicos.add(item.codigoOperacion);// Asume que existe item.codigo
+      
+      sumasPorEstado[estado] = (sumasPorEstado[estado] || 0) + item.duracion;
     });
+  
+    const totalCodigos = codigosUnicos.size;
 
+    // Preparar datos para el gráfico
     const estados = Object.keys(sumasPorEstado);
     const dataPoints = estados.map(estado => {
-      const promedio = sumasPorEstado[estado] / conteoPorEstado[estado];
+      const promedio = totalCodigos > 0 ? sumasPorEstado[estado] / totalCodigos : 0;
       
       return {
         x: estado,
@@ -206,15 +205,12 @@ export class PromedioDeEstadosGeneralComponent implements OnChanges {
       };
     });
   
-    const colors = estados.map(estado => this.coloresPorEstado[estado] || '#000000');
-  
     return {
       dataPoints: dataPoints,
       categories: estados,
-      colors: colors
+      colors: estados.map(estado => this.coloresPorEstado[estado] || '#000000')
     };
-  }  
-  
+  }
 
   private parseHora(horaString: string): Date {
     const [horas, minutos] = horaString.split(':').map(Number);
