@@ -82,12 +82,10 @@ export class PromedioDeEstadosGeneralComponent implements OnChanges {
                 fontSize: '10px',
                 fontWeight: 900 
               },
-              formatter: (val: string) => { // Cambiado a string
+              formatter: (val: string) => {
                 const numValue = parseFloat(val);
                 if (isNaN(numValue)) return val;
-                const horas = Math.floor(numValue);
-                const minutos = Math.round((numValue - horas) * 60);
-                return `${horas}h ${minutos}m`;
+                return `${numValue.toFixed(2)}`; // Mostrar con 2 decimales
               }
             }
           }
@@ -104,17 +102,15 @@ export class PromedioDeEstadosGeneralComponent implements OnChanges {
       xaxis: {
         type: 'category',
         labels: {
-          formatter: (value: string) => { // Eje X usa string
-            return value; // Mostramos el nombre del estado directamente
+          formatter: (value: string) => {
+            return value;
           }
         }
       },
       yaxis: {
         labels: {
-          formatter: (val: number) => { // Eje Y puede usar number
-            const horas = Math.floor(val);
-            const minutos = Math.round((val - horas) * 60);
-            return `${horas}h ${minutos}m`;
+          formatter: (val: number) => {
+            return val.toFixed(2); // Mostrar con 2 decimales
           }
         }
       },
@@ -123,10 +119,8 @@ export class PromedioDeEstadosGeneralComponent implements OnChanges {
       },
       tooltip: {
         y: {
-          formatter: (val: number) => { // Tooltip usa number
-            const horas = Math.floor(val);
-            const minutos = Math.round((val - horas) * 60);
-            return `${horas}h ${minutos}m`;
+          formatter: (val: number) => {
+            return val.toFixed(2); // Mostrar con 2 decimales
           }
         }
       },
@@ -198,7 +192,6 @@ export class PromedioDeEstadosGeneralComponent implements OnChanges {
     const dataPoints = estados.map(estado => {
       const promedio = totalCodigos > 0 ? sumasPorEstado[estado] / totalCodigos : 0;
       
-      
       return {
         x: estado,
         y: parseFloat(promedio.toFixed(2)),
@@ -212,7 +205,6 @@ export class PromedioDeEstadosGeneralComponent implements OnChanges {
       colors: estados.map(estado => this.coloresPorEstado[estado] || '#000000')
     };
   }
-  
 
   private parseHora(horaString: string): Date {
     const [horas, minutos] = horaString.split(':').map(Number);

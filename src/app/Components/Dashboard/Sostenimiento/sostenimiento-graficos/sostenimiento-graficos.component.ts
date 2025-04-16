@@ -7,8 +7,6 @@ import { NgApexchartsModule } from 'ng-apexcharts';
 import { MetrosPerforadosEquipoComponent } from "../Graficos/metros-perforados-equipo/metros-perforados-equipo.component";
 import { MetrosPerforadosLaborComponent } from "../Graficos/metros-perforados-labor/metros-perforados-labor.component";
 import { HorometrosComponent } from "../Graficos/horometros/horometros.component";
-import { GraficoEstadosComponent } from "../../Largo/Graficos/grafico-estados/grafico-estados.component";
-import { PromedioDeEstadosGeneralComponent } from "../../Largo/Graficos/promedio-de-estados-general/promedio-de-estados-general.component";
 import { MallaInstaladaEquipoComponent } from "../Graficos/malla-instalada-equipo/malla-instalada-equipo.component";
 import { MallaInstaladaLaborComponent } from "../Graficos/malla-instalada-labor/malla-instalada-labor.component";
 import { RendimientoDePerforacionesComponent } from "../Graficos/rendimiento-de-perforaciones/rendimiento-de-perforaciones.component";
@@ -16,6 +14,8 @@ import { DisponibilidadMecanicaEquipoComponent } from "../Graficos/disponibilida
 import { DisponibilidadMecanicaGeneralComponent } from "../Graficos/disponibilidad-mecanica-general/disponibilidad-mecanica-general.component";
 import { UtilizacionGeneralComponent } from "../Graficos/utilizacion-general/utilizacion-general.component";
 import { UtilizacionEquipoComponent } from "../Graficos/utilizacion-equipo/utilizacion-equipo.component";
+import { GraficoEstadosComponent } from '../Graficos/grafico-estados/grafico-estados.component';
+import { PromedioDeEstadosGeneralComponent } from '../Graficos/promedio-de-estados-general/promedio-de-estados-general.component';
 
 @Component({
   selector: 'app-sostenimiento-graficos',
