@@ -11,11 +11,16 @@ import { LongitudDePerforacionComponent } from "../Graficos/longitud-de-perforac
 import { HorometrosComponent } from "../Graficos/horometros/horometros.component";
 import { GraficoEstadosComponent } from "../Graficos/grafico-estados/grafico-estados.component";
 import { PromedioDeEstadosGeneralComponent } from "../Graficos/promedio-de-estados-general/promedio-de-estados-general.component";
+import { RendimientoDePerforacionesComponent } from "../Graficos/rendimiento-de-perforaciones/rendimiento-de-perforaciones.component";
+import { DisponibilidadMecanicaEquipoComponent } from "../Graficos/disponibilidad-mecanica-equipo/disponibilidad-mecanica-equipo.component";
+import { DisponibilidadMecanicaGeneralComponent } from "../Graficos/disponibilidad-mecanica-general/disponibilidad-mecanica-general.component";
+import { UtilizacionEquipoComponent } from "../Graficos/utilizacion-equipo/utilizacion-equipo.component";
+import { UtilizacionGeneralComponent } from "../Graficos/utilizacion-general/utilizacion-general.component";
 
 
 @Component({
   selector: 'app-taladro-largo-grafica',
-  imports: [NgApexchartsModule, CommonModule, FormsModule, MetrosPerforadosEquipoComponent, MetrosPerforadosLaborComponent, LongitudDePerforacionComponent, HorometrosComponent, GraficoEstadosComponent, PromedioDeEstadosGeneralComponent],
+  imports: [NgApexchartsModule, CommonModule, FormsModule, MetrosPerforadosEquipoComponent, MetrosPerforadosLaborComponent, LongitudDePerforacionComponent, HorometrosComponent, GraficoEstadosComponent, PromedioDeEstadosGeneralComponent, RendimientoDePerforacionesComponent, DisponibilidadMecanicaEquipoComponent, DisponibilidadMecanicaGeneralComponent, UtilizacionEquipoComponent, UtilizacionGeneralComponent],
   templateUrl: './taladro-largo-grafica.component.html',
   styleUrl: './taladro-largo-grafica.component.css'
 })
@@ -25,7 +30,7 @@ export class TaladroLargoGraficaComponent implements OnInit {
   datosHorometros: any[] = [];
   datosGraficoEstados: any[] = [];
   datosOperacionesOriginal: NubeOperacion[] = [];
-
+  RendimientoPerforacion: any[] = [];
 
   fechaDesde: string = '';
 fechaHasta: string = '';
@@ -128,6 +133,7 @@ turnos: string[] = ['DÍA', 'NOCHE'];
     this.prepararDatosGraficoBarrasApilada();
     this.prepararDatosHorometros();
     this.prepararDatosGraficoEstados();
+    this.prepararDatoRendimientoPerforacion();
 
   }
 
@@ -149,6 +155,7 @@ turnos: string[] = ['DÍA', 'NOCHE'];
         this.prepararDatosGraficoBarrasApilada();
         this.prepararDatosHorometros();
         this.prepararDatosGraficoEstados();
+        this.prepararDatoRendimientoPerforacion();
       },
       error: (err) => {
         console.error('❌ Error al obtener datos:', err);
@@ -201,5 +208,54 @@ turnos: string[] = ['DÍA', 'NOCHE'];
       })) || []
     );
   }
+
+  prepararDatoRendimientoPerforacion(): void {
+    const agrupadoPorOperacion = new Map<string, {
+      codigo: string;
+      estados: {
+        estado: string;
+        codigoEstado: string;
+        hora_inicio: string;
+        hora_final: string;
+      }[];
+      perforaciones: { 
+        longitud_perforacion: number;
+        ntaladro: number;
+      }[];
+    }>();
+  
+    for (const operacion of this.datosOperaciones) {
+      const codigo = operacion.codigo;
+      if (!agrupadoPorOperacion.has(codigo)) {
+        agrupadoPorOperacion.set(codigo, {
+          codigo,
+          estados: (operacion.estados || []).map(estado => ({
+            estado: estado.estado,
+            codigoEstado: estado.codigo,
+            hora_inicio: estado.hora_inicio,
+            hora_final: estado.hora_final
+          })),
+          perforaciones: []
+        });
+      }
+  
+      const grupo = agrupadoPorOperacion.get(codigo)!;
+  
+      operacion.perforaciones?.forEach(perforacion => {
+        perforacion.inter_perforaciones?.forEach(inter => {
+          grupo.perforaciones.push({
+            longitud_perforacion: inter.longitud_perforacion,
+            ntaladro: inter.ntaladro,
+          });
+        });
+      });
+    }
+  
+    // Convertimos el mapa en array final
+    this.RendimientoPerforacion = Array.from(agrupadoPorOperacion.values());
+  
+  }
+  
+  
 
 }

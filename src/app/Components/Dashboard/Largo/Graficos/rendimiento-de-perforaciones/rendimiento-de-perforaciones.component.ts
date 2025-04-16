@@ -51,6 +51,7 @@ export class RendimientoDePerforacionesComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if (changes['RendimientoPerforacion'] && this.RendimientoPerforacion) {
 
+
       // 1. Cálculo de rendimiento
       this.rendimientos = this.calcularRendimientoPerforacion();
       
@@ -64,19 +65,18 @@ export class RendimientoDePerforacionesComponent implements OnChanges {
 
   private calcularRendimientoPerforacion(): {codigo: string, rendimiento: number}[] {
     const rendimientoPorCodigo: { [codigo: string]: number } = {};
-
+  
     this.RendimientoPerforacion.forEach(item => {
       if (!rendimientoPorCodigo[item.codigo]) {
         rendimientoPorCodigo[item.codigo] = 0;
       }
-
+  
       item.perforaciones.forEach((perforacion: any) => {
-        const totalTaladros = (perforacion.ntaladro || 0) + (perforacion.ntaladros_rimados || 0);
-        const rendimiento = totalTaladros * (perforacion.longitud_perforacion || 0);
+        const rendimiento = (perforacion.ntaladro || 0) * (perforacion.longitud_perforacion || 0);
         rendimientoPorCodigo[item.codigo] += rendimiento;
       });
     });
-
+  
     return Object.entries(rendimientoPorCodigo).map(([codigo, total]) => ({
       codigo,
       rendimiento: total

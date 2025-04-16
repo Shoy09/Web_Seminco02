@@ -154,9 +154,9 @@ export class MallaInstaladaLaborComponent implements OnChanges {
       .sort((a, b) => a[0].localeCompare(b[0]));
   
     // Mostrar en consola los datos procesados
-    console.log("Datos procesados por labor:");
+  
     laboresOrdenadas.forEach(([labor, total]) => {
-      console.log(`Labor: ${labor}, Mallas instaladas: ${total}`);
+    
     });
   
     return {

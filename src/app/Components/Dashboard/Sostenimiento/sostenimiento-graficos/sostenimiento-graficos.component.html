@@ -56,6 +56,32 @@
         <h3>HOROMETROS</h3>
         <app-horometros [datosHorometros]="datosHorometros"></app-horometros>
       </div>
+
+      <div class="card">
+        <h3>RENDIMIENTO DE PERFORACION - EQUIPO</h3>
+        <app-rendimiento-de-perforaciones [RendimientoPerforacion]="RendimientoPerforacion"></app-rendimiento-de-perforaciones>
+      </div>
+
+      <div class="card">
+        <h3>DISPONIBILIDAD MECANICA - EQUIPO</h3>
+        <app-disponibilidad-mecanica-equipo [datos]="datosGraficoEstados"></app-disponibilidad-mecanica-equipo>
+      </div>
+      
+      
+    <div class="card">
+      <h3>DISPONIBILIDAD MECANICA - GENERAL</h3>
+      <app-disponibilidad-mecanica-general [datos]="datosGraficoEstados"></app-disponibilidad-mecanica-general>
+    </div>
+
+    <div class="card">
+      <h3>UTILIZACION - EQUIPO</h3>
+      <app-utilizacion-equipo [datos]="datosGraficoEstados"></app-utilizacion-equipo>
+    </div>
+
+    <div class="card">
+      <h3>UTILIZACION - GENERAL</h3>
+      <app-utilizacion-general [datos]="datosGraficoEstados"></app-utilizacion-general>
+    </div>
       
     </div>
     

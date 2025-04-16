@@ -17,11 +17,15 @@ import { PromedioTaladrosComponent } from "../Graficos/promedio-taladros/promedi
 import { BarrasMetroPerforadosLaborComponent } from "../Graficos/barras-metro-perforados-labor/barras-metro-perforados-labor.component";
 import { PromedioDeEstadosGeneralComponent } from "../Graficos/promedio-de-estados-general/promedio-de-estados-general.component";
 import { RendimientoDePerforacionesComponent } from "../Graficos/rendimiento-de-perforaciones/rendimiento-de-perforaciones.component";
+import { DisponibilidadMecanicaEquipoComponent } from "../Graficos/disponibilidad-mecanica-equipo/disponibilidad-mecanica-equipo.component";
+import { DisponibilidadMecanicaGeneralComponent } from "../Graficos/disponibilidad-mecanica-general/disponibilidad-mecanica-general.component";
+import { UtilizacionEquipoComponent } from "../Graficos/utilizacion-equipo/utilizacion-equipo.component";
+import { UtilizacionGeneralComponent } from "../Graficos/utilizacion-general/utilizacion-general.component";
 
 @Component({
   selector: 'app-taladro-horizontal-grafica',
   standalone: true,
-  imports: [FormsModule, GraficoBarrasComponent, CommonModule, GraficoBarrasAgrupadaComponent, PromNumTaladroTipoLaborComponent, PromMetrosPerforadosSeccionComponent, GraficoHorometrosComponent, GraficoBarrasMetrosLaborComponent, GraficoBarrasAgrupadaNumLaborComponent, GraficoEstadosComponent, PromedioTaladrosComponent, BarrasMetroPerforadosLaborComponent, PromedioDeEstadosGeneralComponent, RendimientoDePerforacionesComponent],
+  imports: [FormsModule, GraficoBarrasComponent, CommonModule, GraficoBarrasAgrupadaComponent, PromNumTaladroTipoLaborComponent, PromMetrosPerforadosSeccionComponent, GraficoHorometrosComponent, GraficoBarrasMetrosLaborComponent, GraficoBarrasAgrupadaNumLaborComponent, GraficoEstadosComponent, PromedioTaladrosComponent, BarrasMetroPerforadosLaborComponent, PromedioDeEstadosGeneralComponent, RendimientoDePerforacionesComponent, DisponibilidadMecanicaEquipoComponent, DisponibilidadMecanicaGeneralComponent, UtilizacionEquipoComponent, UtilizacionGeneralComponent],
   templateUrl: './taladro-horizontal-grafica.component.html',
   styleUrl: './taladro-horizontal-grafica.component.css'
 }) 
@@ -289,7 +293,7 @@ prepararDatosGraficoEstados(): void {
       hora_final: estado.hora_final
     })) || []
   );
-}
+} 
 
 prepararDatoRendimientoPerforacion(): void {
   const agrupadoPorOperacion = new Map<string, {
@@ -338,7 +342,6 @@ prepararDatoRendimientoPerforacion(): void {
   // Convertimos el mapa en array final
   this.RendimientoPerforacion = Array.from(agrupadoPorOperacion.values());
 
-  console.log("📦 Datos de RendimientoPerforacion:", this.RendimientoPerforacion);
 }
 
 

@@ -138,7 +138,6 @@ export class PromedioDeEstadosGeneralComponent implements OnChanges {
 
   private updateChart(): void {
     if (!this.datos || this.datos.length === 0) {
-      console.warn('No hay datos para mostrar');
       return;
     }
     
@@ -175,28 +174,38 @@ export class PromedioDeEstadosGeneralComponent implements OnChanges {
       let duracionHoras = (fin - inicio) / (1000 * 60 * 60);
       if (duracionHoras < 0) duracionHoras += 24;
   
+      const duracionFinal = duracionHoras > 0 ? duracionHoras : 0;
+  
       return {
         ...item,
-        duracion: duracionHoras > 0 ? duracionHoras : 0
+        duracion: duracionFinal
       };
     });
   
-    const duracionPorEstado: { [estado: string]: number } = {};
+    const sumasPorEstado: { [estado: string]: number } = {};
+    const conteoPorEstado: { [estado: string]: number } = {};
+  
     datosConDuracion.forEach(item => {
-      const estado = item.estado.toUpperCase(); // Normalizamos a mayúsculas
-      if (!duracionPorEstado[estado]) {
-        duracionPorEstado[estado] = 0;
+      const estado = item.estado.toUpperCase();
+      if (!sumasPorEstado[estado]) {
+        sumasPorEstado[estado] = 0;
+        conteoPorEstado[estado] = 0;
       }
-      duracionPorEstado[estado] += item.duracion;
+      sumasPorEstado[estado] += item.duracion;
+      conteoPorEstado[estado] += 1;
+    });
+
+    const estados = Object.keys(sumasPorEstado);
+    const dataPoints = estados.map(estado => {
+      const promedio = sumasPorEstado[estado] / conteoPorEstado[estado];
+      
+      return {
+        x: estado,
+        y: parseFloat(promedio.toFixed(2)),
+        fillColor: this.coloresPorEstado[estado] || '#000000'
+      };
     });
   
-    const estados = Object.keys(duracionPorEstado);
-    const dataPoints = estados.map(estado => ({
-      x: estado,
-      y: parseFloat(duracionPorEstado[estado].toFixed(2)),
-      fillColor: this.coloresPorEstado[estado] || '#000000'
-    }));
-    
     const colors = estados.map(estado => this.coloresPorEstado[estado] || '#000000');
   
     return {
@@ -204,7 +213,8 @@ export class PromedioDeEstadosGeneralComponent implements OnChanges {
       categories: estados,
       colors: colors
     };
-  }
+  }  
+  
 
   private parseHora(horaString: string): Date {
     const [horas, minutos] = horaString.split(':').map(Number);
