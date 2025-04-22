@@ -1,6 +1,5 @@
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -8,10 +7,11 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { Usuario } from '../../../models/Usuario';
 import { UsuarioService } from '../../../services/usuario.service';
+import { MatSelectModule } from '@angular/material/select';
 
 @Component({
   selector: 'app-usuario-dialog',
-  imports: [MatDialogModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, CommonModule, MatCardModule ],
+  imports: [MatDialogModule, ReactiveFormsModule, MatFormFieldModule, MatInputModule, CommonModule, MatCardModule, MatSelectModule ],
   templateUrl: './usuario-dialog.component.html',
   styleUrl: './usuario-dialog.component.css'
 })
@@ -36,7 +36,8 @@ export class UsuarioDialogComponent {
         cargo: [data?.cargo || ''],
         empresa: [data?.empresa || ''],
         guardia: [data?.guardia || ''],
-        autorizado_equipo: [data?.autorizado_equipo || '']
+        autorizado_equipo: [data?.autorizado_equipo || ''],
+        rol: [data?.rol || '', Validators.required],
       },
       { validators: this.passwordsCoinciden } // 👈 Agregar validador aquí
     );

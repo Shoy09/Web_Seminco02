@@ -139,12 +139,13 @@ export class UsuariosComponent implements OnInit {
           const nombres = row["NOMBRES"];
           const codigo_dni = row["DNI"];
           const cargo = row["PUESTO ACTUAL QUE DESEMPEÑA"];
+          const rol = row["ROL"] || 'Trabajador'; 
           const area = row["ÁREA"];
           const clasificacion = row["CLASIFICACIÓN"];
           const password = row["password"];  
   
           // Verificar si falta algún campo obligatorio
-          if (!apellidos || !nombres || !codigo_dni || !cargo || !area || !clasificacion || !password) {
+          if (!apellidos || !nombres || !codigo_dni || !cargo || !area || !rol || !clasificacion || !password) {
             usuariosInvalidos.push({ 
               nombre: nombres || "Desconocido", 
               dni: codigo_dni || "Sin DNI" 
@@ -156,6 +157,7 @@ export class UsuariosComponent implements OnInit {
               codigo_dni,
               cargo,
               area,
+              rol,
               clasificacion,
               password
             });
@@ -211,15 +213,13 @@ export class UsuariosComponent implements OnInit {
     });
   }
 
-  mostrarErrores(usuariosInvalidos: { nombre: string, dni: string }[]) {
+  mostrarErrores(usuariosInvalidos: { nombre: string, dni: string, motivo?: string }[]) {
     if (usuariosInvalidos.length > 0) {
-      let mensaje = "Los siguientes usuarios no se pudieron registrar por falta de datos:\n\n";
+      let mensaje = "Errores en el registro:\n\n";
       usuariosInvalidos.forEach(usuario => {
-        mensaje += `Nombre: ${usuario.nombre}, DNI: ${usuario.dni}\n`;
+        mensaje += `• ${usuario.nombre} (DNI: ${usuario.dni}): ${usuario.motivo || 'Datos incompletos'}\n`;
       });
       alert(mensaje);
-    } else {
-      alert("Todos los usuarios fueron registrados exitosamente.");
     }
   }
 

@@ -3,7 +3,8 @@ export interface Usuario {
   codigo_dni: string;
   apellidos: string;
   nombres: string;
-  cargo?: string;               // Ahora opcional
+  cargo?: string;
+  rol?: string;  
   area?: string;                // Nuevo campo opcional
   clasificacion?: string;       // Nuevo campo opcional
   empresa?: string;             // Opcional

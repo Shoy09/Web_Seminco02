@@ -52,6 +52,18 @@
         </mat-form-field>
       </div>
 
+      <div class="input-group">
+        <mat-form-field appearance="outline">
+          <mat-label>Rol</mat-label>
+          <mat-select formControlName="rol">
+            <mat-option value="Admin">Admin</mat-option>
+            <mat-option value="Trabajador">Trabajador</mat-option>
+            <mat-option value="Master">Master</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      
+
       <!-- Campos de contraseña solo si es un nuevo usuario -->
       <div *ngIf="!editMode">
         <mat-form-field appearance="outline">
