@@ -73,7 +73,8 @@
       
     }
     .logo {
-      max-width: 160px;
+      max-width: 100px;
+      height: auto;
     }
     .logodow {
       max-width: 12px;

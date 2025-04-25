@@ -171,7 +171,7 @@ export class CrearDataComponent implements OnInit {
         marca: row["MARCA"] || null,
         modelo: row["MODELO"] || null,
         serie: row["SERIE"] || null,
-        anioFabricacion: row["AÑO DE FABRICACIÓN "] ? Number(row["AÑO DE FABRICACIÓN "]) : null,
+        anioFabricacion: row["AÑO DE FABRICACIÓN"] ? Number(row["AÑO DE FABRICACIÓN"]) : null,
         fechaIngreso: this.convertirFechaExcel(row["FECHA DE INGRESO"]),
         capacidadYd3: row["CAPACIDAD (yd3)"] ? Number(row["CAPACIDAD (yd3)"]) : null,
         capacidadM3: row["CAPACIDAD (m3)"] ? Number(row["CAPACIDAD (m3)"]) : null
