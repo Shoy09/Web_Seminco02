@@ -14,6 +14,7 @@ import { MostrarGraficosComponent } from './Components/Dato Movil/mostrar-grafic
 import { TaladroHorizontalGraficaComponent } from './Components/Dashboard/Horizontal/taladro-horizontal-grafica/taladro-horizontal-grafica.component';
 import { TaladroLargoGraficaComponent } from './Components/Dashboard/Largo/taladro-largo-grafica/taladro-largo-grafica.component';
 import { SostenimientoGraficosComponent } from './Components/Dashboard/Sostenimiento/sostenimiento-graficos/sostenimiento-graficos.component';
+import { MetasComponent } from './Components/Crear datos/Metas/metas/metas.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -36,6 +37,7 @@ export const routes: Routes = [
       { path: 'taladro-largo-grafico', component: TaladroLargoGraficaComponent },
       { path: 'taladro-horizontal-grafico', component: TaladroHorizontalGraficaComponent },
       { path: 'sostenimiento', component: SostenimientoGraficosComponent },
+      { path: 'metas', component: MetasComponent },
     ],
   },
 
