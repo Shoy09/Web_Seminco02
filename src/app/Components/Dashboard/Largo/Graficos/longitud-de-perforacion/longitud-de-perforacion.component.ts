@@ -14,20 +14,22 @@ import {
   NgApexchartsModule
 } from "ng-apexcharts";
 import { CommonModule } from '@angular/common';
+import { Meta } from '../../../../../models/meta.model';
 
+// 1. Actualizar el tipo ChartOptions para soportar series mixtas
 export type ChartOptions = {
   series: ApexAxisChartSeries;
   chart: ApexChart;
   dataLabels: ApexDataLabels;
   plotOptions: ApexPlotOptions;
-  yaxis: ApexYAxis;
+  yaxis: ApexYAxis | ApexYAxis[];  // Soporte para múltiples ejes Y
   xaxis: ApexXAxis;
   fill: ApexFill;
   tooltip: ApexTooltip;
   stroke: ApexStroke;
   legend: ApexLegend;
+  colors?: string[];  // Para personalizar colores
 };
-
 
 @Component({
   selector: 'app-longitud-de-perforacion',
@@ -37,6 +39,7 @@ export type ChartOptions = {
 })
 export class LongitudDePerforacionComponent implements OnChanges {
   @Input() datos: any[] = [];
+  @Input() metas: Meta[] = [];
   @ViewChild("chart") chart!: ChartComponent;
   public chartOptions: ChartOptions;
 
@@ -45,18 +48,21 @@ export class LongitudDePerforacionComponent implements OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['datos'] && this.datos && this.datos.length > 0) {
-      this.updateChart();
-    } else {
-      this.chartOptions = this.getDefaultOptions();
+    if (changes['datos'] || changes['metas']) {  // Reaccionar a cambios en ambos inputs
+      if (this.datos && this.datos.length > 0) {
+        this.updateChart();
+      } else {
+        this.chartOptions = this.getDefaultOptions();
+      }
     }
   }
 
+  // 2. Actualizar getDefaultOptions() para series mixtas
   private getDefaultOptions(): ChartOptions {
     return {
       series: [],
       chart: {
-        type: "bar",
+        type: "bar",  // Tipo base (las series pueden sobrescribirlo)
         height: 350,
         stacked: false,
         toolbar: { show: false }
@@ -67,31 +73,33 @@ export class LongitudDePerforacionComponent implements OnChanges {
           borderRadius: 5,
           endingShape: "rounded",
           dataLabels: {
-            position: 'top' // Muestra las etiquetas encima de las barras
+            position: 'top'
           }
         } as any
       },
       dataLabels: {
-        enabled: true, // Habilita las etiquetas de datos
-        formatter: (val: number) => {
-          return val.toFixed(1); // Formatea a 1 decimal
-        },
+        enabled: true,
+        enabledOnSeries: [0],  // Solo habilitar para barras (serie 0)
+        formatter: (val: number) => val.toFixed(1),
         style: {
-          fontSize: '12px',
-          colors: ['#000'] // Color del texto
+          colors: ['#000'],  // Color negro para las barras
+          fontSize: '12px'
         },
-        offsetY: -20 // Ajusta la posición vertical
+        offsetY: -20
       },
       stroke: {
-        show: true,
-        width: 2,
-        colors: ["transparent"]
+        width: [0, 4],  // 0 para barras, 4 para línea
+        colors: [undefined, '#BF4342'],  // Color rojo para la línea
+        curve: 'smooth'
+      },
+      colors: ['#3B82F6', '#BF4342'],  // Azul para barras, rojo para línea
+      fill: {
+        opacity: 1,
+        colors: ['#3B82F6']  // Solo aplica a barras
       },
       xaxis: {
         categories: [],
-        title: {
-          text: 'Labores'
-        },
+        title: { text: 'Labores' },
         labels: {
           style: {
             fontSize: '12px'
@@ -99,90 +107,87 @@ export class LongitudDePerforacionComponent implements OnChanges {
         }
       },
       yaxis: {
-        // title: {
-        //   text: "Longitud de perforación por Labor",
-        //   style: {
-        //     fontSize: '12px'
-        //   }
-        // },
+        title: { text: "Longitud de perforación (m)" },
         labels: {
-          formatter: (value: number) => {
-            return value.toFixed(1);
-          }
+          formatter: (val: number) => val.toFixed(1)
         }
       },
-      fill: {
-        opacity: 1,
-        colors: ['#3B82F6']
-      },
       tooltip: {
+        shared: true,  // Mostrar ambas series en el tooltip
+        intersect: false,
         y: {
-          formatter: (val: number) => {
-            return `${val} metros`;
-          }
+          formatter: (val: number) => `${val.toFixed(1)} metros`
         }
       },
       legend: {
-        show: false
+        show: true,
+        position: 'top',
+        markers: {
+          fillColors: ['#3B82F6', '#BF4342']  // Colores de la leyenda
+        }
       }
     };
   }
+
   private updateChart(): void {
     if (!this.datos || this.datos.length === 0) {
       console.warn('No hay datos para mostrar');
       return;
     }
-  
+    
     const processedData = this.processData(this.datos);
-  
-  
+    
     this.chartOptions = {
       ...this.chartOptions,
       series: processedData.series,
       xaxis: {
         ...this.chartOptions.xaxis,
-        categories: processedData.categories,
-        labels: {
-          style: {
-            fontSize: '12px',
-            fontFamily: 'Arial'
-          }
-        }
+        categories: processedData.categories
       }
     };
-  
-    // Forzar actualización si es necesario
+    
     setTimeout(() => {
       if (this.chart && this.chart.updateSeries) {
         this.chart.updateSeries(processedData.series);
       }
     }, 100);
   }
-  
+
+  // 3. Actualizar processData() para incluir metas
   private processData(data: any[]): { series: any[], categories: string[] } {
-    const laboresMap = new Map<string, number>();
+    const laboresMap = new Map<string, { real: number, meta: number }>();
 
     data.forEach(item => {
       const clave = `${item.tipo_labor}-${item.labor}`;
-      const longitud = item.longitud_perforacion || 0;
-  
-      const longitudActual = laboresMap.get(clave) || 0;
-      laboresMap.set(clave, longitudActual + longitud);
-  
+      const longitud = Number(item.longitud_perforacion) || 0;
+
+      const valorActual = laboresMap.get(clave) || { real: 0, meta: 0 };
+      valorActual.real += longitud;
+
+      // Buscar la meta correspondiente (usando el formato tipo_labor-labor)
+      const metaLabor = this.metas.find(m => m.nombre === clave);
+      valorActual.meta = metaLabor ? metaLabor.objetivo : 0;
+
+      laboresMap.set(clave, valorActual);
     });
-  
+
     const laboresOrdenadas = Array.from(laboresMap.entries())
       .sort((a, b) => a[0].localeCompare(b[0]));
-  
-  
+
     return {
-      series: [{
-        name: "Longitud perforada",
-        data: laboresOrdenadas.map(([_, longitud]) => Number(longitud.toFixed(2)))
-      }],
+      series: [
+        {
+          name: "Real",
+          type: "bar",
+          data: laboresOrdenadas.map(([_, valores]) => valores.real)
+        },
+        {
+          name: "Meta",
+          type: "line",
+          data: laboresOrdenadas.map(([_, valores]) => valores.meta)
+        }
+      ],
       categories: laboresOrdenadas.map(([clave, _]) => clave)
     };
   }
-  
-
 }

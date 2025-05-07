@@ -24,32 +24,32 @@
     <div class="graficos-container">
       <div class="card"> 
         <h3>METROS PERFORADOS - EQUIPO</h3>
-        <app-grafico-barras [datos]="datosGraficobarrasapiladas"></app-grafico-barras>
+        <app-grafico-barras [datos]="datosGraficobarrasapiladas"  [metas]="metasPorGrafico['METROS PERFORADOS - EQUIPO']"></app-grafico-barras>
       </div>
 
       <div class="card">
         <h3>METROS PERFORADOS - LABOR</h3>
-        <app-barras-metro-perforados-labor [datos]="datosGraficobarrasapiladas"></app-barras-metro-perforados-labor>
+        <app-barras-metro-perforados-labor [datos]="datosGraficobarrasapiladas"  [metas]="metasPorGrafico['METROS PERFORADOS - LABOR']"></app-barras-metro-perforados-labor>
       </div>
     
       <div class="card">
         <h3>CANTIDAD DE TALADROS - EQUIPO</h3>
-        <app-grafico-barras-agrupada [datos]="datosGraficobarrasagrupadas"></app-grafico-barras-agrupada>
+        <app-grafico-barras-agrupada [datos]="datosGraficobarrasagrupadas"  [metas]="metasPorGrafico['CANTIDAD DE TALADROS - EQUIPO']"></app-grafico-barras-agrupada>
       </div>
     
       <div class="card">
         <h3>CANTIDAD DE TALADROS - LABOR</h3>
-        <app-grafico-barras-agrupada-num-labor [datos]="datosGraficobarrasagrupadas"></app-grafico-barras-agrupada-num-labor>
+        <app-grafico-barras-agrupada-num-labor [datos]="datosGraficobarrasagrupadas"  [metas]="metasPorGrafico['CANTIDAD DE TALADROS - LABOR']"></app-grafico-barras-agrupada-num-labor>
       </div>
 
       <div class="card">
         <h3>LONGITUD DE PERFORACION</h3>
-        <app-grafico-barras-metros-labor [datos]="datosGraficobarrasapiladas"></app-grafico-barras-metros-labor>
+        <app-grafico-barras-metros-labor [datos]="datosGraficobarrasapiladas"  [metas]="metasPorGrafico['LONGITUD DE PERFORACION']"></app-grafico-barras-metros-labor>
       </div> 
      
       <div class="card">
         <h3>PROMEDIO DE TALADROS - SECCION</h3>
-        <app-promedio-taladros [datos]="paraPromedioTaladrosSeccion"></app-promedio-taladros>
+        <app-promedio-taladros [datos]="paraPromedioTaladrosSeccion"  [metas]="metasPorGrafico['PROMEDIO DE TALADROS - SECCION']"></app-promedio-taladros>
       </div>
     
       <!-- <div class="card">
@@ -59,12 +59,12 @@
     
       <div class="card">
         <h3>PROMEDIO DE TALADROS - LABOR</h3>
-        <app-prom-num-taladro-tipo-labor [datos]="ParaPromediosPromnumtaladrotipolabor"></app-prom-num-taladro-tipo-labor>
+        <app-prom-num-taladro-tipo-labor [datos]="ParaPromediosPromnumtaladrotipolabor"  [metas]="metasPorGrafico['PROMEDIO DE TALADROS - LABOR']"></app-prom-num-taladro-tipo-labor>
       </div>
     
       <div class="card">
         <h3>PROMEDIO DE METROS PERFORADOS - SECCION</h3>
-        <app-prom-metros-perforados-seccion [datos]="ParaPromediostaladrosmetrosperforadosSeccion"></app-prom-metros-perforados-seccion>
+        <app-prom-metros-perforados-seccion [datos]="ParaPromediostaladrosmetrosperforadosSeccion"[metas]="metasPorGrafico['PROMEDIO DE METROS PERFORADOS - SECCION']"></app-prom-metros-perforados-seccion>
       </div>
 
       <div class="card">
@@ -79,32 +79,32 @@
           
       <div class="card">
         <h3>HOROMETROS</h3>
-        <app-grafico-horometros [datosHorometros]="datosHorometros"></app-grafico-horometros>
+        <app-grafico-horometros [datosHorometros]="datosHorometros" [metas]="metasPorGrafico['HOROMETROS']"></app-grafico-horometros>
       </div>
 
       <div class="card">
         <h3>RENDIMIENTO DE PERFORACION - EQUIPO</h3>
-        <app-rendimiento-de-perforaciones [RendimientoPerforacion]="RendimientoPerforacion"></app-rendimiento-de-perforaciones>
+        <app-rendimiento-de-perforaciones [RendimientoPerforacion]="RendimientoPerforacion" [metas]="metasPorGrafico['RENDIMIENTO DE PERFORACION - EQUIPO']"></app-rendimiento-de-perforaciones>
       </div>
 
       <div class="card">
         <h3>DISPONIBILIDAD MECANICA - EQUIPO</h3>
-        <app-disponibilidad-mecanica-equipo [datos]="datosGraficoEstados"></app-disponibilidad-mecanica-equipo>
+        <app-disponibilidad-mecanica-equipo [datos]="datosGraficoEstados" [metas]="metasPorGrafico['DISPONIBILIDAD MECANICA - EQUIPO']"></app-disponibilidad-mecanica-equipo>
       </div>
 
       <div class="card">
         <h3>DISPONIBILIDAD MECANICA - GENERAL</h3>
-        <app-disponibilidad-mecanica-general [datos]="datosGraficoEstados"></app-disponibilidad-mecanica-general>
+        <app-disponibilidad-mecanica-general [datos]="datosGraficoEstados" [metas]="metasPorGrafico['DISPONIBILIDAD MECANICA - GENERAL']"></app-disponibilidad-mecanica-general>
       </div>
 
       <div class="card">
         <h3>UTILIZACION - EQUIPO</h3>
-        <app-utilizacion-equipo [datos]="datosGraficoEstados"></app-utilizacion-equipo>
+        <app-utilizacion-equipo [datos]="datosGraficoEstados" [metas]="metasPorGrafico['UTILIZACION - EQUIPO']"></app-utilizacion-equipo>
       </div>
 
       <div class="card">
         <h3>UTILIZACION - GENERAL</h3>
-        <app-utilizacion-general [datos]="datosGraficoEstados"></app-utilizacion-general>
+        <app-utilizacion-general [datos]="datosGraficoEstados" [metas]="metasPorGrafico['UTILIZACION - GENERAL']"></app-utilizacion-general>
       </div>
     
     </div>

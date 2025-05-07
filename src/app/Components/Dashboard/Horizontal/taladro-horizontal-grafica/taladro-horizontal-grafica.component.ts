@@ -21,6 +21,8 @@ import { DisponibilidadMecanicaEquipoComponent } from "../Graficos/disponibilida
 import { DisponibilidadMecanicaGeneralComponent } from "../Graficos/disponibilidad-mecanica-general/disponibilidad-mecanica-general.component";
 import { UtilizacionEquipoComponent } from "../Graficos/utilizacion-equipo/utilizacion-equipo.component";
 import { UtilizacionGeneralComponent } from "../Graficos/utilizacion-general/utilizacion-general.component";
+import { MetaService } from '../../../../services/meta.service';
+import { Meta } from '../../../../models/meta.model';
 
 @Component({
   selector: 'app-taladro-horizontal-grafica',
@@ -41,7 +43,28 @@ export class TaladroHorizontalGraficaComponent implements OnInit {
   datosHorometros: any[] = [];
   datosGraficoEstados: any[] = [];
   datosOperacionesOriginal: NubeOperacion[] = [];
-
+  private todasLasMetas: Meta[] = [];
+  metasPorGrafico: { 
+    [key: string]: Meta[] 
+  } = {
+    'METROS PERFORADOS - EQUIPO': [],
+    'METROS PERFORADOS - LABOR': [],
+    'CANTIDAD DE TALADROS - EQUIPO': [],
+    'CANTIDAD DE TALADROS - LABOR': [],
+    'LONGITUD DE PERFORACION': [],
+    'PROMEDIO DE TALADROS - SECCION': [],
+    'PROMEDIO DE TALADROS - LABOR': [],
+    'PROMEDIO DE METROS PERFORADOS - SECCION': [],
+    'ESTADOS': [],
+    'ESTADOS GENERAL': [],
+    'HOROMETROS': [],
+    'RENDIMIENTO DE PERFORACION - EQUIPO': [],
+    'DISPONIBILIDAD MECANICA - EQUIPO': [],
+    'DISPONIBILIDAD MECANICA - GENERAL': [],
+    'UTILIZACION - EQUIPO': [], 
+    'UTILIZACION - GENERAL': []
+  };
+  
 
   fechaDesde: string = '';
 fechaHasta: string = '';
@@ -49,7 +72,7 @@ turnoSeleccionado: string = '';
 turnos: string[] = ['DÍA', 'NOCHE'];
 
 
-  constructor(private operacionService: OperacionService) {}
+  constructor(private metaService: MetaService, private operacionService: OperacionService) {}
 
   ngOnInit(): void {
     const fechaISO = this.obtenerFechaLocalISO();
@@ -58,6 +81,41 @@ turnos: string[] = ['DÍA', 'NOCHE'];
     this.turnoSeleccionado = this.obtenerTurnoActual();
   
     this.obtenerDatos();
+    this.cargarMetasDesdeApi();
+  }
+
+  private cargarMetasDesdeApi(): void {
+    this.metaService.getMetas().subscribe({
+      next: (metas: Meta[]) => {
+        if (metas && metas.length > 0) {
+          this.todasLasMetas = metas;
+  
+          // Filtrar y agrupar las metas según el campo "grafico"
+          metas.forEach(meta => {
+            if (this.metasPorGrafico[meta.grafico]) {
+              this.metasPorGrafico[meta.grafico].push(meta);
+            }
+          });
+  
+          // Mostrar en consola las metas por gráfico
+        } else {
+        }
+      },
+      error: (error) => {
+      }
+    });
+  }
+  
+  private obtenerMesDeFecha(fecha: string): string {
+    if (!fecha) return '';
+    
+    const meses = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    
+    const date = new Date(fecha);
+    return meses[date.getMonth()];
   }
 
   obtenerTurnoActual(): string {
@@ -71,7 +129,7 @@ turnos: string[] = ['DÍA', 'NOCHE'];
       // Turno de noche: 7:00 PM a 6:59 AM
       return 'NOCHE';
     }
-  }  
+  }
   
   quitarFiltros(): void {
     const fechaISO = this.obtenerFechaLocalISO();
@@ -86,6 +144,10 @@ turnos: string[] = ['DÍA', 'NOCHE'];
     };
   
     this.datosOperaciones = this.filtrarDatos(this.datosOperacionesOriginal, filtros);
+    
+    // Filtrar metas según el mes actual
+    this.filtrarMetasPorMes(this.fechaDesde);
+    
     this.reprocesarTodosLosGraficos();
   }
   
@@ -112,8 +174,27 @@ turnos: string[] = ['DÍA', 'NOCHE'];
     // Actualizar los datos filtrados
     this.datosOperaciones = datosFiltrados;
   
+    // Filtrar metas según el mes de la fecha de inicio
+    this.filtrarMetasPorMes(this.fechaDesde);
+  
     // Reprocesar los gráficos con los datos filtrados
     this.reprocesarTodosLosGraficos();
+  }
+
+  private filtrarMetasPorMes(fecha: string): void {
+    const mesSeleccionado = this.obtenerMesDeFecha(fecha);
+    
+    // Reiniciamos todas las metas por gráfico
+    Object.keys(this.metasPorGrafico).forEach(key => {
+      this.metasPorGrafico[key] = [];
+    });
+  
+    // Filtramos las metas por el mes seleccionado
+    this.todasLasMetas.forEach(meta => {
+      if (meta.mes === mesSeleccionado && this.metasPorGrafico[meta.grafico]) {
+        this.metasPorGrafico[meta.grafico].push(meta);
+      }
+    });
   }
   
   filtrarDatos(datos: NubeOperacion[], filtros: any): NubeOperacion[] {

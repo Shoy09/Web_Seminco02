@@ -14,18 +14,21 @@ import {
   NgApexchartsModule
 } from "ng-apexcharts";
 import { CommonModule } from '@angular/common';
+import { Meta } from '../../../../../models/meta.model';
 
+// 1. Actualizar el tipo ChartOptions para soportar series mixtas
 export type ChartOptions = {
   series: ApexAxisChartSeries;
   chart: ApexChart;
   dataLabels: ApexDataLabels;
   plotOptions: ApexPlotOptions;
-  yaxis: ApexYAxis;
+  yaxis: ApexYAxis | ApexYAxis[];  // Soporte para múltiples ejes Y
   xaxis: ApexXAxis;
   fill: ApexFill;
   tooltip: ApexTooltip;
   stroke: ApexStroke;
   legend: ApexLegend;
+  colors?: string[];  // Para personalizar colores
 };
 
 @Component({
@@ -37,6 +40,7 @@ export type ChartOptions = {
 })
 export class RendimientoDePerforacionesComponent implements OnChanges {
   @Input() RendimientoPerforacion: any[] = [];
+  @Input() metas: Meta[] = [];
   @ViewChild("chart") chart!: ChartComponent;
   public chartOptions: ChartOptions;
 
@@ -49,8 +53,7 @@ export class RendimientoDePerforacionesComponent implements OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['RendimientoPerforacion'] && this.RendimientoPerforacion) {
-
+    if ((changes['RendimientoPerforacion'] || changes['metas']) && this.RendimientoPerforacion) {
       // 1. Cálculo de rendimiento
       this.rendimientos = this.calcularRendimientoPerforacion();
       
@@ -60,6 +63,78 @@ export class RendimientoDePerforacionesComponent implements OnChanges {
       // 3. Calcular rendimiento por hora y actualizar gráfico
       this.actualizarGrafico();
     }
+  }
+
+  // 2. Actualizar getDefaultOptions() para series mixtas
+  private getDefaultOptions(): ChartOptions {
+    return {
+      series: [],
+      chart: {
+        type: "bar",  // Tipo base (las series pueden sobrescribirlo)
+        height: 350,
+        stacked: false,
+        toolbar: { show: false }
+      },
+      plotOptions: {
+        bar: {
+          horizontal: false,
+          borderRadius: 5,
+          endingShape: "rounded",
+          dataLabels: {
+            position: 'top'
+          }
+        } as any
+      },
+      dataLabels: {
+        enabled: true,
+        enabledOnSeries: [0],  // Solo habilitar para barras (serie 0)
+        formatter: (val: number) => val.toFixed(1),
+        style: {
+          fontSize: '12px',
+          colors: ['#000']  // Color negro para las barras
+        },
+        offsetY: -20
+      },
+      stroke: {
+        width: [0, 4],  // 0 para barras, 4 para línea
+        colors: [undefined, '#BF4342'],  // Color rojo para la línea
+        curve: 'smooth'
+      },
+      colors: ['#3B82F6', '#BF4342'],  // Azul para barras, rojo para línea
+      fill: {
+        opacity: 1,
+        colors: ['#3B82F6']  // Solo aplica a barras
+      },
+      xaxis: {
+        categories: [],
+        title: { text: 'Equipos' },
+        labels: {
+          style: {
+            fontSize: '12px'
+          }
+        }
+      },
+      yaxis: {
+        title: { text: "Rendimiento (m/h)" },
+        labels: {
+          formatter: (val: number) => val.toFixed(1)
+        }
+      },
+      tooltip: {
+        shared: true,  // Mostrar ambas series en el tooltip
+        intersect: false,
+        y: {
+          formatter: (val: number) => `${val.toFixed(2)} m/h`
+        }
+      },
+      legend: {
+        show: true,
+        position: 'top',
+        markers: {
+          fillColors: ['#3B82F6', '#BF4342']  // Colores de la leyenda
+        }
+      }
+    };
   }
 
   private calcularRendimientoPerforacion(): {codigo: string, rendimiento: number}[] {
@@ -117,7 +192,7 @@ export class RendimientoDePerforacionesComponent implements OnChanges {
   }
 
   private actualizarGrafico(): void {
-    // Combinar rendimientos y horas operativas por código
+    // Combinar rendimientos, horas operativas y metas por código
     const datosCombinados = this.combinarDatos();
     
     // Procesar datos para el gráfico
@@ -130,34 +205,26 @@ export class RendimientoDePerforacionesComponent implements OnChanges {
       xaxis: {
         ...this.chartOptions.xaxis,
         categories: datosGrafico.categories
-      },
-      tooltip: {
-        y: {
-          formatter: (val: number) => {
-            return `${val.toFixed(2)} m/h`; // Mostrar en metros por hora
-          }
-        }
-      },
-      yaxis: {
-        ...this.chartOptions.yaxis,
-        title: {
-          text: "Rendimiento (m/h)",
-          style: {
-            fontSize: '12px'
-          }
-        }
       }
     };
+    
+    setTimeout(() => {
+      if (this.chart && this.chart.updateSeries) {
+        this.chart.updateSeries(datosGrafico.series);
+      }
+    }, 100);
   }
 
-  private combinarDatos(): {codigo: string, rendimiento: number, horas_operativas: number}[] {
-    const mapaCombinado = new Map<string, {rendimiento: number, horas_operativas: number}>();
+  // 3. Actualizar combinarDatos() para incluir metas
+  private combinarDatos(): {codigo: string, rendimiento: number, horas_operativas: number, meta: number}[] {
+    const mapaCombinado = new Map<string, {rendimiento: number, horas_operativas: number, meta: number}>();
 
     // Agregar rendimientos
     this.rendimientos.forEach(item => {
       mapaCombinado.set(item.codigo, {
         rendimiento: item.rendimiento,
-        horas_operativas: 0 // Inicializar horas
+        horas_operativas: 0, // Inicializar horas
+        meta: 0 // Inicializar meta
       });
     });
 
@@ -169,27 +236,45 @@ export class RendimientoDePerforacionesComponent implements OnChanges {
       }
     });
 
+    // Agregar metas
+    this.metas.forEach(meta => {
+      const existente = mapaCombinado.get(meta.nombre);
+      if (existente) {
+        existente.meta = meta.objetivo;
+      }
+    });
+
     // Convertir a array
     return Array.from(mapaCombinado.entries()).map(([codigo, datos]) => ({
       codigo,
       rendimiento: datos.rendimiento,
-      horas_operativas: datos.horas_operativas
+      horas_operativas: datos.horas_operativas,
+      meta: datos.meta
     }));
   }
 
+  // 4. Actualizar procesarDatosParaGrafico() para incluir línea de metas
   private procesarDatosParaGrafico(datos: any[]): { series: any[], categories: string[] } {
     // Ordenar por código
     const datosOrdenados = [...datos].sort((a, b) => a.codigo.localeCompare(b.codigo));
 
     return {
-      series: [{
-        name: "Rendimiento por hora",
-        data: datosOrdenados.map(item => {
-          // Calcular rendimiento por hora (evitar división por cero)
-          const horas = item.horas_operativas || 1; // Si horas es 0, usamos 1 para evitar NaN
-          return (item.rendimiento / horas);
-        })
-      }],
+      series: [
+        {
+          name: "Rendimiento real",
+          type: "bar",
+          data: datosOrdenados.map(item => {
+            // Calcular rendimiento por hora (evitar división por cero)
+            const horas = item.horas_operativas || 1;
+            return (item.rendimiento / horas);
+          })
+        },
+        {
+          name: "Meta de rendimiento",
+          type: "line",
+          data: datosOrdenados.map(item => item.meta) // Usar valor directo de la meta
+        }
+      ],
       categories: datosOrdenados.map(item => item.codigo)
     };
   }
@@ -211,75 +296,5 @@ export class RendimientoDePerforacionesComponent implements OnChanges {
     return totalFin >= totalIni
       ? totalFin - totalIni
       : (totalFin + 24) - totalIni;
-  }
-
-  private getDefaultOptions(): ChartOptions {
-    return {
-      series: [],
-      chart: {
-        type: "bar",
-        height: 350,
-        stacked: false,
-        toolbar: { show: false }
-      },
-      plotOptions: {
-        bar: {
-          horizontal: false,
-          borderRadius: 5,
-          endingShape: "rounded",
-          dataLabels: {
-            position: 'top'
-          }
-        } as any
-      },
-      dataLabels: {
-        enabled: true,
-        formatter: (val: number) => {
-          return val.toFixed(1);
-        },
-        style: {
-          fontSize: '12px',
-          colors: ['#000']
-        },
-        offsetY: -20
-      },
-      stroke: {
-        show: true,
-        width: 2,
-        colors: ["transparent"]
-      },
-      xaxis: {
-        categories: [],
-        title: {
-          text: 'Equipos'
-        },
-        labels: {
-          style: {
-            fontSize: '12px'
-          }
-        }
-      },
-      yaxis: {
-        labels: {
-          formatter: (value: number) => {
-            return value.toFixed(1);
-          }
-        }
-      },
-      fill: {
-        opacity: 1,
-        colors: ['#3B82F6']
-      },
-      tooltip: {
-        y: {
-          formatter: (val: number) => {
-            return `${val.toFixed(2)} m/h`;
-          }
-        }
-      },
-      legend: {
-        show: false
-      }
-    };
   }
 }

@@ -16,6 +16,8 @@ import { UtilizacionGeneralComponent } from "../Graficos/utilizacion-general/uti
 import { UtilizacionEquipoComponent } from "../Graficos/utilizacion-equipo/utilizacion-equipo.component";
 import { GraficoEstadosComponent } from '../Graficos/grafico-estados/grafico-estados.component';
 import { PromedioDeEstadosGeneralComponent } from '../Graficos/promedio-de-estados-general/promedio-de-estados-general.component';
+import { Meta } from '../../../../models/meta.model';
+import { MetaSostenimientoService } from '../../../../services/meta-sostenimiento.service';
 
 @Component({
   selector: 'app-sostenimiento-graficos',
@@ -35,9 +37,26 @@ export class SostenimientoGraficosComponent implements OnInit {
 fechaHasta: string = '';
 turnoSeleccionado: string = '';
 turnos: string[] = ['DÍA', 'NOCHE'];
+private todasLasMetas: Meta[] = [];
+  metasPorGrafico: { 
+    [key: string]: Meta[] 
+  } = {
+    'METROS PERFORADOS - EQUIPO': [],
+    'METROS PERFORADOS - LABOR': [],
+    'ESTADOS': [],
+    'ESTADOS GENERAL': [],
+    'MALLA - EQUIPO': [],
+    'MALLA - LABOR': [],
+    'HOROMETROS': [],
+    'RENDIMIENTO DE PERFORACION - EQUIPO': [],
+    'DISPONIBILIDAD MECANICA - EQUIPO': [],
+    'DISPONIBILIDAD MECANICA - GENERAL': [],
+    'UTILIZACION - EQUIPO': [],
+    'UTILIZACION - GENERAL': [],
+  };
 
 
-  constructor(private operacionService: OperacionService) {}
+  constructor(private metaService: MetaSostenimientoService, private operacionService: OperacionService) {}
  
   ngOnInit(): void {
     const fechaISO = this.obtenerFechaLocalISO();
@@ -46,6 +65,29 @@ turnos: string[] = ['DÍA', 'NOCHE'];
     this.turnoSeleccionado = this.obtenerTurnoActual();
   
     this.obtenerDatos();
+    this.cargarMetasDesdeApi();
+  }
+
+  private cargarMetasDesdeApi(): void {
+    this.metaService.getMetas().subscribe({
+      next: (metas: Meta[]) => {
+        if (metas && metas.length > 0) {
+          this.todasLasMetas = metas;
+  
+          // Filtrar y agrupar las metas según el campo "grafico"
+          metas.forEach(meta => {
+            if (this.metasPorGrafico[meta.grafico]) {
+              this.metasPorGrafico[meta.grafico].push(meta);
+            }
+          });
+  
+          // Mostrar en consola las metas por gráfico
+        } else {
+        }
+      },
+      error: (error) => {
+      }
+    });
   }
 
   obtenerTurnoActual(): string {
@@ -60,6 +102,22 @@ turnos: string[] = ['DÍA', 'NOCHE'];
       return 'NOCHE';
     }
   }  
+
+  private filtrarMetasPorMes(fecha: string): void {
+    const mesSeleccionado = this.obtenerMesDeFecha(fecha);
+    
+    // Reiniciamos todas las metas por gráfico
+    Object.keys(this.metasPorGrafico).forEach(key => {
+      this.metasPorGrafico[key] = [];
+    });
+  
+    // Filtramos las metas por el mes seleccionado
+    this.todasLasMetas.forEach(meta => {
+      if (meta.mes === mesSeleccionado && this.metasPorGrafico[meta.grafico]) {
+        this.metasPorGrafico[meta.grafico].push(meta);
+      }
+    });
+  }
   
   quitarFiltros(): void {
     const fechaISO = this.obtenerFechaLocalISO();
@@ -74,6 +132,10 @@ turnos: string[] = ['DÍA', 'NOCHE'];
     };
   
     this.datosOperaciones = this.filtrarDatos(this.datosOperacionesOriginal, filtros);
+    
+    // Filtrar metas según el mes actual
+    this.filtrarMetasPorMes(this.fechaDesde);
+    
     this.reprocesarTodosLosGraficos();
   }
 
@@ -100,8 +162,23 @@ turnos: string[] = ['DÍA', 'NOCHE'];
     // Actualizar los datos filtrados
     this.datosOperaciones = datosFiltrados;
   
+    // Filtrar metas según el mes de la fecha de inicio
+    this.filtrarMetasPorMes(this.fechaDesde);
+  
     // Reprocesar los gráficos con los datos filtrados
     this.reprocesarTodosLosGraficos();
+  }
+
+  private obtenerMesDeFecha(fecha: string): string {
+    if (!fecha) return '';
+    
+    const meses = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    
+    const date = new Date(fecha);
+    return meses[date.getMonth()];
   }
   
   filtrarDatos(datos: NubeOperacion[], filtros: any): NubeOperacion[] {

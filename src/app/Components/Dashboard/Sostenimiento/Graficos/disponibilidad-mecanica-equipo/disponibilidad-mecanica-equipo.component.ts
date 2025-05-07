@@ -14,6 +14,7 @@ import {
   NgApexchartsModule
 } from "ng-apexcharts";
 import { CommonModule } from '@angular/common';
+import { Meta } from '../../../../../models/meta.model';
 
 export type ChartOptions = {
   series: ApexAxisChartSeries;
@@ -37,8 +38,11 @@ export type ChartOptions = {
 })
 export class DisponibilidadMecanicaEquipoComponent implements OnChanges {
   @Input() datos: any[] = [];
+  @Input() metas: Meta[] = [];
   @ViewChild("chart") chart!: ChartComponent;
   public chartOptions: ChartOptions;
+
+  private metasPorCodigo: { [codigo: string]: number } = {};
 
   constructor() {
     this.chartOptions = this.getDefaultOptions();
@@ -46,22 +50,44 @@ export class DisponibilidadMecanicaEquipoComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['datos'] && this.datos && this.datos.length > 0) {
+      this.calcularMetas();
       this.updateChart();
+    } else if (changes['metas']) {
+      this.calcularMetas();
+      if (this.datos && this.datos.length > 0) {
+        this.updateChart();
+      }
     } else {
       this.chartOptions = this.getDefaultOptions();
     }
   }
 
+  private calcularMetas(): void {
+    this.metasPorCodigo = {};
+    this.metas.forEach(meta => {
+      this.metasPorCodigo[meta.nombre] = meta.objetivo;
+    });
+  }
+
   private getDefaultOptions(): ChartOptions {
     return {
-      series: [{
-        name: "Disponibilidad Mecánica",
-        data: []
-      }],
-      colors: [], // Color verde para las barras
+      series: [
+        {
+          name: "Disponibilidad Mecánica",
+          type: "bar",
+          data: []
+        },
+        {
+          name: "Meta",
+          type: "line",
+          data: []
+        }
+      ],
+      colors: ['#3B82F6', '#BF4342'],
       chart: {
         type: "bar",
         height: 350,
+        stacked: false,
         toolbar: { show: false }
       },
       plotOptions: {
@@ -76,19 +102,33 @@ export class DisponibilidadMecanicaEquipoComponent implements OnChanges {
       },
       dataLabels: {
         enabled: true,
-        formatter: (val: number) => {
-          return `${val.toFixed(2)}%`;
-        },
+        enabledOnSeries: [0], // Solo habilitar para las barras
+        formatter: (val: number) => `${val.toFixed(2)}%`,
         offsetY: -20,
         style: {
           fontSize: '12px',
-          colors: ["#333"]
+          colors: ["#000"]
+        },
+        background: {
+          enabled: false,
+          foreColor: '#000',
+          padding: 3,
+          borderRadius: 2,
+          borderWidth: 0,
+          opacity: 0.9,
+        },
+        dropShadow: {
+          enabled: true,
+          top: 1,
+          left: 1,
+          blur: 1,
+          opacity: 0.45,
         }
       },
       stroke: {
-        show: true,
-        width: 2,
-        colors: ["transparent"]
+        width: [0, 4], // Sin borde para barras, grosor 4 para línea
+        colors: [undefined, '#BF4342'], // Color solo para la línea
+        curve: 'smooth'
       },
       xaxis: {
         categories: [],
@@ -97,35 +137,44 @@ export class DisponibilidadMecanicaEquipoComponent implements OnChanges {
           style: {
             fontSize: '12px'
           }
+        },
+        axisBorder: {
+          show: true
+        },
+        axisTicks: {
+          show: true
         }
       },
       yaxis: {
-        // title: {
-        //   text: 'Disponibilidad (%)',
-        //   style: {
-        //     fontSize: '12px'
-        //   }
-        // },
         min: 0,
         max: 100,
-        labels: {
-          formatter: (val: number) => {
-            return `${val}%`;
+        title: {
+          text: 'Disponibilidad (%)',
+          style: {
+            fontSize: '12px'
           }
+        },
+        labels: {
+          formatter: (val: number) => `${val}%`
         }
       },
       fill: {
-        opacity: 1
+        opacity: 1,
+        colors: ['#3B82F6', '#BF4342']
       },
       tooltip: {
+        shared: true,
+        intersect: false,
         y: {
-          formatter: (val: number) => {
-            return `${val.toFixed(2)}%`;
-          }
+          formatter: (val: number) => `${val.toFixed(2)}%`
         }
       },
       legend: {
-        show: false
+        show: true,
+        position: 'top',
+        markers: {
+          fillColors: ['#3B82F6', '#BF4342']
+        }
       }
     };
   }
@@ -138,12 +187,25 @@ export class DisponibilidadMecanicaEquipoComponent implements OnChanges {
     
     const processedData = this.processData(this.datos);
     
+    // Obtener datos de metas en el mismo orden que las categorías
+    const metasData = processedData.categories.map(codigo => 
+      this.metasPorCodigo[codigo] || 0
+    );
+    
     this.chartOptions = {
       ...this.chartOptions,
-      series: [{
-        name: "Disponibilidad Mecánica",
-        data: processedData.disponibilidadMecanica
-      }],
+      series: [
+        {
+          name: "Disponibilidad Mecánica",
+          type: "bar",
+          data: processedData.disponibilidadMecanica
+        },
+        {
+          name: "Meta",
+          type: "line",
+          data: metasData
+        }
+      ],
       xaxis: {
         ...this.chartOptions.xaxis,
         categories: processedData.categories
@@ -152,10 +214,18 @@ export class DisponibilidadMecanicaEquipoComponent implements OnChanges {
     
     setTimeout(() => {
       if (this.chart && this.chart.updateSeries) {
-        this.chart.updateSeries([{
-          name: "Disponibilidad Mecánica",
-          data: processedData.disponibilidadMecanica
-        }]);
+        this.chart.updateSeries([
+          {
+            name: "Disponibilidad Mecánica",
+            type: "bar",
+            data: processedData.disponibilidadMecanica
+          },
+          {
+            name: "Meta",
+            type: "line",
+            data: metasData
+          }
+        ]);
       }
     }, 100);
   }
