@@ -37,7 +37,7 @@ export class SostenimientoGraficosComponent implements OnInit {
 fechaHasta: string = '';
 turnoSeleccionado: string = '';
 turnos: string[] = ['DÍA', 'NOCHE'];
-private todasLasMetas: Meta[] = [];
+private todasLasMetas: Meta[] = []; 
   metasPorGrafico: { 
     [key: string]: Meta[] 
   } = {

@@ -43,12 +43,12 @@
     </div>
     <div class="card">
       <h3>ESTADOS</h3>
-      <app-grafico-estados [datos]="datosGraficoEstados"></app-grafico-estados>
+      <app-grafico-estados [datos]="datosGraficoEstados"   [metas]="metasPorGrafico['ESTADOS']"></app-grafico-estados>
     </div>
 
     <div class="card">
       <h3>ESTADOS GENERAL</h3>
-      <app-promedio-de-estados-general [datos]="datosGraficoEstados"></app-promedio-de-estados-general>
+      <app-promedio-de-estados-general [datos]="datosGraficoEstados"   [metas]="metasPorGrafico['ESTADOS GENERAL']"></app-promedio-de-estados-general>
     </div>
 
 

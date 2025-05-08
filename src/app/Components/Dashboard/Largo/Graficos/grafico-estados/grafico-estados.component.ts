@@ -14,6 +14,7 @@ import {
   NgApexchartsModule
 } from "ng-apexcharts";
 import { CommonModule } from '@angular/common';
+import { Meta } from '../../../../../models/meta.model';
 
 export type ChartOptions = {
   series: ApexAxisChartSeries;
@@ -38,7 +39,8 @@ export type ChartOptions = {
 })
 export class GraficoEstadosComponent implements OnChanges {
   @Input() datos: any[] = [];
-  @ViewChild("chart") chart!: ChartComponent;
+  @Input() metas: Meta[] = [];
+  @ViewChild("chart") chart!: ChartComponent; 
   public chartOptions: ChartOptions;
 
   // Mapeo de estados a colores

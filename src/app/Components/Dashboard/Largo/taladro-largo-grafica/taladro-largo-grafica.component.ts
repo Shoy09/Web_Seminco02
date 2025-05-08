@@ -44,16 +44,15 @@ private todasLasMetas: Meta[] = [];
   } = {
     'METROS PERFORADOS - EQUIPO': [],
     'METROS PERFORADOS - LABOR': [],
-    'ESTADOS': [],
-    'ESTADOS GENERAL': [],
-    'MALLA - EQUIPO': [],
-    'MALLA - LABOR': [],
+    'LONGITUD DE PERFORACION': [],
     'HOROMETROS': [],
-    'RENDIMIENTO DE PERFORACION - EQUIPO': [],
+    'ESTADOS DE EQUIPOS': [],
+    'ESTADOS GENERAL': [],
     'DISPONIBILIDAD MECANICA - EQUIPO': [],
     'DISPONIBILIDAD MECANICA - GENERAL': [],
     'UTILIZACION - EQUIPO': [],
     'UTILIZACION - GENERAL': [],
+    'RENDIMIENTO DE PERFORACION - EQUIPO': [],
   };
 
 
