@@ -18,11 +18,12 @@ import { UtilizacionEquipoComponent } from "../Graficos/utilizacion-equipo/utili
 import { UtilizacionGeneralComponent } from "../Graficos/utilizacion-general/utilizacion-general.component";
 import { Meta } from '../../../../models/meta.model';
 import { MetaLargoService } from '../../../../services/meta-largo.service';
+import { SumaMetrosPerforadosComponent } from "../Graficos/suma-metros-perforados/suma-metros-perforados.component";
 
 
 @Component({
   selector: 'app-taladro-largo-grafica',
-  imports: [NgApexchartsModule, CommonModule, FormsModule, MetrosPerforadosEquipoComponent, MetrosPerforadosLaborComponent, LongitudDePerforacionComponent, HorometrosComponent, GraficoEstadosComponent, PromedioDeEstadosGeneralComponent, RendimientoDePerforacionesComponent, DisponibilidadMecanicaEquipoComponent, DisponibilidadMecanicaGeneralComponent, UtilizacionEquipoComponent, UtilizacionGeneralComponent],
+  imports: [NgApexchartsModule, CommonModule, FormsModule, MetrosPerforadosEquipoComponent, MetrosPerforadosLaborComponent, LongitudDePerforacionComponent, HorometrosComponent, GraficoEstadosComponent, PromedioDeEstadosGeneralComponent, RendimientoDePerforacionesComponent, DisponibilidadMecanicaEquipoComponent, DisponibilidadMecanicaGeneralComponent, UtilizacionEquipoComponent, UtilizacionGeneralComponent, SumaMetrosPerforadosComponent],
   templateUrl: './taladro-largo-grafica.component.html',
   styleUrl: './taladro-largo-grafica.component.css'
 })

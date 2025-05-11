@@ -22,6 +22,25 @@
   
     <!-- Tarjetas con los gráficos -->
     <div class="graficos-container">
+ 
+<div class="special-row">
+        <div class="card"> 
+          <h3>SUMA DE METROS PERFORADOS</h3>
+          <app-suma-metros-perforados [datos]="datosGraficobarrasapiladas" [metas]="metasPorGrafico['METROS PERFORADOS - EQUIPO']"></app-suma-metros-perforados>
+        </div>
+
+        <div class="card">
+          <h3>UTILIZACION - GENERAL</h3>
+          <app-utilizacion-general [datos]="datosGraficoEstados" [metas]="metasPorGrafico['UTILIZACION - GENERAL']"></app-utilizacion-general>
+        </div>
+
+        <div class="card">
+          <h3>DISPONIBILIDAD MECANICA - GENERAL</h3>
+          <app-disponibilidad-mecanica-general [datos]="datosGraficoEstados" [metas]="metasPorGrafico['DISPONIBILIDAD MECANICA - GENERAL']"></app-disponibilidad-mecanica-general>
+        </div>
+      </div>
+
+
       <div class="card"> 
         <h3>METROS PERFORADOS - EQUIPO</h3>
         <app-grafico-barras [datos]="datosGraficobarrasapiladas"  [metas]="metasPorGrafico['METROS PERFORADOS - EQUIPO']"></app-grafico-barras>
@@ -92,20 +111,13 @@
         <app-disponibilidad-mecanica-equipo [datos]="datosGraficoEstados" [metas]="metasPorGrafico['DISPONIBILIDAD MECANICA - EQUIPO']"></app-disponibilidad-mecanica-equipo>
       </div>
 
-      <div class="card">
-        <h3>DISPONIBILIDAD MECANICA - GENERAL</h3>
-        <app-disponibilidad-mecanica-general [datos]="datosGraficoEstados" [metas]="metasPorGrafico['DISPONIBILIDAD MECANICA - GENERAL']"></app-disponibilidad-mecanica-general>
-      </div>
 
       <div class="card">
         <h3>UTILIZACION - EQUIPO</h3>
         <app-utilizacion-equipo [datos]="datosGraficoEstados" [metas]="metasPorGrafico['UTILIZACION - EQUIPO']"></app-utilizacion-equipo>
       </div>
 
-      <div class="card">
-        <h3>UTILIZACION - GENERAL</h3>
-        <app-utilizacion-general [datos]="datosGraficoEstados" [metas]="metasPorGrafico['UTILIZACION - GENERAL']"></app-utilizacion-general>
-      </div>
+
     
     </div>
     

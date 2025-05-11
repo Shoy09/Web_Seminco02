@@ -93,3 +93,26 @@
   font-size: 1.1rem;
   text-align: center;
 }
+
+.special-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  width: 100%;
+  grid-column: 1 / -1; /* Esto hace que ocupe todas las columnas disponibles */
+  margin-bottom: 20px;
+}
+
+/* Ajusta el tamaño mínimo para pantallas más pequeñas */
+@media (max-width: 1300px) {
+  .special-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mantén el diseño original para el resto */
+.graficos-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 20px;
+}
