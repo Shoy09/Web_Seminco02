@@ -96,7 +96,7 @@
 
 .special-row {
   display: grid;
-  grid-template-columns: repeat(6, 1fr); /* 4 columnas de igual tamaño */
+  grid-template-columns: repeat(3, 1fr); /* 4 columnas de igual tamaño */
   gap: 20px;
   width: 100%;
   grid-column: 1 / -1; 
