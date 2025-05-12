@@ -200,7 +200,7 @@ export class PlanProduccionListComponent implements OnInit {
       vpt_act: fila['VPT ACT'],
       vpt_final: fila['VPT FINAL'],
       cut_off_1: fila['CUT OFF 1'],
-      cut_off_2: fila['CUT OFF 2'],
+      cut_off_2: fila['TONELAJE'],
       // Campos dinámicos 1A - 28B
       ...Object.fromEntries(
         Array.from({ length: 28 }, (_, i) => [

@@ -206,7 +206,7 @@ export class PlanMetrajeListComponent implements OnInit {
       ancho_minado_sem: fila['ANCHO DE MINADO SEM (m)'], // Revisa que este nombre coincida
       ancho_minado_mes: fila['ANCHO DE MINADO MES (m)'], // Revisa que este nombre coincida
       burden: fila['BURDEN (m)'], // Revisa que este nombre coincida
-      espaciamiento: fila['ESPACIAMIENTO (m)'], // Revisa que este nombre coincida
+      espaciamiento: fila['METRAJE (m)'], // Revisa que este nombre coincida
       longitud_perforacion: fila['LONGITUD DE PERFORACIÓN (m)'], // Revisa que este nombre coincida
       // Mapeo dinámico de columnas 1A - 28B
       ...Object.fromEntries(
