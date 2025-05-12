@@ -41,7 +41,7 @@ export type ChartOptions = {
 export class RendimientoDePerforacionesComponent implements OnChanges {
   @Input() RendimientoPerforacion: any[] = [];
   @Input() metas: Meta[] = [];
-  @ViewChild("chart") chart!: ChartComponent;
+  @ViewChild("chart") chart!: ChartComponent; 
   public chartOptions: ChartOptions;
 
   // Datos calculados

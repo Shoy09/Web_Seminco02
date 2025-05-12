@@ -36,7 +36,12 @@ export class SostenimientoMetaPrincipalComponent implements OnInit {
     'DISPONIBILIDAD MECANICA - EQUIPO',
     'DISPONIBILIDAD MECANICA - GENERAL',
     'UTILIZACION - EQUIPO',
-    'UTILIZACION - GENERAL'
+    'UTILIZACION - GENERAL',
+    'PROMEDIO DE RENDIMIENTO',
+    'SUMA DE METROS PERFORADOS',
+    'SUMA DE TALADROS',
+    'MALLA PROMEDIO',
+
   ];
 
   constructor(private metaService: MetaSostenimientoService, private dialog: MatDialog, private _toastr: ToastrService) {}

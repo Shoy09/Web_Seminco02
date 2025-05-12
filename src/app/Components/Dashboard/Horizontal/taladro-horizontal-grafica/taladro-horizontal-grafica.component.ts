@@ -24,11 +24,12 @@ import { UtilizacionGeneralComponent } from "../Graficos/utilizacion-general/uti
 import { MetaService } from '../../../../services/meta.service';
 import { Meta } from '../../../../models/meta.model';
 import { SumaMetrosPerforadosComponent } from "../Graficos/suma-metros-perforados/suma-metros-perforados.component";
+import { RendimientoPromedioComponent } from "../Graficos/rendimiento-promedio/rendimiento-promedio.component";
 
 @Component({
   selector: 'app-taladro-horizontal-grafica',
   standalone: true,
-  imports: [FormsModule, GraficoBarrasComponent, CommonModule, GraficoBarrasAgrupadaComponent, PromNumTaladroTipoLaborComponent, PromMetrosPerforadosSeccionComponent, GraficoHorometrosComponent, GraficoBarrasMetrosLaborComponent, GraficoBarrasAgrupadaNumLaborComponent, GraficoEstadosComponent, PromedioTaladrosComponent, BarrasMetroPerforadosLaborComponent, PromedioDeEstadosGeneralComponent, RendimientoDePerforacionesComponent, DisponibilidadMecanicaEquipoComponent, DisponibilidadMecanicaGeneralComponent, UtilizacionEquipoComponent, UtilizacionGeneralComponent, SumaMetrosPerforadosComponent],
+  imports: [FormsModule, GraficoBarrasComponent, CommonModule, GraficoBarrasAgrupadaComponent, PromNumTaladroTipoLaborComponent, PromMetrosPerforadosSeccionComponent, GraficoHorometrosComponent, GraficoBarrasMetrosLaborComponent, GraficoBarrasAgrupadaNumLaborComponent, GraficoEstadosComponent, PromedioTaladrosComponent, BarrasMetroPerforadosLaborComponent, PromedioDeEstadosGeneralComponent, RendimientoDePerforacionesComponent, DisponibilidadMecanicaEquipoComponent, DisponibilidadMecanicaGeneralComponent, UtilizacionEquipoComponent, UtilizacionGeneralComponent, SumaMetrosPerforadosComponent, RendimientoPromedioComponent],
   templateUrl: './taladro-horizontal-grafica.component.html',
   styleUrl: './taladro-horizontal-grafica.component.css'
 }) 
@@ -63,7 +64,9 @@ export class TaladroHorizontalGraficaComponent implements OnInit {
     'DISPONIBILIDAD MECANICA - EQUIPO': [],
     'DISPONIBILIDAD MECANICA - GENERAL': [],
     'UTILIZACION - EQUIPO': [], 
-    'UTILIZACION - GENERAL': []
+    'UTILIZACION - GENERAL': [],
+    'SUMA DE METROS PERFORADOS': [],
+    'PROMEDIO DE RENDIMIENTO': []
   };
   
 
@@ -107,17 +110,26 @@ turnos: string[] = ['DÍA', 'NOCHE'];
     });
   }
   
-  private obtenerMesDeFecha(fecha: string): string {
-    if (!fecha) return '';
-    
-    const meses = [
-      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-    ];
-    
-    const date = new Date(fecha);
-    return meses[date.getMonth()];
-  }
+private obtenerMesDeFecha(fecha: string): string {
+  if (!fecha) return '';
+  
+  const meses = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+  
+  // Dividir la fecha y crear el Date objeto en UTC para evitar problemas de zona horaria
+  const partes = fecha.split('-');
+  const year = parseInt(partes[0], 10);
+  const month = parseInt(partes[1], 10) - 1; // Restamos 1 porque los meses en Date son 0-based
+  const day = parseInt(partes[2], 10);
+  
+  // Crear la fecha en UTC
+  const date = new Date(Date.UTC(year, month, day));
+  
+  return meses[date.getUTCMonth()]; // Usamos getUTCMonth() para obtener el mes correcto
+}
+
 
   obtenerTurnoActual(): string {
     const ahora = new Date();
@@ -147,7 +159,7 @@ turnos: string[] = ['DÍA', 'NOCHE'];
     this.datosOperaciones = this.filtrarDatos(this.datosOperacionesOriginal, filtros);
     
     // Filtrar metas según el mes actual
-    this.filtrarMetasPorMes(this.fechaDesde);
+    this.filtrarMetasPorMes(this.fechaDesde, this.fechaHasta);
     
     this.reprocesarTodosLosGraficos();
   }
@@ -176,27 +188,42 @@ turnos: string[] = ['DÍA', 'NOCHE'];
     this.datosOperaciones = datosFiltrados;
   
     // Filtrar metas según el mes de la fecha de inicio
-    this.filtrarMetasPorMes(this.fechaDesde);
+    this.filtrarMetasPorMes(this.fechaDesde, this.fechaHasta) ;
   
     // Reprocesar los gráficos con los datos filtrados
     this.reprocesarTodosLosGraficos();
   }
 
-  private filtrarMetasPorMes(fecha: string): void {
-    const mesSeleccionado = this.obtenerMesDeFecha(fecha);
-    
-    // Reiniciamos todas las metas por gráfico
-    Object.keys(this.metasPorGrafico).forEach(key => {
-      this.metasPorGrafico[key] = [];
-    });
-  
-    // Filtramos las metas por el mes seleccionado
-    this.todasLasMetas.forEach(meta => {
-      if (meta.mes === mesSeleccionado && this.metasPorGrafico[meta.grafico]) {
-        this.metasPorGrafico[meta.grafico].push(meta);
-      }
-    });
-  }
+  private filtrarMetasPorMes(fechaInicio: string, fechaHasta: string): void {
+  const mesSeleccionado = this.obtenerMesDeFecha(fechaInicio); // Asumiendo un mes por ahora
+  const cantidadDias = this.obtenerCantidadDias(fechaInicio, fechaHasta);
+  const multiplicadorTurno = this.turnoSeleccionado === '' ? 2 : 1;
+
+  // Reiniciar metas por gráfico
+  Object.keys(this.metasPorGrafico).forEach(key => {
+    this.metasPorGrafico[key] = [];
+  });
+
+  this.todasLasMetas.forEach(meta => {
+    if (meta.mes === mesSeleccionado && this.metasPorGrafico[meta.grafico]) {
+      const metaClonada = { ...meta };
+      
+      // Cálculo final: objetivo * cantidad de días * multiplicador de turno
+      metaClonada.objetivo = meta.objetivo * cantidadDias * multiplicadorTurno;
+
+      this.metasPorGrafico[meta.grafico].push(metaClonada);
+    }
+  });
+}
+
+private obtenerCantidadDias(fechaInicio: string, fechaFin: string): number {
+  const inicio = new Date(fechaInicio);
+  const fin = new Date(fechaFin);
+  const diffTime = Math.abs(fin.getTime() - inicio.getTime());
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 para incluir ambos días
+  return diffDays;
+}
+
   
   filtrarDatos(datos: NubeOperacion[], filtros: any): NubeOperacion[] {
     return datos.filter(operacion => {

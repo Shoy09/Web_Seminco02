@@ -24,9 +24,16 @@
     <div class="graficos-container">
  
 <div class="special-row">
+  <div class="card">
+        <h3>PROMEDIO DE RENDIMIENTO</h3>
+        <app-rendimiento-promedio
+          [RendimientoPerforacion]="RendimientoPerforacion"
+          [metas]="metasPorGrafico['PROMEDIO DE RENDIMIENTO']"
+        ></app-rendimiento-promedio>
+      </div>
         <div class="card"> 
           <h3>SUMA DE METROS PERFORADOS</h3>
-          <app-suma-metros-perforados [datos]="datosGraficobarrasapiladas" [metas]="metasPorGrafico['METROS PERFORADOS - EQUIPO']"></app-suma-metros-perforados>
+          <app-suma-metros-perforados [datos]="datosGraficobarrasapiladas" [metas]="metasPorGrafico['SUMA DE METROS PERFORADOS']"></app-suma-metros-perforados>
         </div>
 
         <div class="card">

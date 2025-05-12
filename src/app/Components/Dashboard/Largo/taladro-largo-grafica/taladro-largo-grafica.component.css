@@ -96,12 +96,17 @@
 
 .special-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr); /* 4 columnas de igual tamaño */
   gap: 20px;
   width: 100%;
-  grid-column: 1 / -1; /* Esto hace que ocupe todas las columnas disponibles */
-  margin-bottom: 20px;
+  grid-column: 1 / -1; 
 }
+
+.special-row .card {
+  min-width: 0; /* Evita que el contenido fuerce el ancho mínimo */
+  overflow: hidden;
+}
+
 
 /* Ajusta el tamaño mínimo para pantallas más pequeñas */
 @media (max-width: 1300px) {

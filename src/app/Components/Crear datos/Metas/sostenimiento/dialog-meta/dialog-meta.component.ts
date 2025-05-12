@@ -105,6 +105,20 @@ export class DialogMetaComponent {
         this.etiquetaNombre = 'Estado';
         this.placeholderObjetivo = 'Horas';
         break;
+      
+        case 'PROMEDIO DE RENDIMIENTO':
+        this.tipoMeta = 'metros';
+        this.etiquetaObjetivo = 'Rendimiento Objetivo';
+        this.etiquetaNombre = 'Promedio';
+        this.placeholderObjetivo = 'Metros m/h';
+        break;
+      
+      case 'SUMA DE METROS PERFORADOS':
+        this.tipoMeta = 'metros';
+        this.etiquetaObjetivo = 'Rendimiento Objetivo';
+        this.etiquetaNombre = 'Promedio';
+        this.placeholderObjetivo = 'Metros';
+        break;
   
       default:
         this.tipoMeta = '';

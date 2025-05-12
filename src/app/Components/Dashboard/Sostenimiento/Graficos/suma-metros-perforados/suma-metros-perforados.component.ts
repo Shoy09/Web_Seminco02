@@ -19,7 +19,7 @@ export type ChartOptions = {
   plotOptions: ApexPlotOptions;
   fill: ApexFill;
   responsive: ApexResponsive[];
-  legend: ApexLegend;
+  legend: ApexLegend; 
   colors: string[];
 };
 
@@ -36,13 +36,14 @@ export class SumaMetrosPerforadosComponent implements OnChanges {
   public chartOptions: Partial<ChartOptions>;
   public sumaMetros: number = 0;
   public meta: number = 0;
+  public porcentajeCumplimiento: number = 0;
 
   constructor() {
     this.chartOptions = this.getDefaultOptions();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['datos'] && this.datos && this.datos.length > 0) {
+    if ((changes['datos'] && this.datos) || changes['metas']) {
       this.updateChart();
     } else {
       this.chartOptions = this.getDefaultOptions();
@@ -81,7 +82,7 @@ export class SumaMetrosPerforadosComponent implements OnChanges {
               offsetY: -2,
               fontSize: "22px",
               formatter: (val: number) => {
-                return `${val.toFixed(2)}`;  // Aquí mostramos los metros perforados
+                return `${val.toFixed(2)}%`;
               }
             }
           }
@@ -98,7 +99,7 @@ export class SumaMetrosPerforadosComponent implements OnChanges {
           stops: [0, 50, 53, 91]
         }
       },
-      labels: ["METROS PERFORADOS"],
+      labels: ["Cumplimiento de Metros"],
       responsive: [{
         breakpoint: 480,
         options: {
@@ -111,49 +112,44 @@ export class SumaMetrosPerforadosComponent implements OnChanges {
   }
 
   private updateChart(): void {
-    if (!this.datos || this.datos.length === 0) {
-      console.warn('No hay datos para mostrar');
-      return;
-    }
+    this.sumaMetros = this.calcularSumaMetros();
+    this.meta = this.obtenerMeta();
     
-    this.sumaMetros = this.calcularSumaMetros(); // Calcular la suma total de metros perforados
+    // Calcular porcentaje de cumplimiento
+    this.porcentajeCumplimiento = this.meta > 0 
+      ? (this.sumaMetros / this.meta) * 100 
+      : 0;
 
-    this.meta = this.obtenerMeta(); // Asumimos que solo hay una meta
-
-    // Aquí decidimos el color según si la meta ha sido superada o no
-    if (this.sumaMetros >= this.meta) {
-      this.chartOptions.colors = ['#00FF00'];  // Verde si se cumple la meta
-    } else {
-      this.chartOptions.colors = ['#FF0000'];  // Rojo si no se cumple
-    }
+    // Determinar color basado en el porcentaje de cumplimiento
+    this.chartOptions.colors = this.getColorForPercentage(this.porcentajeCumplimiento);
 
     this.chartOptions = {
       ...this.chartOptions,
-      series: [this.sumaMetros],
-      labels: [`: ${this.sumaMetros.toFixed(2)} metros`]  // Mostramos los metros perforados en la etiqueta
+      series: [Math.min(100, this.porcentajeCumplimiento)], // Máximo 100% en el gráfico
+      labels: [`Cumplimiento: ${Math.min(100, this.porcentajeCumplimiento).toFixed(2)}%`]
     };
 
-    requestAnimationFrame(() => {
-  if (this.chart && this.chart.updateSeries) {
-    this.chart.updateSeries([this.sumaMetros]);
+    setTimeout(() => {
+      if (this.chart?.updateSeries) {
+        this.chart.updateSeries([Math.min(100, this.porcentajeCumplimiento)]);
+      }
+    }, 100);
   }
-});
 
+  private getColorForPercentage(percentage: number): string[] {
+    if (percentage >= 100) return ['#00FF00']; // Verde
+    if (percentage >= 90) return ['#FFA500'];  // Naranja
+    return ['#FF0000']; // Rojo
   }
 
-  // Calcular la suma total de metros perforados
   private calcularSumaMetros(): number {
-    let totalMetros = 0;
-
-    this.datos.forEach(item => {
+    if (!this.datos) return 0;
+    
+    return this.datos.reduce((total, item) => {
       const ntaladro = Number(item.ntaladro) || 0;
       const longitud = Number(item.longitud_perforacion) || 0;
-
-      const resultado = ntaladro * longitud;
-      totalMetros += resultado;
-    });
-
-    return totalMetros;
+      return total + (ntaladro * longitud);
+    }, 0);
   }
 
   public obtenerMeta(): number {

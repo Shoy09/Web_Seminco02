@@ -19,22 +19,22 @@ export type ChartOptions = {
   plotOptions: ApexPlotOptions;
   fill: ApexFill;
   responsive: ApexResponsive[];
-  legend: ApexLegend; 
+  legend: ApexLegend;
   colors: string[];
 };
 
 @Component({
-  selector: 'app-suma-metros-perforados',
+  selector: 'app-promedio-n-taladro',
   imports: [CommonModule, NgApexchartsModule],
-  templateUrl: './suma-metros-perforados.component.html',
-  styleUrl: './suma-metros-perforados.component.css'
+  templateUrl: './promedio-n-taladro.component.html',
+  styleUrl: './promedio-n-taladro.component.css'
 })
-export class SumaMetrosPerforadosComponent implements OnChanges {
+export class PromedioNTaladroComponent implements OnChanges {
   @Input() datos: any[] = [];
   @Input() metas: Meta[] = []; 
   @ViewChild("chart") chart!: ChartComponent;
   public chartOptions: Partial<ChartOptions>;
-  public sumaMetros: number = 0;
+  public sumaMallas: number = 0;
   public meta: number = 0;
   public porcentajeCumplimiento: number = 0;
 
@@ -99,7 +99,7 @@ export class SumaMetrosPerforadosComponent implements OnChanges {
           stops: [0, 50, 53, 91]
         }
       },
-      labels: ["Cumplimiento de Metros"],
+      labels: ["Cumplimiento de Mallas"],
       responsive: [{
         breakpoint: 480,
         options: {
@@ -112,12 +112,12 @@ export class SumaMetrosPerforadosComponent implements OnChanges {
   }
 
   private updateChart(): void {
-    this.sumaMetros = this.calcularSumaMetros();
+    this.sumaMallas = this.calcularSumaMallas();
     this.meta = this.obtenerMeta();
     
     // Calcular porcentaje de cumplimiento
     this.porcentajeCumplimiento = this.meta > 0 
-      ? (this.sumaMetros / this.meta) * 100 
+      ? (this.sumaMallas / this.meta) * 100 
       : 0;
 
     // Determinar color basado en el porcentaje de cumplimiento
@@ -142,17 +142,17 @@ export class SumaMetrosPerforadosComponent implements OnChanges {
     return ['#FF0000']; // Rojo
   }
 
-  private calcularSumaMetros(): number {
+  private calcularSumaMallas(): number {
     if (!this.datos) return 0;
     
     return this.datos.reduce((total, item) => {
-      const ntaladro = Number(item.ntaladro) || 0;
-      const longitud = Number(item.longitud_perforacion) || 0;
-      return total + (ntaladro * longitud);
+      const mallas = Number(item.ntaladro) || 0;
+      return total + mallas;
     }, 0);
   }
 
   public obtenerMeta(): number {
+    // Asumimos que hay una sola meta global para mallas
     return this.metas.length > 0 ? this.metas[0].objetivo : 0;
   }
 }

@@ -35,7 +35,9 @@ export class LargoMetaPrincipalComponent implements OnInit {
     'DISPONIBILIDAD MECANICA - GENERAL',
     'UTILIZACION - EQUIPO',
     'UTILIZACION - GENERAL',
-    'RENDIMIENTO DE PERFORACION - EQUIPO'
+    'RENDIMIENTO DE PERFORACION - EQUIPO',
+    'PROMEDIO DE RENDIMIENTO',
+    'SUMA DE METROS PERFORADOS' 
   ];
 
   constructor(private metaService: MetaLargoService, private dialog: MatDialog, private _toastr: ToastrService ) {} 
