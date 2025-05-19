@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 
-import { NubeOperacion } from '../../../../models/operaciones.models';
+import { NubeInterPerforacionHorizontal, NubeOperacion } from '../../../../models/operaciones.models';
 import { GraficoBarrasComponent } from "../Graficos/grafico-barras/grafico-barras.component";
 import { CommonModule } from '@angular/common';
 import { OperacionService } from '../../../../services/OperacionService .service';
@@ -25,7 +25,7 @@ import { MetaService } from '../../../../services/meta.service';
 import { Meta } from '../../../../models/meta.model';
 import { SumaMetrosPerforadosComponent } from "../Graficos/suma-metros-perforados/suma-metros-perforados.component";
 import { RendimientoPromedioComponent } from "../Graficos/rendimiento-promedio/rendimiento-promedio.component";
-
+import * as XLSX from 'xlsx-js-style';
 @Component({
   selector: 'app-taladro-horizontal-grafica',
   standalone: true,
@@ -453,5 +453,206 @@ prepararDatoRendimientoPerforacion(): void {
 
 }
 
+exportarAExcelConHojasSeparadas(): void {
+  if (!this.datosOperaciones || this.datosOperaciones.length === 0) {
+    console.warn('No hay datos para exportar');
+    return;
+  }
+
+  const wb: XLSX.WorkBook = XLSX.utils.book_new();
+
+  this.datosOperaciones.forEach((operacion, index) => {
+    const sheetName = `Op-${operacion.id}`.substring(0, 31);
+    const datosHoja = this.prepararDatosPorOperacion(operacion);
+    const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(datosHoja);
+    
+    // Aplicar estilos a la hoja
+    this.aplicarEstilosAhoja(ws, datosHoja);
+    
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  });
+
+  const fechaHoy = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `Operaciones_Detalladas_${fechaHoy}.xlsx`);
+}
+
+aplicarEstilosAhoja(ws: XLSX.WorkSheet, datosHoja: any[][]): void {
+  // Estilos base
+  const estiloTituloPrincipal = {
+    font: { bold: true, color: { rgb: "FFFFFF" }, sz: 14 },
+    fill: { fgColor: { rgb: "4472C4" } }, // Azul
+    alignment: { horizontal: "center" }
+  };
+
+  const estiloSubtitulo = {
+    font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
+    fill: { fgColor: { rgb: "70AD47" } }, // Verde
+    alignment: { horizontal: "center" }
+  };
+
+  const estiloEncabezadoTabla = {
+    font: { bold: true, color: { rgb: "000000" } },
+    fill: { fgColor: { rgb: "D9E1F2" } }, // Azul claro
+    border: {
+      top: { style: "thin", color: { rgb: "000000" } },
+      bottom: { style: "thin", color: { rgb: "000000" } },
+      left: { style: "thin", color: { rgb: "000000" } },
+      right: { style: "thin", color: { rgb: "000000" } }
+    }
+  };
+
+  const estiloCeldaDatos = {
+    border: {
+      top: { style: "thin", color: { rgb: "000000" } },
+      bottom: { style: "thin", color: { rgb: "000000" } },
+      left: { style: "thin", color: { rgb: "000000" } },
+      right: { style: "thin", color: { rgb: "000000" } }
+    }
+  };
+
+  // Aplicar estilos según el contenido
+datosHoja.forEach((row, rowIndex) => {
+    row.forEach((cell, colIndex) => {
+      const cellRef = XLSX.utils.encode_cell({ r: rowIndex, c: colIndex });
+      
+      // Estilo para títulos principales
+      if (typeof cell === 'string' && cell.toUpperCase() === cell && cell.includes('INFORMACIÓN')) {
+        ws[cellRef].s = estiloTituloPrincipal;
+        if (!ws['!merges']) ws['!merges'] = [];
+        ws['!merges'].push({ s: { r: rowIndex, c: 0 }, e: { r: rowIndex, c: 8 } });
+      }
+      // Estilo para subtítulos (HORÓMETROS, ESTADOS, etc.)
+      else if (typeof cell === 'string' && cell.toUpperCase() === cell && 
+              (cell.includes('HORÓMETROS') || cell.includes('ESTADOS') || 
+               cell.includes('PERFORACIONES'))) {
+        ws[cellRef].s = estiloSubtitulo;
+        if (!ws['!merges']) ws['!merges'] = [];
+        ws['!merges'].push({ s: { r: rowIndex, c: 0 }, e: { r: rowIndex, c: 8 } });
+      }
+      // Estilo para encabezados de tabla - VERSIÓN CORREGIDA
+      else if (rowIndex > 0 && datosHoja[rowIndex-1] && datosHoja[rowIndex-1][0] && 
+              typeof datosHoja[rowIndex-1][0] === 'string') {
+        const cellValue = datosHoja[rowIndex-1][0].toString().toUpperCase();
+        if (cellValue.includes('HORÓMETROS') || cellValue.includes('ESTADOS') || cellValue.includes('DETALLES')) {
+          ws[cellRef].s = estiloEncabezadoTabla;
+        }
+      }
+      // Estilo para datos de tabla - VERSIÓN CORREGIDA
+      else if (rowIndex > 1 && datosHoja[rowIndex-2] && datosHoja[rowIndex-2][0] && 
+              typeof datosHoja[rowIndex-2][0] === 'string') {
+        const cellValue = datosHoja[rowIndex-2][0].toString().toUpperCase();
+        if (cellValue.includes('HORÓMETROS') || cellValue.includes('ESTADOS') || cellValue.includes('DETALLES')) {
+          ws[cellRef].s = estiloCeldaDatos;
+        }
+      }
+    });
+  });
+
+  // Ajustar el ancho de las columnas automáticamente
+  const colWidths = datosHoja[0].map((_, colIndex) => {
+    return {
+      wch: Math.max(
+        ...datosHoja.map(row => 
+          row[colIndex] ? row[colIndex].toString().length + 2 : 10
+        )
+      )
+    };
+  });
+  
+  ws['!cols'] = colWidths;
+}
+
+prepararDatosPorOperacion(operacion: NubeOperacion): any[][] {
+  const datosHoja: any[][] = [];
+
+  // 1. Encabezado principal
+  datosHoja.push(['INFORMACIÓN PRINCIPAL DE LA OPERACIÓN']);
+  datosHoja.push(['ID', operacion.id]);
+  datosHoja.push(['Turno', operacion.turno]);
+  datosHoja.push(['Equipo', operacion.equipo]);
+  datosHoja.push(['Código', operacion.codigo]);
+  datosHoja.push(['Empresa', operacion.empresa]);
+  datosHoja.push(['Fecha', operacion.fecha]);
+  datosHoja.push(['Tipo Operación', operacion.tipo_operacion]);
+  datosHoja.push(['Estado', operacion.estado]);
+  datosHoja.push(['Envío', operacion.envio]);
+  datosHoja.push([""]); // Espacio en blanco
+
+  // 2. Sección de Horómetros
+  if (operacion.horometros && operacion.horometros.length > 0) {
+    datosHoja.push(['HORÓMETROS']);
+    datosHoja.push(['Nombre', 'Inicial', 'Final', 'OP', 'INOP']);
+    
+    operacion.horometros.forEach(horometro => {
+      datosHoja.push([
+        horometro.nombre,
+        horometro.inicial,
+        horometro.final,
+        horometro.EstaOP,
+        horometro.EstaINOP
+      ]);
+    });
+    datosHoja.push([""]); // Espacio en blanco
+  }
+
+  // 3. Sección de Estados
+  if (operacion.estados && operacion.estados.length > 0) {
+    datosHoja.push(['ESTADOS']);
+    datosHoja.push(['Número', 'Estado', 'Código', 'Hora Inicio', 'Hora Final']);
+    
+    operacion.estados.forEach(estado => {
+      datosHoja.push([
+        estado.numero,
+        estado.estado,
+        estado.codigo,
+        estado.hora_inicio,
+        estado.hora_final
+      ]);
+    });
+    datosHoja.push([""]); // Espacio en blanco
+  }
+
+  // 4. Sección de Perforaciones Horizontales
+  if (operacion.perforaciones_horizontal && operacion.perforaciones_horizontal.length > 0) {
+    datosHoja.push(['PERFORACIONES HORIZONTALES']);
+    
+    operacion.perforaciones_horizontal.forEach((perf, i) => {
+      datosHoja.push([`PERFORACIÓN HORIZONTAL ${i + 1}`]);
+      datosHoja.push(['Zona', perf.zona]);
+      datosHoja.push(['Tipo Labor', perf.tipo_labor]);
+      datosHoja.push(['Labor', perf.labor]);
+      datosHoja.push(['Veta', perf.veta]);
+      datosHoja.push(['Nivel', perf.nivel]);
+      datosHoja.push(['Tipo Perforación', perf.tipo_perforacion]);
+      
+      if (perf.inter_perforaciones_horizontal && perf.inter_perforaciones_horizontal.length > 0) {
+        datosHoja.push([""]);
+        datosHoja.push(['DETALLES DE PERFORACIÓN']);
+        datosHoja.push([
+          'Código Actividad', 'Nivel', 'Labor', 'Sección', 
+          'N° Broca', 'N° Taladro', 'Taladros Rimados', 
+          'Longitud Perforación', 'Detalles Trabajo'
+        ]);
+        
+        perf.inter_perforaciones_horizontal.forEach(inter => {
+          datosHoja.push([
+            inter.codigo_actividad,
+            inter.nivel,
+            inter.labor,
+            inter.seccion_la_labor,
+            inter.nbroca,
+            inter.ntaladro,
+            inter.ntaladros_rimados,
+            inter.longitud_perforacion,
+            inter.detalles_trabajo_realizado
+          ]);
+        });
+      }
+      datosHoja.push([""]); // Espacio en blanco entre perforaciones
+    });
+  }
+
+  return datosHoja;
+}
 
 }
