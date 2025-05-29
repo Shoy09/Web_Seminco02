@@ -17,6 +17,7 @@ import * as XLSX from 'xlsx';
 import { Usuario } from '../../../models/Usuario';
 import { UsuarioService } from '../../../services/usuario.service';
 import { LoadingDialogComponent } from '../../Reutilizables/loading-dialog/loading-dialog.component';
+import { OperacionesDialogComponent } from '../operaciones-dialog.component';
 
 @Component({
   selector: 'app-usuarios',
@@ -29,17 +30,19 @@ import { LoadingDialogComponent } from '../../Reutilizables/loading-dialog/loadi
     MatIconModule,
     MatDialogModule,
     MatInputModule, 
-    MatFormFieldModule
+    MatFormFieldModule,
+    CommonModule
   ],
   templateUrl: './usuarios.component.html',
   styleUrl: './usuarios.component.css'
 })
 export class UsuariosComponent implements OnInit {
-  displayedColumns: string[] = ['codigo_dni', 'nombre', 'correo', 'acciones'];
+  displayedColumns: string[] = ['codigo_dni', 'nombre', 'rol', 'operaciones', 'acciones'];
+Object = Object;
   dataSource = new MatTableDataSource<Usuario>([]);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatSort) sort!: MatSort; 
 
   constructor(private usuarioService: UsuarioService, public dialog: MatDialog) {}
 
@@ -67,6 +70,21 @@ export class UsuariosComponent implements OnInit {
       }
     });
   }
+
+ obtenerPrimerasOperaciones(operaciones: { [clave: string]: boolean }): string[] {
+  return Object.keys(operaciones)
+    .filter(k => operaciones[k])
+    .slice(0, 2);
+}
+
+abrirDialogoOperaciones(operaciones: { [clave: string]: boolean }) {
+  this.dialog.open(OperacionesDialogComponent, {
+    width: '400px',
+    data: Object.keys(operaciones).filter(k => operaciones[k])
+  });
+}
+
+
 
   abrirDialogoEditar(usuario: Usuario) {
     const dialogRef = this.dialog.open(UsuarioDialogComponent, {
