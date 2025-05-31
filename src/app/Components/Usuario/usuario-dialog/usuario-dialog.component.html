@@ -62,6 +62,16 @@
           </mat-select>
         </mat-form-field>
       </div>
+
+      <div class="input-group">
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Operaciones Autorizadas</mat-label>
+    <mat-select formControlName="operaciones_autorizadas" multiple>
+      <mat-option *ngFor="let op of operacionesDisponibles" [value]="op">{{ op }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>
+
       
 
       <!-- Campos de contraseña solo si es un nuevo usuario -->

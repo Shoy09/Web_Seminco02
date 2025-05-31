@@ -42,15 +42,22 @@
       <span *ngFor="let key of obtenerPrimerasOperaciones(usuario.operaciones_autorizadas)" class="operacion-chip">
         {{ key }}
       </span>
-      <!-- Muestra el icono si hay más de 2 -->
+
+      <!-- Muestra el icono si hay más de 2
       <ng-container *ngIf="Object.keys(usuario.operaciones_autorizadas).length > 2">
         <button mat-icon-button color="primary" (click)="abrirDialogoOperaciones(usuario.operaciones_autorizadas)">
           <mat-icon>visibility</mat-icon>
         </button>
-      </ng-container>
+      </ng-container> -->
     </ng-container>
+
+    <!-- SIEMPRE muestra el ícono de editar -->
+    <button mat-icon-button color="accent" (click)="abrirDialogoEdicion(usuario.id, usuario.operaciones_autorizadas)">
+      <mat-icon>edit</mat-icon>
+    </button>
   </td>
 </ng-container>
+
 
 
 

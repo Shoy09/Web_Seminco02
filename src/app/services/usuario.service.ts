@@ -40,5 +40,11 @@ export class UsuarioService {
     return this.apiService.getDatos('usuarios/perfil'); 
   }
 
+actualizarOperacionesAutorizadas(id: number, operaciones: { [key: string]: boolean }): Observable<any> {
+  return this.apiService.putDatos(`${this.endpoint}/${id}/operaciones`, {
+    operaciones_autorizadas: operaciones
+  });
+}
+
   
 }
