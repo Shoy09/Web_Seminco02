@@ -53,10 +53,10 @@ export class PlanMensualListComponent implements OnInit {
   obtenerUltimaFecha(): void {
     this.fechasPlanMensualService.getUltimaFecha().subscribe(
       (ultimaFecha) => {
-        console.log('Fecha recibida:', ultimaFecha);
-        console.log('Tipo de año:', typeof ultimaFecha.fecha_ingreso);
-        console.log('Tipo de mes:', typeof ultimaFecha.mes);
-        console.log('Valor de mes:', ultimaFecha.mes);
+        //console.log('Fecha recibida:', ultimaFecha);
+        //console.log('Tipo de año:', typeof ultimaFecha.fecha_ingreso);
+        //console.log('Tipo de mes:', typeof ultimaFecha.mes);
+        //console.log('Valor de mes:', ultimaFecha.mes);
         
         // Asignar los valores de anio y mes
         const anio: number | undefined = ultimaFecha.fecha_ingreso;
@@ -68,11 +68,11 @@ export class PlanMensualListComponent implements OnInit {
           this.mes = mes.trim().toUpperCase(); // Asegurar formato consistente
           this.obtenerPlanesMensuales(anio, this.mes);
         } else {
-          console.error('Fecha de ingreso no válida');
+          //console.error('Fecha de ingreso no válida');
         }
       },
       (error) => {
-        console.error('Error al obtener la última fecha:', error);
+        //console.error('Error al obtener la última fecha:', error);
       }
     );
   }
@@ -86,7 +86,7 @@ export class PlanMensualListComponent implements OnInit {
         this.dataSource.sort = this.sort;
       },
       (error) => {
-        console.error('Error al obtener los planes mensuales:', error);
+        //console.error('Error al obtener los planes mensuales:', error);
       }
     );
   }
@@ -152,7 +152,7 @@ export class PlanMensualListComponent implements OnInit {
           'Advertencia',
           { closeButton: true, timeOut: 7000 }
         );
-        console.warn('Filas ignoradas:', errores);
+        //console.warn('Filas ignoradas:', errores);
       }
     };
   
@@ -211,25 +211,29 @@ export class PlanMensualListComponent implements OnInit {
   
   
 
-  enviarDatosAlServidor(planes: PlanMensual[]): void {
-    this.mostrarPantallaCarga(); // Mostrar el diálogo de carga
-  
+async enviarDatosAlServidor(planes: PlanMensual[]): Promise<void> {
+    //console.log('Iniciando envío de datos al servidor. Total planes:', planes.length);
+    this.mostrarPantallaCarga();
+
     let enviados = 0;
     let errores = 0;
-   
-    planes.forEach((plan, index) => {
-      this.planMensualService.createPlanMensual(plan).subscribe(
-        response => {
-          enviados++;
-          this.verificarCargaCompleta(planes.length, enviados, errores);
-        },
-        error => {
-          errores++;
-          this.verificarCargaCompleta(planes.length, enviados, errores);
+
+    // Enviar registros uno por uno
+    for (const [index, plan] of planes.entries()) {
+        try {
+            //console.log(`Enviando plan mensual ${index + 1}/${planes.length}`, plan);
+            const response = await this.planMensualService.createPlanMensual(plan).toPromise();
+            //console.log(`Plan mensual ${index + 1} enviado con éxito`, response);
+            enviados++;
+        } catch (error) {
+            //console.error(`Error al enviar plan mensual ${index + 1}:`, error);
+            errores++;
+            // Opcional: puedes agregar un reintento aquí si es necesario
         }
-      );
-    });
-  }
+    }
+
+    this.verificarCargaCompleta(planes.length, enviados, errores);
+}
   
   verificarCargaCompleta(total: number, enviados: number, errores: number): void {
     if (enviados + errores === total) {

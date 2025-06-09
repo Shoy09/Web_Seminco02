@@ -30,24 +30,24 @@ export class MenuComponent {
         { title: 'Plan de Avance', path: 'plan-avance' },
         { title: 'Plan de Metraje', path: 'plan-metraje' },
         { title: 'Plan de Producción', path: 'plan-produccion' },
-        { title: 'Metas', path: 'metas' },
+        
       ],
     },
     {
       title: 'Roles',
-      icon: 'rol.svg',
+      icon: 'usuario.png',
       subItems: [
         { title: 'Usuarios', path: 'usuarios' },
         { title: 'Perfil', path: 'perfil' },
       ],
     },
-    {
-      title: 'Gráficas',
-      icon: 'rol.svg',
-      subItems: [
-        { title: 'Gráficos', path: 'graficos' },
-      ],
-    },
+    // {
+    //   title: 'Gráficas',
+    //   icon: 'rol.svg',
+    //   subItems: [
+    //     { title: 'Gráficos', path: 'graficos' },
+    //   ],
+    // },
   ];
   
 
@@ -65,6 +65,14 @@ export class MenuComponent {
   AbrirCerrar(index: number, menu: any) {
     if (menu.title === 'Home') {
       this.router.navigate(['/Dashboard/Home']); // Redirige directamente
+    } else if (this.menuColapsado) {
+      // Si el menú está colapsado, redirige a la primera subruta de ese menú
+      if (menu.subItems && menu.subItems.length > 0) {
+        const ruta =`/Dashboard/${menu.subItems[0].path}`;
+        this.router.navigate([ruta]);
+        this.selectedSubItemIndex = 0;
+        this.selectedSubItem = menu.subItems[0].path;
+      }
     } else {
       this.menuOpenIndex = this.menuOpenIndex === index ? null : index;
     }
@@ -77,9 +85,13 @@ export class MenuComponent {
     const ruta = `/Dashboard/${subItem.path}`;
     this.router.navigate([ruta]);
   }
-  
-
   convertirRuta(subItem: string): string {
     return subItem.toLowerCase().replace(/ /g, '-'); // Convierte espacios a guiones
+  }
+
+  menuColapsado: boolean = false;
+
+  toggleMenu() {
+    this.menuColapsado = !this.menuColapsado;
   }
 }

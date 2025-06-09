@@ -1,11 +1,13 @@
 
-<div class="layout-container">
+
+
+<div class="layout-container" [ngClass]="{ 'colapsado': menuColapsado }">
     <!-- Menú lateral -->
-    <aside class="sidebar">
+    <aside class="sidebar" [class.colapsado]="menuColapsado">
       <div class="logo-container">
         <img src="login/logo1.png" alt="Logo de la empresa" class="logo">
       </div>
-      <div class="user">
+      <div class="user" *ngIf="!menuColapsado">
         <img src="lp.svg" alt="Logo de la empresa" class="logop">
         <div class="user-info">
             <p class="nombre"></p>
@@ -25,10 +27,9 @@
             </div>
             <img *ngIf="menu.title !== 'Home'" src="down.svg" alt="Flecha" class="logodow">
           </div>
-      
-          <!-- 🔽 Aquí cambiamos subItem por subItem.title y subItem.path -->
+       
           <ul [ngClass]="{'submenu': true, 'show': menuOpenIndex === i && menu.title !== 'Home'}">
-            <li *ngFor="let subItem of menu.subItems">
+            <li *ngFor="let subItem of menu.subItems" (click)="selectSubItem(i, subItem)">
               <a [routerLink]="['/Dashboard', subItem.path]" routerLinkActive="selected">
                 {{ subItem.title }}
               </a>
@@ -36,9 +37,12 @@
           </ul>
         </li>
       </ul>
-      
-      
     </aside>
+
+    <!-- Botón flotante para colapsar/expandir -->
+<div class="floating-toggle" (click)="toggleMenu()">
+  <img [src]="menuColapsado ? 'flecha.png' : 'flechai.png '" alt="Flecha">
+</div> 
   <div class="main-container">
     <!-- Barra superior -->
     <header class="top-bar">

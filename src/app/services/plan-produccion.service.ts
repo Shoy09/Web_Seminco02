@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, delay, Observable, tap } from 'rxjs';
 import { ApiService } from './api.service';
 import { PlanProduccion } from '../models/plan_produccion.model'; // Asegúrate de que el nombre del archivo sea correcto
 
@@ -24,13 +24,15 @@ export class PlanProduccionService {
     return this.apiService.getDatos(`${this.baseUrl}/${id}`); // Llamamos al endpoint para obtener un plan de producción específico
   }
 
-  createPlanProduccion(planProduccion: PlanProduccion): Observable<PlanProduccion> {
+createPlanProduccion(planProduccion: PlanProduccion): Observable<PlanProduccion> {
     return this.apiService.postDatos(`${this.baseUrl}/`, planProduccion).pipe(
-      tap(() => {
-        this.planesActualizados.next(true); // Notificar que se creó un nuevo plan de producción
-      })
+        tap(() => {
+            this.planesActualizados.next(true);
+        }),
+        // Añade un pequeño delay entre requests si es necesario
+        delay(100) // 100ms entre requests
     );
-  }
+}
 
     updatePlanProduccion(id: number, planMensual: PlanProduccion): Observable<PlanProduccion> {
       return this.apiService.putDatos(`${this.baseUrl}/${id}`, planMensual).pipe(
