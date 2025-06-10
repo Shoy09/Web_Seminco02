@@ -30,6 +30,7 @@ export class MenuComponent {
         { title: 'Plan de Avance', path: 'plan-avance' },
         { title: 'Plan de Metraje', path: 'plan-metraje' },
         { title: 'Plan de Producción', path: 'plan-produccion' },
+        { title: 'Metas', path: 'metas' },
         
       ],
     },

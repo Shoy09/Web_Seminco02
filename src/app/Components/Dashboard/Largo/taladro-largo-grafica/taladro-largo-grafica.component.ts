@@ -31,6 +31,7 @@ import * as XLSX from 'xlsx-js-style';
 })
 export class TaladroLargoGraficaComponent implements OnInit {
   datosOperaciones: NubeOperacion[] = [];
+  datosOperacionesExport: NubeOperacion[] = [];
   datosGraficobarrasapiladasLargo: any[] = [];
   datosHorometros: any[] = [];
   datosGraficoEstados: any[] = [];
@@ -246,6 +247,7 @@ private obtenerCantidadDias(fechaInicio: string, fechaFin: string): number {
     this.operacionService.getOperacionesLargo().subscribe({
       next: (data) => {
         this.datosOperacionesOriginal = data;
+        this.datosOperacionesExport = data
   
         // Aplicar filtros por fecha actual y turno automáticamente
         const filtros = {
@@ -668,7 +670,7 @@ prepararDatosPorOperacion(operacion: NubeOperacion): any[][] {
 
 exportarAExcel(): void {
   // Preparar los datos
-  const datosParaExcel = this.prepararDatosParaExcel(this.datosOperaciones);
+  const datosParaExcel = this.prepararDatosParaExcel(this.datosOperacionesExport);
   
   // Crear hoja de trabajo
   const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(datosParaExcel);
@@ -798,10 +800,10 @@ exportarAExcel(): void {
 
   // Crear libro de trabajo
   const wb: XLSX.WorkBook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'DatosOperaciones');
+  XLSX.utils.book_append_sheet(wb, ws, 'datosOperacionesExport');
   
   // Exportar el archivo
   const fechaHoy = new Date().toISOString().split('T')[0];
-  XLSX.writeFile(wb, `Operaciones_${fechaHoy}.xlsx`, { compression: true });
+  XLSX.writeFile(wb, `Operaciones_Taladro_largo_${fechaHoy}.xlsx`, { compression: true });
 }
 }

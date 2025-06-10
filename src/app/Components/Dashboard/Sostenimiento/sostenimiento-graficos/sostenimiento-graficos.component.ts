@@ -32,6 +32,7 @@ import * as XLSX from 'xlsx-js-style';
 })
 export class SostenimientoGraficosComponent implements OnInit {
   datosOperaciones: NubeOperacion[] = [];
+  datosOperacionesExport: NubeOperacion[] = [];
   datosGraficobarrasapiladasLargo: any[] = [];
   datosHorometros: any[] = [];
   datosGraficoEstados: any[] = [];
@@ -252,6 +253,7 @@ private obtenerMesDeFecha(fecha: string): string {
     this.operacionService.getOperacionesSostenimiento().subscribe({
       next: (data) => {
         this.datosOperacionesOriginal = data;
+         this.datosOperacionesExport = data;
   
         // Aplicar filtros por fecha actual y turno automáticamente
         const filtros = {
@@ -590,6 +592,328 @@ prepararDatosPorOperacion(operacion: NubeOperacion): any[][] {
   }
 
   return datosHoja;
+}
+
+//EXCEL GENERALL--------------------------------------------------------------------------
+prepararDatosParaExcel(datosOperaciones: NubeOperacion[]): any[] {
+  const datosPlanos = [];
+
+  for (const operacion of datosOperaciones) {
+    // Datos base de la operación
+    const filaBase = {
+      'ID Operación': operacion.id,
+      'Turno': operacion.turno,
+      'Equipo': operacion.equipo,
+      'Código': operacion.codigo,
+      'Empresa': operacion.empresa,
+      'Fecha': operacion.fecha,
+      'Tipo Operación': operacion.tipo_operacion,
+      'Estado': operacion.estado,
+      'Envío': operacion.envio
+    };
+
+    // Procesar horómetros
+    if (operacion.horometros && operacion.horometros.length > 0) {
+      for (const horometro of operacion.horometros) {
+        const filaHorometro = {
+          ...filaBase,
+          'Tipo Dato': 'HORÓMETRO',
+          'Nombre Horómetro': horometro.nombre,
+          'Inicial': horometro.inicial,
+          'Final': horometro.final,
+          'Esta OP': horometro.EstaOP,
+          'Esta INOP': horometro.EstaINOP
+        };
+        datosPlanos.push(filaHorometro);
+      }
+    }
+
+    // Procesar estados
+    if (operacion.estados && operacion.estados.length > 0) {
+      for (const estado of operacion.estados) {
+        const filaEstado = {
+          ...filaBase,
+          'Tipo Dato': 'ESTADO',
+          'Número Estado': estado.numero,
+          'Estado': estado.estado,
+          'Código Estado': estado.codigo,
+          'Hora Inicio': estado.hora_inicio,
+          'Hora Final': estado.hora_final
+        };
+        datosPlanos.push(filaEstado);
+      }
+    }
+
+    // Procesar perforaciones (taladro largo)
+    if (operacion.perforaciones && operacion.perforaciones.length > 0) {
+      for (const perforacion of operacion.perforaciones) {
+        const filaPerforacionBase = {
+          ...filaBase,
+          'Tipo Dato': 'PERFORACIÓN',
+          'Zona': perforacion.zona,
+          'Tipo Labor': perforacion.tipo_labor,
+          'Labor': perforacion.labor,
+          'Veta': perforacion.veta,
+          'Nivel': perforacion.nivel,
+          'Tipo Perforación': perforacion.tipo_perforacion
+        };
+
+        if (perforacion.inter_perforaciones && perforacion.inter_perforaciones.length > 0) {
+          for (const inter of perforacion.inter_perforaciones) {
+            const filaInter = {
+              ...filaPerforacionBase,
+              'Código Actividad': inter.codigo_actividad,
+              'Nivel Inter': inter.nivel,
+              'Tajo': inter.tajo,
+              'N° Broca': inter.nbroca,
+              'N° Taladro': inter.ntaladro,
+              'N° Barras': inter.nbarras,
+              'Longitud Perforación': inter.longitud_perforacion,
+              'Ángulo Perforación': inter.angulo_perforacion,
+              'N° Filas de Hasta': inter.nfilas_de_hasta,
+              'Detalles Trabajo Realizado': inter.detalles_trabajo_realizado
+            };
+            datosPlanos.push(filaInter);
+          }
+        } else {
+          datosPlanos.push(filaPerforacionBase);
+        }
+      }
+    }
+
+    // Procesar perforaciones horizontales
+    if (operacion.perforaciones_horizontal && operacion.perforaciones_horizontal.length > 0) {
+      for (const perforacion of operacion.perforaciones_horizontal) {
+        const filaPerforacionHorizontalBase = {
+          ...filaBase,
+          'Tipo Dato': 'PERFORACIÓN HORIZONTAL',
+          'Zona': perforacion.zona,
+          'Tipo Labor': perforacion.tipo_labor,
+          'Labor': perforacion.labor,
+          'Veta': perforacion.veta,
+          'Nivel': perforacion.nivel,
+          'Tipo Perforación': perforacion.tipo_perforacion
+        };
+
+        if (perforacion.inter_perforaciones_horizontal && perforacion.inter_perforaciones_horizontal.length > 0) {
+          for (const inter of perforacion.inter_perforaciones_horizontal) {
+            const filaInterHorizontal = {
+              ...filaPerforacionHorizontalBase,
+              'Código Actividad': inter.codigo_actividad,
+              'Nivel Inter': inter.nivel,
+              'Labor Inter': inter.labor,
+              'Sección Labor': inter.seccion_la_labor,
+              'N° Broca': inter.nbroca,
+              'N° Taladro': inter.ntaladro,
+              'N° Taladros Rimados': inter.ntaladros_rimados,
+              'Longitud Perforación': inter.longitud_perforacion,
+              'Detalles Trabajo Realizado': inter.detalles_trabajo_realizado
+            };
+            datosPlanos.push(filaInterHorizontal);
+          }
+        } else {
+          datosPlanos.push(filaPerforacionHorizontalBase);
+        }
+      }
+    }
+
+    // Procesar sostenimientos
+    if (operacion.sostenimientos && operacion.sostenimientos.length > 0) {
+      for (const sostenimiento of operacion.sostenimientos) {
+        const filaSostenimientoBase = {
+          ...filaBase,
+          'Tipo Dato': 'SOSTENIMIENTO',
+          'Zona': sostenimiento.zona,
+          'Tipo Labor': sostenimiento.tipo_labor,
+          'Labor': sostenimiento.labor,
+          'Veta': sostenimiento.veta,
+          'Nivel': sostenimiento.nivel,
+          'Tipo Perforación': sostenimiento.tipo_perforacion
+        };
+
+        if (sostenimiento.inter_sostenimientos && sostenimiento.inter_sostenimientos.length > 0) {
+          for (const inter of sostenimiento.inter_sostenimientos) {
+            const filaInterSostenimiento = {
+              ...filaSostenimientoBase,
+              'Código Actividad': inter.codigo_actividad,
+              'Nivel Inter': inter.nivel,
+              'Labor Inter': inter.labor,
+              'Sección Labor': inter.seccion_de_labor,
+              'N° Broca': inter.nbroca,
+              'N° Taladro': inter.ntaladro,
+              'Longitud Perforación': inter.longitud_perforacion,
+              'Malla Instalada': inter.malla_instalada
+            };
+            datosPlanos.push(filaInterSostenimiento);
+          }
+        } else {
+          datosPlanos.push(filaSostenimientoBase);
+        }
+      }
+    }
+
+    // Si no hay datos relacionados, agregar solo la fila base
+    if (!operacion.horometros?.length && !operacion.estados?.length && 
+        !operacion.perforaciones?.length && !operacion.perforaciones_horizontal?.length &&
+        !operacion.sostenimientos?.length) {
+      datosPlanos.push({
+        ...filaBase,
+        'Tipo Dato': 'OPERACIÓN'
+      });
+    }
+  }
+
+  return datosPlanos;
+}
+
+exportarAExcel(): void {
+  // Preparar los datos
+  const datosParaExcel = this.prepararDatosParaExcel(this.datosOperacionesExport);
+  
+  // Crear hoja de trabajo
+  const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(datosParaExcel);
+  
+  // Ajustar el ancho de las columnas
+  const wscols = [
+    {wch: 10}, // ID Operación
+    {wch: 8},  // Turno
+    {wch: 12}, // Equipo
+    {wch: 10}, // Código
+    {wch: 15}, // Empresa
+    {wch: 12}, // Fecha
+    {wch: 15}, // Tipo Operación
+    {wch: 12}, // Estado
+    {wch: 8},  // Envío
+    {wch: 12}, // Tipo Dato
+    {wch: 15}, // Nombre Horómetro
+    {wch: 8},  // Inicial
+    {wch: 8},  // Final
+    {wch: 8},  // Esta OP
+    {wch: 10}, // Esta INOP
+    {wch: 12}, // Número Estado
+    {wch: 15}, // Estado
+    {wch: 15}, // Código Estado
+    {wch: 12}, // Hora Inicio
+    {wch: 12}, // Hora Final
+    {wch: 10}, // Zona
+    {wch: 15}, // Tipo Labor
+    {wch: 15}, // Labor
+    {wch: 10}, // Veta
+    {wch: 10}, // Nivel
+    {wch: 18}, // Tipo Perforación
+    {wch: 15}, // Código Actividad
+    {wch: 10}, // Nivel Inter
+    {wch: 15}, // Labor Inter
+    {wch: 15}, // Sección Labor
+    {wch: 10}, // Tajo
+    {wch: 8},  // N° Broca
+    {wch: 10}, // N° Taladro
+    {wch: 15}, // N° Taladros Rimados
+    {wch: 10}, // N° Barras
+    {wch: 18}, // Longitud Perforación
+    {wch: 18}, // Ángulo Perforación
+    {wch: 15}, // N° Filas de Hasta
+    {wch: 15}, // Malla Instalada
+    {wch: 25}  // Detalles Trabajo Realizado
+  ];
+  ws['!cols'] = wscols;
+
+  // Definir estilos
+  const headerStyle = {
+    fill: {
+      patternType: 'solid',
+      fgColor: { rgb: '4472C4' } // Azul corporativo
+    },
+    font: {
+      name: 'Arial',
+      sz: 11,
+      bold: true,
+      color: { rgb: 'FFFFFF' } // Texto blanco
+    },
+    alignment: {
+      horizontal: 'center',
+      vertical: 'center',
+      wrapText: true
+    },
+    border: {
+      top: { style: 'thin', color: { rgb: '000000' } },
+      bottom: { style: 'thin', color: { rgb: '000000' } },
+      left: { style: 'thin', color: { rgb: '000000' } },
+      right: { style: 'thin', color: { rgb: '000000' } }
+    }
+  };
+
+  const dataStyle = {
+    font: {
+      name: 'Arial',
+      sz: 10
+    },
+    border: {
+      top: { style: 'thin', color: { rgb: 'D9D9D9' } },
+      bottom: { style: 'thin', color: { rgb: 'D9D9D9' } },
+      left: { style: 'thin', color: { rgb: 'D9D9D9' } },
+      right: { style: 'thin', color: { rgb: 'D9D9D9' } }
+    }
+  };
+
+  // Aplicar estilos a los encabezados
+  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:Z1');
+  for (let C = range.s.c; C <= range.e.c; ++C) {
+    const cellAddress = XLSX.utils.encode_cell({ r: range.s.r, c: C });
+    if (!ws[cellAddress]) continue;
+    ws[cellAddress].s = headerStyle;
+  }
+
+  // Aplicar estilos a los datos
+  for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+      if (!ws[cellAddress]) continue;
+      
+      // Estilo base para datos
+      ws[cellAddress].s = dataStyle;
+      
+      // Formato condicional por tipo de dato
+      const tipoDato = ws['J' + (R + 1)]?.v; // Columna J es 'Tipo Dato'
+      
+      if (tipoDato === 'HORÓMETRO') {
+        ws[cellAddress].s.fill = { patternType: 'solid', fgColor: { rgb: 'E2EFDA' } }; // Verde claro
+      } else if (tipoDato === 'ESTADO') {
+        ws[cellAddress].s.fill = { patternType: 'solid', fgColor: { rgb: 'FFF2CC' } }; // Amarillo claro
+      } else if (tipoDato === 'PERFORACIÓN') {
+        ws[cellAddress].s.fill = { patternType: 'solid', fgColor: { rgb: 'DDEBF7' } }; // Azul claro
+      } else if (tipoDato === 'PERFORACIÓN HORIZONTAL') {
+        ws[cellAddress].s.fill = { patternType: 'solid', fgColor: { rgb: 'F8CBAD' } }; // Naranja claro
+      } else if (tipoDato === 'SOSTENIMIENTO') {
+        ws[cellAddress].s.fill = { patternType: 'solid', fgColor: { rgb: 'EAD1DC' } }; // Lila claro
+      }
+      
+      // Formato para números
+      if (typeof ws[cellAddress].v === 'number') {
+        ws[cellAddress].s.numFmt = '0.00';
+        ws[cellAddress].s.alignment = { horizontal: 'right' };
+      }
+      
+      // Formato para fechas
+      if (cellAddress.includes('Fecha') || cellAddress.includes('Hora')) {
+        ws[cellAddress].s.numFmt = 'dd/mm/yyyy hh:mm';
+      }
+    }
+  }
+
+  // Congelar la primera fila (encabezados)
+  ws['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomRight' };
+
+  // Añadir filtros a los encabezados
+  ws['!autofilter'] = { ref: XLSX.utils.encode_range(range) };
+
+  // Crear libro de trabajo
+  const wb: XLSX.WorkBook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'datosOperacionesExport');
+  
+  // Exportar el archivo
+  const fechaHoy = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `Operaciones_Sostenimiento_${fechaHoy}.xlsx`, { compression: true });
 }
 
 }
