@@ -15,6 +15,7 @@ import { TaladroHorizontalGraficaComponent } from './Components/Dashboard/Horizo
 import { TaladroLargoGraficaComponent } from './Components/Dashboard/Largo/taladro-largo-grafica/taladro-largo-grafica.component';
 import { SostenimientoGraficosComponent } from './Components/Dashboard/Sostenimiento/sostenimiento-graficos/sostenimiento-graficos.component';
 import { MetasComponent } from './Components/Crear datos/Metas/metas/metas.component';
+import { ExplosivosGraficosComponent } from './Components/Dashboard/Explosivos/explosivos-graficos/explosivos-graficos.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -38,6 +39,7 @@ export const routes: Routes = [
       { path: 'taladro-horizontal-grafico', component: TaladroHorizontalGraficaComponent },
       { path: 'sostenimiento', component: SostenimientoGraficosComponent },
       { path: 'metas', component: MetasComponent },
+      { path: 'explosivos-graficos', component: ExplosivosGraficosComponent },
     ],
   },
 
