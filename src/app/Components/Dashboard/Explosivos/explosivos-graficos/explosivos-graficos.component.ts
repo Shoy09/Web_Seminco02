@@ -80,7 +80,7 @@ exportarAExcelExplosivos(): void {
   const workbook = XLSX.utils.book_new();
   
   // Preparar los datos para la hoja de Excel
-  const excelData = this.prepararDatosParaExcel();
+  const { data: excelData, headers: materialHeaders } = this.prepararDatosParaExcel();
   
   // Crear una hoja de trabajo con los datos
   const worksheet = XLSX.utils.json_to_sheet(excelData);
@@ -92,13 +92,30 @@ exportarAExcelExplosivos(): void {
   XLSX.writeFile(workbook, 'Reporte_Explosivos.xlsx');
 }
 
-private prepararDatosParaExcel(): any[] {
+private prepararDatosParaExcel(): { data: any[], headers: string[] } {
   const excelData: any[] = [];
+  const materialHeaders = new Set<string>();
   
+  // Primera pasada: recolectar todos los nombres de materiales únicos
+  this.datosExplosivosExport.forEach((dato) => {
+    dato.despachos.forEach((despacho) => {
+      despacho.detalles.forEach((detalle) => {
+        materialHeaders.add(detalle.nombre_material);
+      });
+    });
+    
+    dato.devoluciones.forEach((devolucion) => {
+      devolucion.detalles.forEach((detalle) => {
+        materialHeaders.add(detalle.nombre_material);
+      });
+    });
+  });
+
+  // Segunda pasada: procesar los datos
   this.datosExplosivosExport.forEach((dato) => {
     // Procesar despachos
     dato.despachos.forEach((despacho) => {
-      const row = this.crearFilaBase(dato);
+      const row = this.crearFilaBase(dato, Array.from(materialHeaders));
       
       // Agregar información específica de despacho
       row['VALE'] = 'DESPACHO';
@@ -113,12 +130,9 @@ private prepararDatosParaExcel(): any[] {
         }
       });
       
-      // Procesar otros materiales en despacho con mapeo flexible
+      // Procesar otros materiales en despacho
       despacho.detalles.forEach((detalle) => {
-        const nombreNormalizado = this.normalizarNombreMaterial(detalle.nombre_material);
-        if (nombreNormalizado && row.hasOwnProperty(nombreNormalizado)) {
-          row[nombreNormalizado] = detalle.cantidad;
-        }
+        row[detalle.nombre_material] = detalle.cantidad;
       });
       
       excelData.push(row);
@@ -126,7 +140,7 @@ private prepararDatosParaExcel(): any[] {
     
     // Procesar devoluciones
     dato.devoluciones.forEach((devolucion) => {
-      const row = this.crearFilaBase(dato);
+      const row = this.crearFilaBase(dato, Array.from(materialHeaders));
       
       // Agregar información específica de devolución
       row['VALE'] = 'DEVOLUCIÓN';
@@ -141,83 +155,20 @@ private prepararDatosParaExcel(): any[] {
         }
       });
       
-      // Procesar otros materiales en devolución con mapeo flexible
+      // Procesar otros materiales en devolución
       devolucion.detalles.forEach((detalle) => {
-        const nombreNormalizado = this.normalizarNombreMaterial(detalle.nombre_material);
-        if (nombreNormalizado && row.hasOwnProperty(nombreNormalizado)) {
-          row[nombreNormalizado] = detalle.cantidad;
-        }
+        row[detalle.nombre_material] = detalle.cantidad;
       });
       
       excelData.push(row);
     });
   });
   
-  return excelData;
+  return { data: excelData, headers: Array.from(materialHeaders) };
 }
 
-// Función para normalizar los nombres de materiales
-private normalizarNombreMaterial(nombre: string): string | null {
-  // Limpieza robusta del nombre
-  const nombreLimpio = nombre
-    .trim()
-    .toUpperCase()
-    .replace(/\s+/g, ' ')
-    .replace(/[×x]/g, 'X')
-    .replace(/["”]/g, '"')
-    .replace(/\s*"\s*/g, '"')
-    .replace(/\s*\/\s*/g, '/')
-    .replace(/[áäà]/g, 'A')
-    .replace(/[éëè]/g, 'E')
-    .replace(/[íïì]/g, 'I')
-    .replace(/[óöò]/g, 'O')
-    .replace(/[úüù]/g, 'U');
-
-  // Mapeo ampliado con variantes
-  const mapeo: { [key: string]: string } = {
-    'MECHA RÁPIDA': 'MECHA RAPIDA',
-    'MECHA RAPIDA': 'MECHA RAPIDA',
-    'CARMEX ': 'CARMEX',
-    'CARMEX': 'CARMEX',
-    'CORDON DETONANTE 4P': 'CORDON DETONANTE',
-    'CORDON DETONANTE': 'CORDON DETONANTE',
-    'EXEL 4.20M': 'EXEL 4.2M',
-    'EXEL 4.2M': 'EXEL 4.2M',
-    'EXEL 15.0M': 'EXEL 15.0M',
-    'SENATEL PULSAR 1 1/2X12"': 'SENATEL PULSAR 1 1/2"X12"',
-    'SENATEL PULSAR 1 1/2"X12"': 'SENATEL PULSAR 1 1/2"X12"',
-    'SENATEL PULSAR 1 1/4X12"': 'SENATEL PULSAR 1 1/4"X12"',
-    'SENATEL PULSAR 1 1/4"X12"': 'SENATEL PULSAR 1 1/4"X12"',
-    'SENATEL ULTREX 1 1/2X12"': 'SENATEL ULTREX 1 1/2"X12"',
-    'SENATEL ULTREX 1 1/2"X12"': 'SENATEL ULTREX 1 1/2"X12"',
-    'SENATEL ULTREX 1 1/4X12"': 'SENATEL ULTREX 1 1/4"X12"',
-    'SENATEL ULTREX 1 1/4"X12"': 'SENATEL ULTREX 1 1/4"X12"',
-    'SENATEL MAGNAFRAC 1 1/4X12"': 'SENATEL MAGNAFRAC 1 1/4"X12"',
-    'SENATEL MAGNAFRAC 1 1/4"X12"': 'SENATEL MAGNAFRAC 1 1/4"X12"',
-    'ANFO': 'ANFO',
-    'LONG. EXCEL': 'LONG. EXCEL'
-  };
-
-  // Intentar coincidencia directa
-  if (mapeo[nombreLimpio]) {
-    return mapeo[nombreLimpio];
-  }
-
-  // Intentar coincidencia flexible
-  const entradaNormalizada = nombreLimpio.replace(/\s+/g, ' ').trim();
-
-  for (const [key, value] of Object.entries(mapeo)) {
-    const keyNormalizado = key.replace(/\s+/g, ' ').trim();
-    if (entradaNormalizada === keyNormalizado) {
-      return value;
-    }
-  }
-
-  return null;
-}
-
-private crearFilaBase(dato: NubeDatosTrabajoExploraciones): any {
-  // Primero creamos un objeto con todas las propiedades en el orden deseado
+private crearFilaBase(dato: NubeDatosTrabajoExploraciones, materialHeaders: string[]): any {
+  // Primero creamos un objeto con todas las propiedades fijas
   const row: any = {
     'ID': dato.id,
     'FECHA': dato.fecha,
@@ -229,24 +180,17 @@ private crearFilaBase(dato: NubeDatosTrabajoExploraciones): any {
     'LABOR': dato.labor,
     'ALA': dato.ala || '',
     'VETA': dato.veta,
-    'SECCION': '',
+    'SECCION': dato.seccion,
     'NIVEL': dato.nivel,
     'TIPO DE PERFORACIÓN': dato.tipo_perforacion,
     'N° TALADROS DISPARADOS': dato.taladro,
-    'PIES POR TALADRO': dato.pies_por_taladro,
-    'CARMEX': '',
-    'MECHA RAPIDA': '',
-    'CORDON DETONANTE': '',
-    'EXEL 4.2M': '',
-    'EXEL 15.0M': '',
-    'SENATEL PULSAR 1 1/2"X12"': '',
-    'SENATEL PULSAR 1 1/4"X12"': '',
-    'SENATEL ULTREX 1 1/2"X12"': '',
-    'SENATEL ULTREX 1 1/4"X12"': '',
-    'SENATEL MAGNAFRAC 1 1/4"X12"': '',
-    'ANFO': '',
-    'LONG. EXCEL': ''
+    'PIES POR TALADRO': dato.pies_por_taladro
   };
+
+  // Agregamos las columnas de materiales dinámicas
+  materialHeaders.forEach(header => {
+    row[header] = '';
+  });
 
   // Agregamos las columnas MS en orden (1-20)
   for (let i = 1; i <= 20; i++) {

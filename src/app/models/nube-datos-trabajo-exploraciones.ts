@@ -61,6 +61,7 @@ export interface NubeDatosTrabajoExploraciones {
   semanaDefault?: string;  // Nuevo campo
   semanaSelect?: string;  // Nuevo campo
   empresa?: string;       // Nuevo campo
+  seccion: string;
   despachos: NubeDespacho[];
   devoluciones: NubeDevoluciones[];
 }
