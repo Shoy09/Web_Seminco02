@@ -120,6 +120,9 @@ private prepararDatosParaExcel(): { data: any[], headers: string[] } {
       // Agregar información específica de despacho
       row['VALE'] = 'DESPACHO';
       row['OBSERVACIONES'] = despacho.observaciones || '';
+
+      row['LONG. EXCEL (MS)'] = despacho.mili_segundo;
+      row['LONG. EXCEL (LP)'] = despacho.medio_segundo;
       
       // Procesar detalles de explosivos en despacho
       despacho.detalles_explosivos.forEach((detalle) => {
@@ -191,6 +194,10 @@ private crearFilaBase(dato: NubeDatosTrabajoExploraciones, materialHeaders: stri
   materialHeaders.forEach(header => {
     row[header] = '';
   });
+
+  // Agregamos las nuevas columnas LONG. EXCEL (MS) y LONG. EXCEL (LP)
+  row['LONG. EXCEL (MS)'] = '';
+  row['LONG. EXCEL (LP)'] = '';
 
   // Agregamos las columnas MS en orden (1-20)
   for (let i = 1; i <= 20; i++) {
