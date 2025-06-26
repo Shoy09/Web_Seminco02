@@ -148,6 +148,9 @@ private prepararDatosParaExcel(): { data: any[], headers: string[] } {
       // Agregar información específica de devolución
       row['VALE'] = 'DEVOLUCIÓN';
       row['OBSERVACIONES'] = devolucion.observaciones || '';
+
+      row['LONG. EXCEL (MS)'] = devolucion.mili_segundo;
+      row['LONG. EXCEL (LP)'] = devolucion.medio_segundo;
       
       // Procesar detalles de explosivos en devolución
       devolucion.detalles_explosivos.forEach((detalle) => {
