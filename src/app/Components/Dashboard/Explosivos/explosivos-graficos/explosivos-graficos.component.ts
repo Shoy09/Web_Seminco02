@@ -55,7 +55,6 @@ turnos: string[] = ['DÍA', 'NOCHE'];
     obtenerDatos(): void {
     this.explosivosService.getExplosivos().subscribe({
       next: (data) => {
-        console.log('✅ Datos recibidos:', data); //
         this.datosExplosivos = data;
          this.datosExplosivosExport = data;
   
@@ -79,17 +78,164 @@ exportarAExcelExplosivos(): void {
   // Crear un nuevo libro de trabajo
   const workbook = XLSX.utils.book_new();
   
-  // Preparar los datos para la hoja de Excel
-  const { data: excelData, headers: materialHeaders } = this.prepararDatosParaExcel();
+
+  // Preparar los datos para ambas hojas
+  const { data: excelDataDetalle, headers: materialHeaders } = this.prepararDatosParaExcel();
+  const excelDataConsumo = this.prepararDatosParaConsumo();
   
-  // Crear una hoja de trabajo con los datos
-  const worksheet = XLSX.utils.json_to_sheet(excelData);
+  // Crear hojas de trabajo
+  const worksheetDetalle = XLSX.utils.json_to_sheet(excelDataDetalle);
+  const worksheetConsumo = XLSX.utils.json_to_sheet(excelDataConsumo);
   
-  // Añadir la hoja al libro de trabajo
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Explosivos');
+  // Añadir hojas al libro de trabajo
+  XLSX.utils.book_append_sheet(workbook, worksheetConsumo, 'CONSUMO EXPLOSIVOS');
+  XLSX.utils.book_append_sheet(workbook, worksheetDetalle, 'EXPLOSIVOS - DETALLE');
   
   // Generar el archivo Excel y descargarlo
-  XLSX.writeFile(workbook, 'Reporte_Explosivos.xlsx');
+  XLSX.writeFile(workbook, 'BD_Explosivos.xlsx');
+}
+
+private prepararDatosParaConsumo(): any[] {
+  const consumoData: any[] = [];
+  const materialHeaders = new Set<string>();
+  
+  // Recolectar todos los nombres de materiales únicos
+  this.datosExplosivosExport.forEach((dato) => {
+    dato.despachos.forEach((despacho) => {
+      despacho.detalles.forEach((detalle) => {
+        materialHeaders.add(detalle.nombre_material);
+      });
+    });
+    
+    dato.devoluciones.forEach((devolucion) => {
+      devolucion.detalles.forEach((detalle) => {
+        materialHeaders.add(detalle.nombre_material);
+      });
+    });
+  });
+
+  // Procesar cada registro principal
+  this.datosExplosivosExport.forEach((dato) => {
+    const row = this.crearFilaBaseConsumo(dato, Array.from(materialHeaders));
+    
+    // Procesar despachos y devoluciones para calcular consumos
+    this.procesarConsumos(dato, row, materialHeaders);
+    
+    consumoData.push(row);
+  });
+  
+  return consumoData;
+}
+
+private crearFilaBaseConsumo(dato: NubeDatosTrabajoExploraciones, materialHeaders: string[]): any {
+  // Crear fila con datos básicos (sin las columnas que se quitan)
+  const row: any = {
+    'ID': dato.id,
+    'FECHA': dato.fecha,
+    'TURNO': dato.turno,
+    'SEMANA': dato.semanaSelect || dato.semanaDefault || '',
+    'EMPRESA': dato.empresa || '',
+    'ZONA': dato.zona,
+    'TIPO DE LABOR': dato.tipo_labor,
+    'LABOR': dato.labor,
+    'ALA': dato.ala || '',
+    'VETA': dato.veta,
+    'SECCION': dato.seccion,
+    'NIVEL': dato.nivel,
+    'TIPO DE PERFORACIÓN': dato.tipo_perforacion,
+    'N° TALADROS DISPARADOS': dato.taladro,
+    'PIES POR TALADRO': dato.pies_por_taladro
+  };
+
+  // Agregar columnas de materiales dinámicas inicializadas en 0
+  materialHeaders.forEach(header => {
+    row[header] = 0;
+  });
+
+// Primero agregar todas las columnas MS (1-20)
+  for (let i = 1; i <= 20; i++) {
+    row[`MS ${i}`] = 0;
+  }
+
+  // Luego agregar todas las columnas LP (1-20)
+  for (let i = 1; i <= 20; i++) {
+    row[`LP ${i}`] = 0;
+  }
+
+  return row;
+}
+
+private procesarConsumos(dato: NubeDatosTrabajoExploraciones, row: any, materialHeaders: Set<string>) {
+  // 1. Inicialización de contadores para materiales
+  const despachosMateriales: {[key: string]: number} = {};
+  const devolucionesMateriales: {[key: string]: number} = {};
+
+  // 2. Inicialización de contadores para explosivos (MS/LP)
+  const despachosExplosivos: {[key: string]: number} = {};
+  const devolucionesExplosivos: {[key: string]: number} = {};
+
+  // Inicializar todos los contadores en 0
+  materialHeaders.forEach(header => {
+    despachosMateriales[header] = 0;
+    devolucionesMateriales[header] = 0;
+  });
+
+  for (let i = 1; i <= 20; i++) {
+    despachosExplosivos[`MS ${i}`] = 0;
+    despachosExplosivos[`LP ${i}`] = 0;
+    devolucionesExplosivos[`MS ${i}`] = 0;
+    devolucionesExplosivos[`LP ${i}`] = 0;
+  }
+
+  // Procesar DESPACHOS
+  dato.despachos.forEach(despacho => {
+    // Procesar materiales en despachos (se mantiene la suma)
+    despacho.detalles.forEach(detalle => {
+      const cantidad = parseFloat(detalle.cantidad) || 0;
+      despachosMateriales[detalle.nombre_material] += cantidad;
+    });
+
+    // Procesar explosivos en despachos (sin suma, toma el último valor)
+    despacho.detalles_explosivos.forEach(detalle => {
+      const numero = detalle.numero;
+      if (numero >= 1 && numero <= 20) {
+        despachosExplosivos[`MS ${numero}`] = parseFloat(detalle.ms_cant1) || 0; // Asignación directa
+        despachosExplosivos[`LP ${numero}`] = parseFloat(detalle.lp_cant1) || 0; // Asignación directa
+      }
+    });
+  });
+
+  // Procesar DEVOLUCIONES
+  dato.devoluciones.forEach(devolucion => {
+    // Procesar materiales en devoluciones (se mantiene la suma)
+    devolucion.detalles.forEach(detalle => {
+      const cantidad = parseFloat(detalle.cantidad) || 0;
+      devolucionesMateriales[detalle.nombre_material] += cantidad;
+    });
+
+    // Procesar explosivos en devoluciones (sin suma, toma el último valor)
+    devolucion.detalles_explosivos.forEach(detalle => {
+      const numero = detalle.numero;
+      if (numero >= 1 && numero <= 20) {
+        devolucionesExplosivos[`MS ${numero}`] = parseFloat(detalle.ms_cant1) || 0; // Asignación directa
+        devolucionesExplosivos[`LP ${numero}`] = parseFloat(detalle.lp_cant1) || 0; // Asignación directa
+      }
+    });
+  });
+
+  // Calcular CONSUMOS FINALES (Despachos - Devoluciones)
+  
+  // Para materiales (se mantiene igual)
+  materialHeaders.forEach(header => {
+    row[header] = despachosMateriales[header] - devolucionesMateriales[header];
+  });
+
+  // Para explosivos (MS/LP) - ahora usa los valores directos sin acumulación
+  for (let i = 1; i <= 20; i++) {
+    row[`MS ${i}`] = despachosExplosivos[`MS ${i}`] - devolucionesExplosivos[`MS ${i}`];
+    row[`LP ${i}`] = despachosExplosivos[`LP ${i}`] - devolucionesExplosivos[`LP ${i}`];
+  }
+
 }
 
 private prepararDatosParaExcel(): { data: any[], headers: string[] } {
