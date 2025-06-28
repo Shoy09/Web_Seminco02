@@ -18,9 +18,13 @@
         </option>
       </select>
     </label>
-
+    <button (click)="aplicarFiltrosLocales()">Filtrar</button>
+    <button (click)="quitarFiltros()">Quitar filtros</button>
     <button (click)="exportarAExcelExplosivos()" class="btn btn-success">
   <i class="fas fa-file-excel"></i> Exportar a Excel completo
+</button>
+<button (click)="exportarAExcelExplosivosfiltro()" class="btn btn-success">
+  <i class="fas fa-file-excel"></i> Exportar a Excel filtrados
 </button>
   </div>
 
