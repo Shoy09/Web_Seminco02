@@ -6,6 +6,10 @@ import { FormsModule } from '@angular/forms';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import * as XLSX from 'xlsx-js-style';
 import { ToastrService } from 'ngx-toastr';
+import { ExplosivoService } from '../../../../services/explosivo.service';
+import { AccesorioService } from '../../../../services/accesorio.service';
+import { Accesorio } from '../../../../models/Accesorio';
+import { Explosivo } from '../../../../models/Explosivo';
 
 @Component({
   selector: 'app-explosivos-graficos',
@@ -17,11 +21,14 @@ export class ExplosivosGraficosComponent implements OnInit {
     datosExplosivos: NubeDatosTrabajoExploraciones[] = [];
   datosExplosivosOriginal: NubeDatosTrabajoExploraciones[] = [];
     datosExplosivosExport: NubeDatosTrabajoExploraciones[] = [];
+    accesorios: Accesorio[] = [];
+    explosivos: Explosivo[] = [];
   fechaDesde: string = '';
 fechaHasta: string = '';
 turnoSeleccionado: string = '';
 turnos: string[] = ['DÍA', 'NOCHE'];
-  constructor(private explosivosService: NubeDatosTrabajoExploracionesService, private _toastr: ToastrService) {}
+  constructor(private explosivosService: NubeDatosTrabajoExploracionesService, private _toastr: ToastrService, private explosivoService: ExplosivoService,
+      private accesorioService: AccesorioService,) {}
 
   ngOnInit(): void {
     const fechaISO = this.obtenerFechaLocalISO();
@@ -29,6 +36,9 @@ turnos: string[] = ['DÍA', 'NOCHE'];
     this.fechaHasta = fechaISO;
     this.turnoSeleccionado = this.obtenerTurnoActual();
   
+  this.cargarExplosivos();
+  this.cargarAccesorios();
+
     this.obtenerDatos();
   }
 
@@ -52,6 +62,30 @@ turnos: string[] = ['DÍA', 'NOCHE'];
       return 'NOCHE';
     }
   } 
+
+  cargarExplosivos(): void {
+  this.explosivoService.getExplosivos().subscribe(
+    (data) => {
+      this.explosivos = data;
+      console.log('Explosivos cargados:', this.explosivos);
+    },
+    (error) => {
+      console.error('Error al cargar explosivos', error);
+    }
+  );
+}
+
+cargarAccesorios(): void {
+  this.accesorioService.getAccesorios().subscribe(
+    (data) => {
+      this.accesorios = data;
+      console.log('Accesorios cargados:', this.accesorios);
+    },
+    (error) => {
+      console.error('Error al cargar accesorios', error);
+    }
+  );
+}
 
   obtenerDatos(): void {
   this.explosivosService.getExplosivos().subscribe({
@@ -137,12 +171,10 @@ turnos: string[] = ['DÍA', 'NOCHE'];
     });
   }
 
-  exportarAExcelExplosivosfiltro(): void {
-  // Crear un nuevo libro de trabajo
+exportarAExcelExplosivosfiltro(): void {
   const workbook = XLSX.utils.book_new();
   
-
-  // Preparar los datos para ambas hojas
+  // Obtener los datos ordenados (explosivos primero ordenados A-Z, luego accesorios ordenados A-Z)
   const { data: excelDataDetalle, headers: materialHeaders } = this.prepararDatosParaExcelfiltra();
   const excelDataConsumo = this.prepararDatosParaConsumofiltrados();
   
@@ -154,8 +186,24 @@ turnos: string[] = ['DÍA', 'NOCHE'];
   XLSX.utils.book_append_sheet(workbook, worksheetConsumo, 'CONSUMO EXPLOSIVOS');
   XLSX.utils.book_append_sheet(workbook, worksheetDetalle, 'EXPLOSIVOS - DETALLE');
   
-  // Generar el archivo Excel y descargarlo
   XLSX.writeFile(workbook, 'BD_Explosivos.xlsx');
+}
+
+private esExplosivo(nombreMaterial: string): boolean {
+  return this.explosivos.some(exp => exp.tipo_explosivo === nombreMaterial);
+}
+
+private esAccesorio(nombreMaterial: string): boolean {
+  return this.accesorios.some(acc => acc.tipo_accesorio === nombreMaterial);
+}
+
+private ordenarMateriales(materiales: string[]): string[] {
+  // Separar explosivos y accesorios
+  const explosivos = materiales.filter(m => this.esExplosivo(m)).sort((a, b) => a.localeCompare(b));
+  const accesorios = materiales.filter(m => this.esAccesorio(m)).sort((a, b) => a.localeCompare(b));
+  
+  // Concatenar: explosivos primero (ordenados A-Z), luego accesorios (ordenados A-Z)
+  return [...explosivos, ...accesorios];
 }
 
 private prepararDatosParaConsumofiltrados(): any[] {
@@ -177,12 +225,15 @@ private prepararDatosParaConsumofiltrados(): any[] {
     });
   });
 
+  // Ordenar materiales: explosivos A-Z primero, luego accesorios A-Z
+  const materialesOrdenados = this.ordenarMateriales(Array.from(materialHeaders));
+
   // Procesar cada registro principal
   this.datosExplosivos.forEach((dato) => {
-    const row = this.crearFilaBaseConsumo(dato, Array.from(materialHeaders));
+    const row = this.crearFilaBaseConsumo(dato, materialesOrdenados);
     
     // Procesar despachos y devoluciones para calcular consumos
-    this.procesarConsumos(dato, row, materialHeaders);
+    this.procesarConsumos(dato, row, new Set(materialesOrdenados));
     
     consumoData.push(row);
   });
@@ -209,16 +260,18 @@ private prepararDatosParaExcelfiltra(): { data: any[], headers: string[] } {
     });
   });
 
+  // Ordenar materiales: explosivos A-Z primero, luego accesorios A-Z
+  const materialesOrdenados = this.ordenarMateriales(Array.from(materialHeaders));
+
   // Segunda pasada: procesar los datos
   this.datosExplosivos.forEach((dato) => {
     // Procesar despachos
     dato.despachos.forEach((despacho) => {
-      const row = this.crearFilaBase(dato, Array.from(materialHeaders));
+      const row = this.crearFilaBase(dato, materialesOrdenados);
       
       // Agregar información específica de despacho
       row['VALE'] = 'DESPACHO';
       row['OBSERVACIONES'] = despacho.observaciones || '';
-
       row['LONG. EXCEL (MS)'] = despacho.mili_segundo;
       row['LONG. EXCEL (LP)'] = despacho.medio_segundo;
       
@@ -241,12 +294,11 @@ private prepararDatosParaExcelfiltra(): { data: any[], headers: string[] } {
     
     // Procesar devoluciones
     dato.devoluciones.forEach((devolucion) => {
-      const row = this.crearFilaBase(dato, Array.from(materialHeaders));
+      const row = this.crearFilaBase(dato, materialesOrdenados);
       
       // Agregar información específica de devolución
       row['VALE'] = 'DEVOLUCIÓN';
       row['OBSERVACIONES'] = devolucion.observaciones || '';
-
       row['LONG. EXCEL (MS)'] = devolucion.mili_segundo;
       row['LONG. EXCEL (LP)'] = devolucion.medio_segundo;
       
@@ -268,9 +320,8 @@ private prepararDatosParaExcelfiltra(): { data: any[], headers: string[] } {
     });
   });
   
-  return { data: excelData, headers: Array.from(materialHeaders) };
+  return { data: excelData, headers: materialesOrdenados };
 }
-
 
 exportarAExcelExplosivos(): void {
   // Crear un nuevo libro de trabajo
@@ -312,12 +363,15 @@ private prepararDatosParaConsumo(): any[] {
     });
   });
 
+    // Ordenar materiales: explosivos A-Z primero, luego accesorios A-Z
+  const materialesOrdenados = this.ordenarMateriales(Array.from(materialHeaders));
+
   // Procesar cada registro principal
   this.datosExplosivosExport.forEach((dato) => {
-    const row = this.crearFilaBaseConsumo(dato, Array.from(materialHeaders));
+    const row = this.crearFilaBaseConsumo(dato, Array.from(materialesOrdenados));
     
     // Procesar despachos y devoluciones para calcular consumos
-    this.procesarConsumos(dato, row, materialHeaders);
+    this.procesarConsumos(dato, row, new Set (materialesOrdenados));
     
     consumoData.push(row);
   });
@@ -455,16 +509,18 @@ private prepararDatosParaExcel(): { data: any[], headers: string[] } {
     });
   });
 
+
+  const materialesOrdenados = this.ordenarMateriales(Array.from(materialHeaders));
+
   // Segunda pasada: procesar los datos
   this.datosExplosivosExport.forEach((dato) => {
     // Procesar despachos
     dato.despachos.forEach((despacho) => {
-      const row = this.crearFilaBase(dato, Array.from(materialHeaders));
+       const row = this.crearFilaBase(dato, materialesOrdenados);
       
       // Agregar información específica de despacho
       row['VALE'] = 'DESPACHO';
       row['OBSERVACIONES'] = despacho.observaciones || '';
-
       row['LONG. EXCEL (MS)'] = despacho.mili_segundo;
       row['LONG. EXCEL (LP)'] = despacho.medio_segundo;
       
@@ -487,12 +543,11 @@ private prepararDatosParaExcel(): { data: any[], headers: string[] } {
     
     // Procesar devoluciones
     dato.devoluciones.forEach((devolucion) => {
-      const row = this.crearFilaBase(dato, Array.from(materialHeaders));
+      const row = this.crearFilaBase(dato, materialesOrdenados);
       
       // Agregar información específica de devolución
       row['VALE'] = 'DEVOLUCIÓN';
       row['OBSERVACIONES'] = devolucion.observaciones || '';
-
       row['LONG. EXCEL (MS)'] = devolucion.mili_segundo;
       row['LONG. EXCEL (LP)'] = devolucion.medio_segundo;
       
@@ -514,7 +569,7 @@ private prepararDatosParaExcel(): { data: any[], headers: string[] } {
     });
   });
   
-  return { data: excelData, headers: Array.from(materialHeaders) };
+  return { data: excelData, headers: materialesOrdenados };
 }
 
 private crearFilaBase(dato: NubeDatosTrabajoExploraciones, materialHeaders: string[]): any {
