@@ -81,23 +81,26 @@ export class PlanMetrajeListComponent implements OnInit {
   obtenerUltimaFecha(): void {
     this.fechasPlanMensualService.getUltimaFecha().subscribe(
       (ultimaFecha) => {
+        //console.log('Fecha recibida:', ultimaFecha);
+        //console.log('Tipo de año:', typeof ultimaFecha.fecha_ingreso);
+        //console.log('Tipo de mes:', typeof ultimaFecha.mes);
+        //console.log('Valor de mes:', ultimaFecha.mes);
         
-        
-        // Usar el operador de encadenamiento opcional y comprobar si es undefined
+        // Asignar los valores de anio y mes
         const anio: number | undefined = ultimaFecha.fecha_ingreso;
         const mes: string = ultimaFecha.mes;
   
         // Verificar que 'anio' no sea undefined antes de llamar a la función
         if (anio !== undefined) {
-          this.anio = anio;  // Asignamos el valor de anio a la propiedad del componente
-          this.mes = mes;   
-          this.obtenerPlanesMetraje(anio, mes);
+          this.anio = anio;
+          this.mes = mes.trim().toUpperCase(); // Asegurar formato consistente
+          this.obtenerPlanesMetraje(anio, this.mes);
         } else {
-          console.error('Fecha de ingreso no válida');
+          //console.error('Fecha de ingreso no válida');
         }
       },
       (error) => {
-        console.error('Error al obtener la última fecha:', error);
+        //console.error('Error al obtener la última fecha:', error);
       }
     );
   }
@@ -110,7 +113,7 @@ export class PlanMetrajeListComponent implements OnInit {
         this.dataSource.sort = this.sort;
       },
       (error) => {
-        console.error('Error al obtener los planes mensuales:', error);
+        //console.error('Error al obtener los planes mensuales:', error);
       }
     );
   }
@@ -129,57 +132,56 @@ export class PlanMetrajeListComponent implements OnInit {
   cargarArchivo(event: any): void {
     const archivo = event.target.files[0];
     if (!archivo) return;
-
+  
     const reader = new FileReader();
     reader.onload = (e: any) => {
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: 'array' });
-      const sheetName = 'PLAN METRAJE TL'; // Nombre específico de la hoja
+      const sheetName = "PLAN METRAJE TL";
       const sheet = workbook.Sheets[sheetName];
-
+  
       if (!sheet) {
-        console.error(`La hoja "${sheetName}" no existe en el archivo.`);
+        this._toastr.error(`La hoja "${sheetName}" no existe en el archivo.`, 'Error');
         return;
       }
-
-      // Convertimos los datos en formato JSON
+  
       const jsonData: any[] = XLSX.utils.sheet_to_json(sheet);
-
-      const totalFilas = jsonData.length; // Contar filas del archivo
-
-       // Almacenar errores de filas
-       const errores: string[] = [];
-        
-            // Convertir datos a modelo PlanMensual
-            const planes: PlanMetraje[] = jsonData.map((fila: any, index: number) => {
-              const anioFila = fila["AÑO"];
-              const mesFila = fila["MES"];
-        
-              // Verificar si el año y mes coinciden
-              if (anioFila !== this.anio || mesFila !== this.mes) {
-                errores.push(`Error en la fila ${index + 1}: El año y mes no coinciden. Año: ${anioFila}, Mes: ${mesFila}`);
-              }
-              
-              return this.mapearFilaAPlanMetraje(fila);
-            });
-        
-            // Si hay errores, mostrar la notificación usando toastr
-            if (errores.length > 0) {
-              this.errorMessage = errores.join('\n'); // Unir los errores en un solo mensaje
-              console.error(this.errorMessage);
-        
-              // Mostrar el mensaje de error usando toastr
-              this._toastr.error(this.errorMessage, 'Error en el archivo', {
-                closeButton: true,  // Agregar un botón para cerrar la notificación
-                progressBar: true,  // Mostrar una barra de progreso
-                timeOut: 5000       // Duración del mensaje
-              });
-              return;
-            }
-      // Enviar los datos al backend
-      this.enviarDatosAlServidor(planes);
+      const errores: string[] = [];
+  
+      // 1. Filtrar filas válidas (año/mes correctos) y mapear
+      const planesValidos: PlanMetraje[] = jsonData
+        .filter((fila: any, index: number) => {
+          const anioFila = Number(fila["AÑO"]);
+          const mesFila = String(fila["MES"]).trim().toUpperCase();
+  
+          if (anioFila !== this.anio || mesFila !== this.mes) {
+            errores.push(`Fila ${index + 1} ignorada: Año/Mes no coinciden (Año: ${anioFila}, Mes: ${mesFila})`);
+            return false; // Excluir esta fila
+          }
+          return true; // Incluir esta fila
+        })
+        .map((fila: any) => this.mapearFilaAPlanMetraje(fila));
+  
+      // 2. Si NO hay filas válidas, mostrar error y salir
+      if (planesValidos.length === 0) {
+        this._toastr.error('No hay filas válidas para enviar. Verifica el año y mes.', 'Error');
+        return;
+      }
+  
+      // 3. Si hay filas válidas, enviarlas al servidor
+      this.enviarDatosAlServidor(planesValidos);
+  
+      // 4. Mostrar advertencia si hubo filas ignoradas
+      if (errores.length > 0) {
+        this._toastr.warning(
+          `Se ignoraron ${errores.length} filas por año/mes incorrecto. Verifica la consola para detalles.`,
+          'Advertencia',
+          { closeButton: true, timeOut: 7000 }
+        );
+        //console.warn('Filas ignoradas:', errores);
+      }
     };
-
+  
     reader.readAsArrayBuffer(archivo);
   }
 
@@ -204,7 +206,7 @@ export class PlanMetrajeListComponent implements OnInit {
       ancho_minado_sem: fila['ANCHO DE MINADO SEM (m)'], // Revisa que este nombre coincida
       ancho_minado_mes: fila['ANCHO DE MINADO MES (m)'], // Revisa que este nombre coincida
       burden: fila['BURDEN (m)'], // Revisa que este nombre coincida
-      espaciamiento: fila['ESPACIAMIENTO (m)'], // Revisa que este nombre coincida
+      espaciamiento: fila['METRAJE (m)'], // Revisa que este nombre coincida
       longitud_perforacion: fila['LONGITUD DE PERFORACIÓN (m)'], // Revisa que este nombre coincida
       // Mapeo dinámico de columnas 1A - 28B
       ...Object.fromEntries(
@@ -221,25 +223,29 @@ export class PlanMetrajeListComponent implements OnInit {
   }
   
 
-  enviarDatosAlServidor(planes: PlanMetraje[]): void {
-    this.mostrarPantallaCarga(); // Mostrar el diálogo de carga
+async enviarDatosAlServidor(planes: PlanMetraje[]): Promise<void> {
+    //console.log('Iniciando envío de datos de metraje. Total planes:', planes.length);
+    this.mostrarPantallaCarga();
 
     let enviados = 0;
     let errores = 0;
 
-    planes.forEach((plan, index) => {
-      this.planMetrajeService.createPlanMetraje(plan).subscribe(
-        response => {
-          enviados++;
-          this.verificarCargaCompleta(planes.length, enviados, errores);
-        },
-        error => {
-          errores++;
-          this.verificarCargaCompleta(planes.length, enviados, errores);
+    // Enviar registros uno por uno
+    for (const [index, plan] of planes.entries()) {
+        try {
+            //console.log(`Enviando plan de metraje ${index + 1}/${planes.length}`);
+            const response = await this.planMetrajeService.createPlanMetraje(plan).toPromise();
+            //console.log(`Plan de metraje ${index + 1} enviado con éxito`, response);
+            enviados++;
+        } catch (error) {
+            //console.error(`Error al enviar plan de metraje ${index + 1}:`, error);
+            errores++;
+            // Opcional: puedes agregar lógica adicional de manejo de errores aquí
         }
-      );
-    });
-  }
+    }
+
+    this.verificarCargaCompleta(planes.length, enviados, errores);
+}
 
   verificarCargaCompleta(total: number, enviados: number, errores: number): void {
     if (enviados + errores === total) {

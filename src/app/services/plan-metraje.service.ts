@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, delay, Observable, tap } from 'rxjs';
 import { ApiService } from './api.service';
 import { PlanMetraje } from '../models/plan_metraje.model';
  
@@ -28,7 +28,8 @@ export class PlanMetrajeService {
     return this.apiService.postDatos(`${this.baseUrl}/`, planMetraje).pipe(
       tap(() => {
         this.planesActualizados.next(true); // Notificar que se creó un nuevo plan
-      })
+      }),
+      delay(100) 
     );
   }
 

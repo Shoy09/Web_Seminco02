@@ -14,29 +14,33 @@ import {
   NgApexchartsModule
 } from "ng-apexcharts";
 import { CommonModule } from '@angular/common';
+import { Meta } from '../../../../../models/meta.model';
 
 export type ChartOptions = {
   series: ApexAxisChartSeries;
   chart: ApexChart;
   dataLabels: ApexDataLabels;
   plotOptions: ApexPlotOptions;
-  yaxis: ApexYAxis;
+  yaxis: ApexYAxis | ApexYAxis[];  // ¡Ahora soporta múltiples ejes Y!
   xaxis: ApexXAxis;
   fill: ApexFill;
   tooltip: ApexTooltip;
   stroke: ApexStroke;
   legend: ApexLegend;
+  colors?: string[];  // Para personalizar colores
 };
 
 @Component({
   selector: 'app-grafico-barras',
-  standalone: true,
+  standalone: true, 
   imports: [CommonModule, NgApexchartsModule],
   templateUrl: './grafico-barras.component.html',
   styleUrls: ['./grafico-barras.component.css']
 })
 export class GraficoBarrasComponent implements OnChanges { 
   @Input() datos: any[] = [];
+  @Input() metas: Meta[] = [];
+
   @ViewChild("chart") chart!: ChartComponent;
   public chartOptions: ChartOptions;
 
@@ -59,7 +63,7 @@ export class GraficoBarrasComponent implements OnChanges {
     return {
       series: [],
       chart: {
-        type: "bar",
+        type: "bar",  // Tipo base (las series pueden sobrescribirlo)
         height: 350,
         stacked: false,
         toolbar: { show: false }
@@ -70,66 +74,93 @@ export class GraficoBarrasComponent implements OnChanges {
           borderRadius: 5,
           endingShape: "rounded",
           dataLabels: {
-            position: 'top' // Muestra las etiquetas encima de las barras
+            position: 'top'
           }
         } as any
       },
       dataLabels: {
-        enabled: true, // Habilita las etiquetas de datos
-        formatter: (val: number) => {
-          return val.toFixed(1); // Formatea a 1 decimal
-        },
+        enabled: true,
+        enabledOnSeries: [0],  // Solo habilita para barras (serie 0)
+        formatter: (val: number) => val.toFixed(1),  // Formato simple para barras
         style: {
-          fontSize: '12px',
-          colors: ['#000'] // Color del texto
+          colors: ['#000'],  // Solo color negro para barras
+          fontSize: '10px',
         },
-        offsetY: -20 // Ajusta la posición vertical
+        background: {
+          enabled: false,
+          foreColor: '#000',
+          padding: 3,
+          borderRadius: 2,
+          borderWidth: 0,
+          opacity: 0.9,
+        },
+        offsetY: -20,
+        dropShadow: {
+          enabled: true,
+          top: 1,
+          left: 1,
+          blur: 1,
+          opacity: 0.45,
+        }
       },
       stroke: {
-        show: true,
-        width: 2,
-        colors: ["transparent"]
+        width: [0, 4],
+        colors: [undefined, '#BF4342'], // Solo define color para la línea
+        curve: 'smooth'
+      },
+      colors: ['#3B82F6', '#BF4342'], // Azul para barras, rojo para línea
+      fill: { 
+        opacity: 1,
+        colors: ['#3B82F6', '#BF4342']
       },
       xaxis: {
+        type: 'category',
         categories: [],
-        title: {
-          text: 'Equipos'
-        },
+        title: { text: 'Equipos' },
         labels: {
           style: {
             fontSize: '12px'
           }
+        },
+        axisBorder: {
+          show: true
+        },
+        axisTicks: {
+          show: true
+        },
+        tooltip: {
+          enabled: false
         }
       },
       yaxis: {
-        // title: {
-        //   text: "Longitud de perforación por Equipo",
-        //   style: {
-        //     fontSize: '12px'
-        //   }
-        // },
+        title: { text: "Metros perforados" },
         labels: {
-          formatter: (value: number) => {
-            return value.toFixed(1);
-          }
+          formatter: (val: number) => val.toFixed(1)
         }
       },
-      fill: {
-        opacity: 1,
-        colors: ['#3B82F6']
-      },
+      
       tooltip: {
+        shared: true,
+        intersect: false,
         y: {
-          formatter: (val: number) => {
-            return `${val} metros`;
+          formatter: (val: number, { seriesIndex }) => {
+            return seriesIndex === 0 
+              ? `${val.toFixed(1)} metros` 
+              : `${val.toFixed(1)} metros`;
           }
         }
       },
       legend: {
-        show: false
-      }
+        show: true,
+        position: 'top',
+        markers: {
+          fillColors: ['#3B82F6', '#BF4342']  // Asegura que los colores de la leyenda coincidan
+        }
+      },
     };
   }
+
+
   private updateChart(): void {
     if (!this.datos || this.datos.length === 0) {
       console.warn('No hay datos para mostrar');
@@ -164,8 +195,7 @@ export class GraficoBarrasComponent implements OnChanges {
 }
 
 private processData(data: any[]): { series: any[], categories: string[] } {
-  const codigosMap = new Map<string, number>();
-
+  const codigosMap = new Map<string, {real: number, meta: number}>();
 
   data.forEach(item => {
     const codigo = item.codigo;
@@ -175,22 +205,34 @@ private processData(data: any[]): { series: any[], categories: string[] } {
 
     const resultado = (ntaladro + ntaladrosRimados) * longitud;
 
-    const valorActual = codigosMap.get(codigo) || 0;
-    codigosMap.set(codigo, valorActual + resultado);
+    const valorActual = codigosMap.get(codigo) || {real: 0, meta: 0};
+    valorActual.real += resultado;
+    
+    // Buscar la meta correspondiente usando el nombre (que equivale al código)
+    const metaEquipo = this.metas.find(m => m.nombre === codigo);
+    valorActual.meta = metaEquipo ? metaEquipo.objetivo : 0; // Meta será 0 si no está definida
 
+    codigosMap.set(codigo, valorActual);
   });
 
   const codigosOrdenados = Array.from(codigosMap.entries())
     .sort((a, b) => a[0].localeCompare(b[0]));
 
   return {
-    series: [{
-      name: "Total por equipo",
-      data: codigosOrdenados.map(([_, total]) => Number(total.toFixed(2)))
-    }],
+    series: [
+      {
+        name: "Real",
+        type: "bar",
+        data: codigosOrdenados.map(([_, valores]) => Number(valores.real.toFixed(2)))
+      },
+      {
+        name: "Meta",
+        type: "line",
+        data: codigosOrdenados.map(([_, valores]) => Number(valores.meta.toFixed(2)))
+      }
+    ],
     categories: codigosOrdenados.map(([codigo, _]) => codigo)
   };
 }
-
 
 }

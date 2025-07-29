@@ -18,7 +18,17 @@ import { MatSelectModule } from '@angular/material/select';
 export class UsuarioDialogComponent {
   usuarioForm: FormGroup;
   editMode = false;
-
+  operacionesDisponibles = [
+    'ACARREO',
+    'CARGUÍO',
+    'EXPLOSIVOS',
+    'MEDICIONES',
+    'SOSTENIMIENTO',
+    'SERVICIOS AUXILIARES',
+    'ACEROS DE PERFORACIÓN',
+    'PERFORACIÓN HORIZONTAL',
+    'PERFORACIÓN TALADROS LARGOS'
+  ];
   constructor(
     private fb: FormBuilder,
     private usuarioService: UsuarioService,
@@ -38,6 +48,7 @@ export class UsuarioDialogComponent {
         guardia: [data?.guardia || ''],
         autorizado_equipo: [data?.autorizado_equipo || ''],
         rol: [data?.rol || '', Validators.required],
+        operaciones_autorizadas: [data?.operaciones_autorizadas || []],
       },
       { validators: this.passwordsCoinciden } // 👈 Agregar validador aquí
     );
@@ -54,28 +65,30 @@ export class UsuarioDialogComponent {
     return password === confirmPassword ? null : { noCoincide: true };
   }
   
-  guardar() {
-    if (this.usuarioForm.valid) {
-      const usuarioData = { ...this.usuarioForm.value };
+guardar() {
+  if (this.usuarioForm.valid) {
+    const formValue = this.usuarioForm.value;
 
-      // Si es edición, eliminamos el campo password para no enviarlo
-      if (this.editMode) {
-        delete usuarioData.password;
-      }
-
-      if (this.editMode) {
-        this.usuarioService.actualizarUsuario(this.data.id!, usuarioData).subscribe(() => {
-          this.dialogRef.close(true);
-        });
-      } else {
-        this.usuarioService.crearUsuario(usuarioData).subscribe(() => {
-          this.dialogRef.close(true);
-        });
-      }
+    const operacionesObj: { [key: string]: boolean } = {};
+    if (Array.isArray(formValue.operaciones_autorizadas)) {
+      formValue.operaciones_autorizadas.forEach((op: string) => {
+        operacionesObj[op] = true;
+      });
     }
+
+    const usuarioData = {
+      ...formValue,
+      operaciones_autorizadas: operacionesObj
+    };
+
+    this.usuarioService.crearUsuario(usuarioData).subscribe(() => {
+      this.dialogRef.close(true);
+    });
   }
+}
+
 
   cancelar() {
     this.dialogRef.close();
   }
-}
+} 

@@ -69,11 +69,11 @@ export class PlanProduccionListComponent implements OnInit {
           this.mes = mes; 
           this.obtenerPlanesMetraje(anio, mes);
         } else {
-          console.error('Fecha de ingreso no válida');
+          //console.error('Fecha de ingreso no válida');
         }
       },
       (error) => {
-        console.error('Error al obtener la última fecha:', error);
+        //console.error('Error al obtener la última fecha:', error);
       }
     );
   }
@@ -86,7 +86,7 @@ export class PlanProduccionListComponent implements OnInit {
         this.dataSource.sort = this.sort;
       },
       (error) => {
-        console.error('Error al obtener los planes mensuales:', error);
+        //console.error('Error al obtener los planes mensuales:', error);
       }
     );
   }
@@ -115,149 +115,178 @@ export class PlanProduccionListComponent implements OnInit {
   seleccionarArchivo(): void {
     const fileInput = document.getElementById('fileInput') as HTMLInputElement;
     fileInput.click();
-  }
+}
 
-  cargarArchivo(event: any): void {
+cargarArchivo(event: any): void {
     const archivo = event.target.files[0];
     if (!archivo) return;
+    
+    //console.log('Archivo seleccionado:', archivo.name); // Log 1: Nombre del archivo
 
     const reader = new FileReader();
     reader.onload = (e: any) => {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const sheetName = 'PLAN PRODUCCIÓN'; // Nombre específico de la hoja
-      const sheet = workbook.Sheets[sheetName];
-
-      if (!sheet) {
-        console.error(`La hoja "${sheetName}" no existe en el archivo.`);
-        return;
-      }
-
-      // Convertimos los datos en formato JSON
-      const jsonData: any[] = XLSX.utils.sheet_to_json(sheet);
-const totalFilas = jsonData.length; // Contar filas del archivo
-      
-      // Almacenar errores de filas
-      const errores: string[] = [];
-  
-      // Convertir datos a modelo PlanMensual
-      const planes: PlanProduccion[] = jsonData.map((fila: any, index: number) => {
-        const anioFila = fila["AÑO"];
-        const mesFila = fila["MES"];
-  
-        // Verificar si el año y mes coinciden
-        if (anioFila !== this.anio || mesFila !== this.mes) {
-          errores.push(`Error en la fila ${index + 1}: El año y mes no coinciden. Año: ${anioFila}, Mes: ${mesFila}`);
-        }
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = "PLAN PRODUCCIÓN";
+        const sheet = workbook.Sheets[sheetName];
         
-        return this.mapearFilaAPlanProduccion(fila);
-      });
-  
-      // Si hay errores, mostrar la notificación usando toastr
-      if (errores.length > 0) {
-        this.errorMessage = errores.join('\n'); // Unir los errores en un solo mensaje
-        console.error(this.errorMessage);
-  
-        // Mostrar el mensaje de error usando toastr
-        this._toastr.error(this.errorMessage, 'Error en el archivo', {
-          closeButton: true,  // Agregar un botón para cerrar la notificación
-          progressBar: true,  // Mostrar una barra de progreso
-          timeOut: 5000       // Duración del mensaje
-        });
-        return;
-      }
-      
-      // Enviar los datos al backend
-      this.enviarDatosAlServidor(planes);
+        //console.log('Hojas disponibles:', workbook.SheetNames); // Log 2: Hojas del Excel
+
+        if (!sheet) {
+            //console.error(`La hoja "${sheetName}" no se encontró`); // Log 3: Error de hoja
+            this._toastr.error(`La hoja "${sheetName}" no existe en el archivo.`, 'Error');
+            return;
+        }
+
+        const jsonData: any[] = XLSX.utils.sheet_to_json(sheet);
+        //console.log('Total de filas en Excel:', jsonData.length); // Log 4: Total filas leídas
+        
+        const errores: string[] = [];
+
+        // 1. Filtrar filas válidas (año/mes correctos) y mapear
+        const planesValidos: PlanProduccion[] = jsonData
+            .filter((fila: any, index: number) => {
+                //console.log(`Procesando fila ${index + 1}`, fila); // Log 5: Fila completa
+                
+                const anioFila = Number(fila["AÑO"]);
+                const mesFila = String(fila["MES"]).trim().toUpperCase();
+                
+                //console.log(`Fila ${index + 1} - Año: ${anioFila}, Mes: ${mesFila}`); // Log 6: Año/Mes
+
+                if (anioFila !== this.anio || mesFila !== this.mes) {
+                    const mensaje = `Fila ${index + 1} ignorada: Año/Mes no coinciden (Año: ${anioFila}, Mes: ${mesFila})`;
+                    //console.warn(mensaje); // Log 7: Fila ignorada
+                    errores.push(mensaje);
+                    return false;
+                }
+                return true;
+            })
+            .map((fila: any) => {
+                const planMapeado = this.mapearFilaAPlanProduccion(fila);
+                //console.log('Fila mapeada a PlanProduccion:', planMapeado); // Log 8: Datos mapeados
+                return planMapeado;
+            });
+
+        //console.log('Total de planes válidos:', planesValidos.length); // Log 9: Planes válidos
+        //console.log('Planes válidos detallados:', planesValidos); // Log 10: Detalle planes
+
+        // 2. Si NO hay filas válidas, mostrar error y salir
+        if (planesValidos.length === 0) {
+            //console.error('No hay filas válidas para enviar'); // Log 11: Sin datos válidos
+            this._toastr.error('No hay filas válidas para enviar. Verifica el año y mes.', 'Error');
+            return;
+        }
+
+        // 3. Si hay filas válidas, enviarlas al servidor
+        this.enviarDatosAlServidor(planesValidos);
+
+        // 4. Mostrar advertencia si hubo filas ignoradas
+        if (errores.length > 0) {
+            //console.warn('Resumen de filas ignoradas:', errores); // Log 12: Resumen errores
+            this._toastr.warning(
+                `Se ignoraron ${errores.length} filas por año/mes incorrecto. Verifica la consola para detalles.`,
+                'Advertencia',
+                { closeButton: true, timeOut: 7000 }
+            );
+        }
     };
 
     reader.readAsArrayBuffer(archivo);
-  }
+}
 
-  mapearFilaAPlanProduccion(fila: any): PlanProduccion {
-    return {
-      anio: fila["AÑO"],
-      mes: fila['MES'],
-      semana: fila['SEMANA'],
-      mina: fila['MINA'],
-      zona: fila['ZONA'],
-      area: fila['AREA'],
-      fase: fila['FASE'],
-      minado_tipo: fila['MINADO/TIPO'],
-      tipo_labor: fila['TIPO LABOR'],
-      tipo_mineral: fila['TIPO DE MINERAL'],
-      estructura_veta: fila['ESTRUCTURA/VETA'],
-      nivel: fila['NIVEL'],
-      block: fila['BLOCK'],
-      labor: fila['LABOR'],
-      ala: fila['ALA'],
-      ancho_veta: fila['ANCHO DE VETA'],
-      ancho_minado_sem: fila['ANCHO DE MINADO SEM'],
-      ancho_minado_mes: fila['ANCHO DE MINADO MES'],
-      ag_gr: fila['Ag gr'],
-      porcentaje_cu: fila['%Cu'],
-      porcentaje_pb: fila['%Pb'],
-      porcentaje_zn: fila['%Zn'],
-      vpt_act: fila['VPT ACT'],
-      vpt_final: fila['VPT FINAL'],
-      cut_off_1: fila['CUT OFF 1'],
-      cut_off_2: fila['CUT OFF 2'],
-      // Campos dinámicos 1A - 28B
-      ...Object.fromEntries(
-        Array.from({ length: 28 }, (_, i) => [
-          `col_${i + 1}A`, fila[`${i + 1}A`] !== undefined ? fila[`${i + 1}A`].toString().trim() : null
-        ])
-      ),
-      ...Object.fromEntries(
-        Array.from({ length: 28 }, (_, i) => [
-          `col_${i + 1}B`, fila[`${i + 1}B`] !== undefined ? fila[`${i + 1}B`].toString().trim() : null
-        ])
-      )
+mapearFilaAPlanProduccion(fila: any): PlanProduccion {
+    //console.log('Mapeando fila:', fila); // Log 13: Fila antes de mapear
+    const plan = {
+        anio: fila["AÑO"],
+        mes: fila['MES'],
+        semana: fila['SEMANA'],
+        mina: fila['MINA'],
+        zona: fila['ZONA'],
+        area: fila['AREA'],
+        fase: fila['FASE'],
+        minado_tipo: fila['MINADO/TIPO'],
+        tipo_labor: fila['TIPO LABOR'],
+        tipo_mineral: fila['TIPO DE MINERAL'],
+        estructura_veta: fila['ESTRUCTURA/VETA'],
+        nivel: fila['NIVEL'],
+        block: fila['BLOCK'],
+        labor: fila['LABOR'],
+        ala: fila['ALA'],
+        ancho_veta: fila['ANCHO DE VETA'],
+        ancho_minado_sem: fila['ANCHO DE MINADO SEM'],
+        ancho_minado_mes: fila['ANCHO DE MINADO MES'],
+        ag_gr: fila['Ag gr'],
+        porcentaje_cu: fila['%Cu'],
+        porcentaje_pb: fila['%Pb'],
+        porcentaje_zn: fila['%Zn'],
+        vpt_act: fila['VPT ACT'],
+        vpt_final: fila['VPT FINAL'],
+        cut_off_1: fila['CUT OFF 1'],
+        cut_off_2: fila['TONELAJE'],
+        // Campos dinámicos 1A - 28B
+        ...Object.fromEntries(
+            Array.from({ length: 28 }, (_, i) => [
+                `col_${i + 1}A`, fila[`${i + 1}A`] !== undefined ? fila[`${i + 1}A`].toString().trim() : null
+            ])
+        ),
+        ...Object.fromEntries(
+            Array.from({ length: 28 }, (_, i) => [
+                `col_${i + 1}B`, fila[`${i + 1}B`] !== undefined ? fila[`${i + 1}B`].toString().trim() : null
+            ])
+        )
     };
-  }
-  
+    //console.log('PlanProduccion resultante:', plan); // Log 14: Plan después de mapear
+    return plan;
+}
 
-  enviarDatosAlServidor(planes: PlanProduccion[]): void {
-    this.mostrarPantallaCarga(); // Mostrar el diálogo de carga
+async enviarDatosAlServidor(planes: PlanProduccion[]): Promise<void> {
+    //console.log('Iniciando envío de datos al servidor. Total planes:', planes.length);
+    this.mostrarPantallaCarga();
 
     let enviados = 0;
     let errores = 0;
 
-    planes.forEach((plan, index) => {
-      this.planProduccionService.createPlanProduccion(plan).subscribe(
-        response => {
-          enviados++;
-          this.verificarCargaCompleta(planes.length, enviados, errores);
-        },
-        error => {
-          errores++;
-          this.verificarCargaCompleta(planes.length, enviados, errores);
+    // Enviar registros uno por uno
+    for (const [index, plan] of planes.entries()) {
+        try {
+            //console.log(`Enviando plan ${index + 1}/${planes.length}`, plan);
+            const response = await this.planProduccionService.createPlanProduccion(plan).toPromise();
+            //console.log(`Plan ${index + 1} enviado con éxito`, response);
+            enviados++;
+        } catch (error) {
+            //console.error(`Error al enviar plan ${index + 1}:`, error);
+            errores++;
         }
-      );
-    });
-  }
-
-  verificarCargaCompleta(total: number, enviados: number, errores: number): void {
-    if (enviados + errores === total) {
-      this.dialog.closeAll(); // Cerrar la pantalla de carga
-      this.obtenerUltimaFecha(); // Recargar la tabla con los nuevos datos
-  
-      // Mostrar una notificación de éxito si todo salió correctamente
-      if (errores === 0) {
-        this._toastr.success('Los datos se cargaron correctamente', 'Carga exitosa', {
-          closeButton: true,
-          progressBar: true,
-          timeOut: 5000
-        });
-      } else {
-        this._toastr.error(`Hubo ${errores} errores durante la carga`, 'Error en la carga', {
-          closeButton: true,
-          progressBar: true,
-          timeOut: 5000
-        });
-      }
     }
-  }
+
+    this.verificarCargaCompleta(planes.length, enviados, errores);
+}
+
+verificarCargaCompleta(total: number, enviados: number, errores: number): void {
+    //console.log(`Progreso: ${enviados + errores}/${total} (Éxitos: ${enviados}, Errores: ${errores})`); // Log 19
+    
+    if (enviados + errores === total) {
+        //console.log('Carga completada. Resumen:', { total, enviados, errores }); // Log 20
+        this.dialog.closeAll();
+        this.obtenerUltimaFecha();
+        
+        if (errores === 0) {
+            //console.log('Todos los planes se cargaron correctamente'); // Log 21
+            this._toastr.success('Los datos se cargaron correctamente', 'Carga exitosa', {
+                closeButton: true,
+                progressBar: true,
+                timeOut: 5000
+            });
+        } else {
+            //console.error(`Hubo ${errores} errores durante la carga`); // Log 22
+            this._toastr.error(`Hubo ${errores} errores durante la carga`, 'Error en la carga', {
+                closeButton: true,
+                progressBar: true,
+                timeOut: 5000
+            });
+        }
+    }
+}
 
   mostrarPantallaCarga() {
     this.dialog.open(LoadingDialogComponent, {

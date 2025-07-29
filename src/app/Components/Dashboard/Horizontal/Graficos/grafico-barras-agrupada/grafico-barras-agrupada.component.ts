@@ -13,6 +13,8 @@ import {
   ApexTooltip,
   NgApexchartsModule
 } from "ng-apexcharts";
+import { Meta } from '../../../../../models/meta.model';
+import { CommonModule } from '@angular/common';
 
 export type ChartOptions = {
   series: ApexAxisChartSeries;
@@ -25,42 +27,99 @@ export type ChartOptions = {
   tooltip: ApexTooltip;
   stroke: ApexStroke;
   legend: ApexLegend;
+  colors?: string[];
+  annotations?: any;
 };
 
 @Component({
   selector: 'app-grafico-barras-agrupada',
-  imports: [NgApexchartsModule],
   standalone: true,
+  imports: [CommonModule, NgApexchartsModule],
   templateUrl: './grafico-barras-agrupada.component.html',
   styleUrl: './grafico-barras-agrupada.component.css'
 })
 export class GraficoBarrasAgrupadaComponent implements OnChanges {
   @Input() datos: any[] = [];
+  @Input() metas: Meta[] = [];
   @ViewChild("chart") chart!: ChartComponent;
-  public chartOptions: Partial<ChartOptions> | any;
+  public chartOptions: ChartOptions;
 
-  ngOnChanges(changes: SimpleChanges): void {
-    this.updateChart();
-    if (this.datos && this.datos.length > 0) {
-      this.updateChart();
-    } else {
-    } 
+  constructor() {
+    this.chartOptions = this.getDefaultOptions();
   }
 
-  private updateChart(): void {
-    const processedData = this.processData(this.datos);
-  
-    this.chartOptions = {
-      series: processedData.series,
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['datos'] || changes['metas']) {
+      if (this.datos && this.datos.length > 0) {
+        this.updateChart();
+      } else {
+        this.chartOptions = this.getDefaultOptions();
+      }
+    }
+  }
+
+  private getDefaultOptions(): ChartOptions {
+    return {
+      series: [],
       chart: {
         type: "bar",
         height: 350,
-        stacked: true,
-        toolbar: {
-          show: true
+        stacked: true, // Barras apiladas
+        toolbar: { show: true },
+        zoom: { enabled: true }
+      },
+      plotOptions: {
+        bar: {
+          horizontal: false,
+          borderRadius: 5,
+          endingShape: "rounded",
+          columnWidth: '70%',
+          dataLabels: {
+            enabled: false // Desactivamos las etiquetas individuales
+          }
+        } as any
+      },
+      dataLabels: {
+        enabled: false // Desactivamos dataLabels globalmente
+      },
+      stroke: {
+        show: true,
+        width: [1, 1, 3], // Grosor diferente para barras (1) y línea (3)
+        colors: ['#fff', '#fff', '#BF4342'] // Color para la línea de meta
+      },
+      colors: ['#3B82F6', '#10B981', '#BF4342'], // Azul para taladros, verde para rimados, rojo para meta
+      fill: {
+        opacity: 1
+      },
+      xaxis: {
+        categories: [],
+        title: {
+          text: 'Equipos'
         },
-        zoom: {
-          enabled: true
+        labels: {
+          style: {
+            fontSize: '12px'
+          }
+        }
+      },
+      yaxis: {
+        title: {
+          text: 'Número de Taladros'
+        },
+        labels: {
+          formatter: (value: number) => value.toFixed(0)
+        }
+      },
+      tooltip: {
+        shared: true,
+        intersect: false,
+        y: {
+          formatter: (val: number, { seriesIndex }) => {
+            if (seriesIndex === 2) {
+              return `${val.toFixed(0)} taladros`;
+            }
+            return `${val.toFixed(0)} taladros`;
+          }
         }
       },
       legend: {
@@ -68,118 +127,110 @@ export class GraficoBarrasAgrupadaComponent implements OnChanges {
         position: 'top',
         horizontalAlign: 'center',
         markers: {
-          width: 12,
-          height: 12
-        }
-      },
-      plotOptions: {
-        bar: {
-          horizontal: false,
-          borderRadius: 5,
-          endingShape: "rounded",
-          dataLabels: {
-            total: {
-              enabled: true,  // Activar solo los totales
-              style: {
-                fontSize: '10px',
-                fontWeight: 900 
-              },
-            }
-          }
-        }
-      } as any,
-      dataLabels: {
-        enabled: false // ❌ Desactivamos etiquetas dentro de las barras
-        
-      },
-      stroke: {
-        show: true,
-        width: 1,
-        colors: ['#fff']
-      },
-      xaxis: {
-        categories: processedData.categories,
-        title: {
-          text: 'Equipos'
-        }
-      },
-      yaxis: {
-        min: 0,
-        title: {
-          text: 'Número de Taladros'
-        }
-      },
-      fill: {
-        opacity: 1
-      },
-      tooltip: {
-        y: {
-          formatter: (val: number) => `${val} taladro(s)`
+          fillColors: ['#3B82F6', '#10B981', '#BF4342']
         }
       },
       annotations: {
-        points: processedData.annotations // ✅ Etiquetas personalizadas arriba de cada barra
+        points: [] // Inicializamos las anotaciones vacías
       }
     };
   }
-  
+
+  private updateChart(): void {
+    if (!this.datos || this.datos.length === 0) {
+      console.warn('No hay datos para mostrar');
+      return;
+    }
+    
+    const processedData = this.processData(this.datos);
+    
+    this.chartOptions = {
+      ...this.chartOptions,
+      series: processedData.series,
+      xaxis: {
+        ...this.chartOptions.xaxis,
+        categories: processedData.categories,
+        labels: {
+          style: {
+            fontSize: '12px',
+            fontFamily: 'Arial'
+          }
+        }
+      },
+      annotations: {
+        points: processedData.annotations // Añadimos las anotaciones
+      }
+    };
+    
+    setTimeout(() => {
+      if (this.chart && this.chart.updateOptions) {
+        this.chart.updateOptions(this.chartOptions);
+      }
+    }, 100);
+  }
+
   private processData(data: any[]): { series: any[], categories: string[], annotations: any[] } {
-    const categorias: string[] = [];
-    const taladros: number[] = [];
-    const rimados: number[] = [];
+    const equiposMap = new Map<string, {taladros: number, rimados: number, meta: number}>();
     const annotations: any[] = [];
-  
-    const agrupado = new Map<string, { ntaladro: number, ntaladros_rimados: number }>();
-  
+
     data.forEach(item => {
       const codigo = item.codigo;
-  
-      if (!agrupado.has(codigo)) {
-        agrupado.set(codigo, { ntaladro: 0, ntaladros_rimados: 0 });
-      }
-  
-      const actual = agrupado.get(codigo)!;
-      actual.ntaladro += item.ntaladro || 0;
-      actual.ntaladros_rimados += item.ntaladros_rimados || 0;
+      const ntaladro = Number(item.ntaladro) || 0;
+      const ntaladrosRimados = Number(item.ntaladros_rimados) || 0;
+
+      const valorActual = equiposMap.get(codigo) || {taladros: 0, rimados: 0, meta: 0};
+      valorActual.taladros += ntaladro;
+      valorActual.rimados += ntaladrosRimados;
+      
+      const metaEquipo = this.metas.find(m => m.nombre === codigo);
+      valorActual.meta = metaEquipo ? metaEquipo.objetivo : 0;
+
+      equiposMap.set(codigo, valorActual);
     });
-  
-    Array.from(agrupado.entries()).sort(([a], [b]) => a.localeCompare(b)).forEach(([codigo, valores], index) => {
-      categorias.push(codigo);
-      taladros.push(valores.ntaladro);
-      rimados.push(valores.ntaladros_rimados);
-  
-      const total = valores.ntaladro + valores.ntaladros_rimados;
-  
+
+    const equiposOrdenados = Array.from(equiposMap.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]));
+
+    // Creamos las anotaciones para mostrar la suma total
+    equiposOrdenados.forEach(([codigo, valores]) => {
+      const total = valores.taladros + valores.rimados;
       annotations.push({
         x: codigo,
         y: total,
         label: {
-          text: `${total}`,
           borderColor: 'transparent',
           style: {
-            background: 'transparent',
             color: '#000',
+            background: 'transparent',
             fontSize: '12px',
-            fontWeight: 'bold',
-            padding: 0 // 🔥 Elimina espacio interno
+            fontWeight: 'bold'
           },
-          offsetY: -5
-        },
-        marker: {
-          size: 0,
-          fillColor: 'transparent', // 🔥 asegúrate que no pinta nada
-          strokeColor: 'transparent'
+          text: total.toString(),
+          offsetY: -10
         }
-      });           
+      });
     });
-  
+
     return {
-      categories: categorias,
       series: [
-        { name: 'Taladros', data: taladros },
-        { name: 'Rimados', data: rimados }
+        {
+          name: "Taladros",
+          type: "bar",
+          data: equiposOrdenados.map(([_, valores]) => valores.taladros)
+        },
+        {
+          name: "Rimados",
+          type: "bar",
+          data: equiposOrdenados.map(([_, valores]) => valores.rimados)
+        },
+        {
+          name: "Meta",
+          type: "line",
+          data: equiposOrdenados.map(([_, valores]) => valores.meta)
+        }
       ],
-      annotations
+      categories: equiposOrdenados.map(([equipo, _]) => equipo),
+      annotations: annotations
     };
   }
-}  
+}

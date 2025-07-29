@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service'; // Importamos ApiService
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, delay, Observable, tap } from 'rxjs';
 import { PlanMensual } from '../models/plan-mensual.model';
 
 @Injectable({
@@ -28,7 +28,8 @@ export class PlanMensualService {
     return this.apiService.postDatos(`${this.baseUrl}/`, planMensual).pipe(
       tap(() => {
         this.planesActualizados.next(true); // Notificar que se creó un nuevo plan
-      })
+      }),
+      delay(100)
     );
   }
 

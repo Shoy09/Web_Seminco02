@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit, OnChanges } from '@angular/core';
 import { NgApexchartsModule } from 'ng-apexcharts';
+import { Meta } from '../../../../../models/meta.model';
 
 @Component({
   selector: 'app-promedio-taladros',
@@ -8,10 +9,10 @@ import { NgApexchartsModule } from 'ng-apexcharts';
   templateUrl: './promedio-taladros.component.html',
   styleUrl: './promedio-taladros.component.css'
 })
-export class PromedioTaladrosComponent {
+export class PromedioTaladrosComponent implements OnInit, OnChanges {
   @Input() datos: any[] = [];
-  
-  // Configuración del gráfico
+  @Input() metas: Meta[] = [];
+
   public chartOptions: any = {
     series: [],
     chart: {
@@ -38,10 +39,9 @@ export class PromedioTaladrosComponent {
             total: {
               show: true,
               label: 'Total promedio',
-              formatter: () => {
-                const total = this.chartOptions.series.reduce((a: number, b: number) => a + b, 0);
-                const count = this.chartOptions.series.length;
-                return (total / count).toFixed(1);
+              formatter: (w: any) => {
+                const total = w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0);
+                return (total / w.globals.series.length).toFixed(2);
               }
             }
           }
@@ -50,22 +50,42 @@ export class PromedioTaladrosComponent {
     },
     dataLabels: {
       enabled: true,
-      formatter: function(val: number, opts: { w: { config: { labels: { [x: string]: string; }; }; }; seriesIndex: string | number; }) {
-        return opts.w.config.labels[opts.seriesIndex] + ': ' + val.toFixed(1);
+      style: {
+        colors: ['#fff']
+      },
+      formatter: (val: number, opts: { w: { config: { labels: string[]; }; }; seriesIndex: number; }) => {
+        const label = opts.w.config.labels[opts.seriesIndex];
+        return `${label}: ${val.toFixed(2)}`;
       }
     },
     legend: {
       position: 'right',
-      horizontalAlign: 'center'
+      horizontalAlign: 'center',
+      formatter: (seriesName: string, opts: { w: any; seriesIndex: number; }) => {
+        const meta = this.metas.find(m => m.nombre === opts.w.config.labels[opts.seriesIndex]);
+        const metaValue = meta ? meta.objetivo : 'N/A';
+        return `${seriesName}: ${opts.w.config.series[opts.seriesIndex].toFixed(2)} (Meta: ${metaValue})`;
+      }
     },
-    // title: {
-    //   text: 'Distribución de Promedio de Taladros por Sección',
-    //   align: 'center'
-    // },
     colors: [
       '#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0',
       '#546E7A', '#26a69a', '#D10CE8', '#FFA726', '#66BB6A'
-    ]
+    ],
+    tooltip: {
+      y: {
+        formatter: (value: number, opts: { seriesIndex: number; dataPointIndex: number; w: any }) => {
+          const label = opts.w.config.labels[opts.seriesIndex];
+          const meta = this.metas.find(m => m.nombre === label);
+          const metaValue = meta ? meta.objetivo : 'N/A';
+          return `${value.toFixed(2)} (Meta: ${metaValue})`;
+        }
+      }
+    },
+    annotations: {
+      yaxis: [],
+      xaxis: [],
+      points: []
+    }
   };
 
   ngOnInit(): void {
@@ -83,13 +103,12 @@ export class PromedioTaladrosComponent {
       return;
     }
 
-    // Agrupar datos por sección
     const seccionesMap = new Map<string, { total: number, count: number }>();
 
     this.datos.forEach(item => {
       const seccion = item.seccion_la_labor;
       const totalTaladros = (item.ntaladro || 0) + (item.ntaladros_rimados || 0);
-      
+
       if (seccionesMap.has(seccion)) {
         const current = seccionesMap.get(seccion)!;
         seccionesMap.set(seccion, {
@@ -104,20 +123,18 @@ export class PromedioTaladrosComponent {
       }
     });
 
-    // Preparar datos para el gráfico
     const labels: string[] = [];
     const series: number[] = [];
 
     seccionesMap.forEach((value, key) => {
       labels.push(key);
-      series.push(value.total / value.count);
+      series.push(parseFloat((value.total / value.count).toFixed(2)));
     });
 
-    // Actualizar las opciones del gráfico
     this.chartOptions = {
       ...this.chartOptions,
       series: series,
-      labels: labels
+      labels: labels,
     };
   }
 }

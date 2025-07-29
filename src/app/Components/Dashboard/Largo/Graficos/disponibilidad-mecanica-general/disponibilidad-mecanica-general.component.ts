@@ -10,6 +10,7 @@ import {
   NgApexchartsModule
 } from "ng-apexcharts";
 import { CommonModule } from '@angular/common';
+import { Meta } from '../../../../../models/meta.model';
 
 export type ChartOptions = {
   series: ApexNonAxisChartSeries;
@@ -28,16 +29,19 @@ export type ChartOptions = {
   templateUrl: './disponibilidad-mecanica-general.component.html',
   styleUrl: './disponibilidad-mecanica-general.component.css'
 })
-export class DisponibilidadMecanicaGeneralComponent implements OnChanges {
+export class DisponibilidadMecanicaGeneralComponent implements OnChanges { 
   @Input() datos: any[] = [];
+  @Input() metas: Meta[] = [];
   @ViewChild("chart") chart!: ChartComponent;
   public chartOptions: Partial<ChartOptions>;
+  public disponibilidad: number = 0;
+  public meta: number = 0;
 
   constructor() {
     this.chartOptions = this.getDefaultOptions();
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
+ ngOnChanges(changes: SimpleChanges): void {
     if (changes['datos'] && this.datos && this.datos.length > 0) {
       this.updateChart();
     } else {
@@ -113,20 +117,33 @@ export class DisponibilidadMecanicaGeneralComponent implements OnChanges {
       return;
     }
     
-    const disponibilidad = this.calcularDisponibilidadGeneral(this.datos);
-    
+    this.disponibilidad = this.calcularDisponibilidadGeneral(this.datos);
+    this.meta = this.obtenerMeta(); // Asumimos que solo hay una meta
+
+    // Comprobar si la disponibilidad cumple con la meta
+    if (this.disponibilidad >= this.meta) {
+      this.chartOptions.colors = ['#00FF00'];  // Cambiar color a verde si se cumple la meta
+    } else {
+      this.chartOptions.colors = ['#FF0000'];  // Cambiar color a rojo si no se cumple
+    }
+
     this.chartOptions = {
       ...this.chartOptions,
-      series: [disponibilidad],
-      labels: [`Disponibilidad: ${disponibilidad.toFixed(2)}%`]
+      series: [this.disponibilidad],
+      labels: [`Disponibilidad: ${this.disponibilidad.toFixed(2)}%`]
     };
     
     setTimeout(() => {
       if (this.chart && this.chart.updateSeries) {
-        this.chart.updateSeries([disponibilidad]);
+        this.chart.updateSeries([this.disponibilidad]);
       }
     }, 100);
   }
+
+  public obtenerMeta(): number {
+    return this.metas.length > 0 ? this.metas[0].objetivo : 0;
+  }
+  
 
   private calcularDisponibilidadGeneral(data: any[]): number {
     // Calcular duración para cada registro

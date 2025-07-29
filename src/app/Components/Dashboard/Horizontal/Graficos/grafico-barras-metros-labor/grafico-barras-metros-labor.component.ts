@@ -14,6 +14,7 @@ import {
   NgApexchartsModule
 } from "ng-apexcharts";
 import { CommonModule } from '@angular/common';
+import { Meta } from '../../../../../models/meta.model';
 
 export type ChartOptions = {
   series: ApexAxisChartSeries;
@@ -26,17 +27,19 @@ export type ChartOptions = {
   tooltip: ApexTooltip;
   stroke: ApexStroke;
   legend: ApexLegend;
+  colors?: string[];
 };
 
- 
 @Component({
   selector: 'app-grafico-barras-metros-labor',
+  standalone: true,
   imports: [CommonModule, NgApexchartsModule],
   templateUrl: './grafico-barras-metros-labor.component.html',
   styleUrl: './grafico-barras-metros-labor.component.css'
 })
 export class GraficoBarrasMetrosLaborComponent implements OnChanges {
   @Input() datos: any[] = [];
+  @Input() metas: Meta[] = [];
   @ViewChild("chart") chart!: ChartComponent;
   public chartOptions: ChartOptions;
 
@@ -45,10 +48,12 @@ export class GraficoBarrasMetrosLaborComponent implements OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['datos'] && this.datos && this.datos.length > 0) {
-      this.updateChart();
-    } else {
-      this.chartOptions = this.getDefaultOptions();
+    if (changes['datos'] || changes['metas']) {
+      if (this.datos && this.datos.length > 0) {
+        this.updateChart();
+      } else {
+        this.chartOptions = this.getDefaultOptions();
+      }
     }
   }
 
@@ -67,25 +72,28 @@ export class GraficoBarrasMetrosLaborComponent implements OnChanges {
           borderRadius: 5,
           endingShape: "rounded",
           dataLabels: {
-            position: 'top' // Muestra las etiquetas encima de las barras
+            position: 'top'
           }
         } as any
       },
       dataLabels: {
-        enabled: true, // Habilita las etiquetas de datos
-        formatter: (val: number) => {
-          return val.toFixed(1); // Formatea a 1 decimal
-        },
+        enabled: true,
+        enabledOnSeries: [0], // Solo muestra etiquetas en las barras
+        formatter: (val: number) => val.toFixed(1),
         style: {
           fontSize: '12px',
-          colors: ['#000'] // Color del texto
+          colors: ['#000']
         },
-        offsetY: -20 // Ajusta la posición vertical
+        offsetY: -20
       },
       stroke: {
-        show: true,
-        width: 2,
-        colors: ["transparent"]
+        width: [0, 4], // Grosor diferente para barras (0) y línea (4)
+        colors: [undefined, '#BF4342'] // Color para la línea
+      },
+      colors: ['#3B82F6', '#BF4342'], // Azul para barras, rojo para línea
+      fill: {
+        opacity: 1,
+        colors: ['#3B82F6']
       },
       xaxis: {
         categories: [],
@@ -99,43 +107,39 @@ export class GraficoBarrasMetrosLaborComponent implements OnChanges {
         }
       },
       yaxis: {
-        // title: {
-        //   text: "Longitud de perforación por Labor",
-        //   style: {
-        //     fontSize: '12px'
-        //   }
-        // },
         labels: {
-          formatter: (value: number) => {
-            return value.toFixed(1);
-          }
+          formatter: (value: number) => value.toFixed(1)
         }
       },
-      fill: {
-        opacity: 1,
-        colors: ['#3B82F6']
-      },
       tooltip: {
+        shared: true,
+        intersect: false,
         y: {
-          formatter: (val: number) => {
-            return `${val} metros`;
+          formatter: (val: number, { seriesIndex }) => {
+            return seriesIndex === 0 
+              ? `${val.toFixed(1)} metros` 
+              : `${val.toFixed(1)} metros (meta)`;
           }
         }
       },
       legend: {
-        show: false
+        show: true,
+        position: 'top',
+        markers: {
+          fillColors: ['#3B82F6', '#BF4342']
+        }
       }
     };
   }
+
   private updateChart(): void {
     if (!this.datos || this.datos.length === 0) {
       console.warn('No hay datos para mostrar');
       return;
     }
-  
+    
     const processedData = this.processData(this.datos);
-  
-  
+    
     this.chartOptions = {
       ...this.chartOptions,
       series: processedData.series,
@@ -150,39 +154,48 @@ export class GraficoBarrasMetrosLaborComponent implements OnChanges {
         }
       }
     };
-  
-    // Forzar actualización si es necesario
+    
     setTimeout(() => {
       if (this.chart && this.chart.updateSeries) {
         this.chart.updateSeries(processedData.series);
       }
     }, 100);
   }
-  
+
   private processData(data: any[]): { series: any[], categories: string[] } {
-    const laboresMap = new Map<string, number>();
+    const laboresMap = new Map<string, {real: number, meta: number}>();
 
     data.forEach(item => {
       const clave = `${item.tipo_labor}-${item.labor}`;
       const longitud = item.longitud_perforacion || 0;
-  
-      const longitudActual = laboresMap.get(clave) || 0;
-      laboresMap.set(clave, longitudActual + longitud);
-  
+
+      const valorActual = laboresMap.get(clave) || {real: 0, meta: 0};
+      valorActual.real += longitud;
+      
+      // Buscar la meta correspondiente usando el nombre de la labor
+      const metaLabor = this.metas.find(m => m.nombre === clave);
+      valorActual.meta = metaLabor ? metaLabor.objetivo : 0; // Meta será 0 si no está definida
+
+      laboresMap.set(clave, valorActual);
     });
-  
+
     const laboresOrdenadas = Array.from(laboresMap.entries())
       .sort((a, b) => a[0].localeCompare(b[0]));
-  
-  
+
     return {
-      series: [{
-        name: "Longitud perforada",
-        data: laboresOrdenadas.map(([_, longitud]) => Number(longitud.toFixed(2)))
-      }],
+      series: [
+        {
+          name: "Real",
+          type: "bar",
+          data: laboresOrdenadas.map(([_, valores]) => Number(valores.real.toFixed(2)))
+        },
+        {
+          name: "Meta",
+          type: "line",
+          data: laboresOrdenadas.map(([_, valores]) => Number(valores.meta.toFixed(2)))
+        }
+      ],
       categories: laboresOrdenadas.map(([clave, _]) => clave)
     };
   }
-  
-
 }

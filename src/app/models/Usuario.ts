@@ -4,7 +4,7 @@ export interface Usuario {
   apellidos: string;
   nombres: string;
   cargo?: string;
-  rol?: string;  
+  rol?: string;
   area?: string;                // Nuevo campo opcional
   clasificacion?: string;       // Nuevo campo opcional
   empresa?: string;             // Opcional
@@ -13,4 +13,7 @@ export interface Usuario {
   correo?: string;              // Opcional
   password?: string;            // Solo necesario en la creación
   firma?: string;
+  operaciones_autorizadas?: {   // Nuevo campo JSON opcional
+    [clave: string]: boolean;
+  };
 }

@@ -10,8 +10,9 @@ import {
   NgApexchartsModule
 } from "ng-apexcharts";
 import { CommonModule } from '@angular/common';
+import { Meta } from '../../../../../models/meta.model';
 
-export type ChartOptions = {
+export type ChartOptions = { 
   series: ApexNonAxisChartSeries;
   chart: ApexChart;
   labels: string[];
@@ -30,8 +31,11 @@ export type ChartOptions = {
 })
 export class UtilizacionGeneralComponent implements OnChanges {
   @Input() datos: any[] = [];
+  @Input() metas: Meta[] = [];
   @ViewChild("chart") chart!: ChartComponent;
   public chartOptions: Partial<ChartOptions>;
+  public utilizacion: number = 0;
+  public meta: number = 0;
 
   constructor() {
     this.chartOptions = this.getDefaultOptions();
@@ -95,7 +99,7 @@ export class UtilizacionGeneralComponent implements OnChanges {
         }
       },
       
-      labels: ["Disponibilidad Mecánica"],
+      labels: ["Utilización General"],
       responsive: [{
         breakpoint: 480,
         options: {
@@ -113,22 +117,34 @@ export class UtilizacionGeneralComponent implements OnChanges {
       return;
     }
     
-    const disponibilidad = this.calcularDisponibilidadGeneral(this.datos);
-    
+    this.utilizacion = this.calcularUtilizacionGeneral(this.datos);
+    this.meta = this.obtenerMeta(); // Asumimos que solo hay una meta
+
+    // Comprobar si la utilización cumple con la meta
+    if (this.utilizacion >= this.meta) {
+      this.chartOptions.colors = ['#00FF00'];  // Cambiar color a verde si se cumple la meta
+    } else {
+      this.chartOptions.colors = ['#FF0000'];  // Cambiar color a rojo si no se cumple
+    }
+
     this.chartOptions = {
       ...this.chartOptions,
-      series: [disponibilidad],
-      labels: [`Disponibilidad: ${disponibilidad.toFixed(2)}%`]
+      series: [this.utilizacion],
+      labels: [`Utilización: ${this.utilizacion.toFixed(2)}%`]
     };
     
     setTimeout(() => {
       if (this.chart && this.chart.updateSeries) {
-        this.chart.updateSeries([disponibilidad]);
+        this.chart.updateSeries([this.utilizacion]);
       }
     }, 100);
   }
 
-  private calcularDisponibilidadGeneral(data: any[]): number {
+  public obtenerMeta(): number {
+    return this.metas.length > 0 ? this.metas[0].objetivo : 0;
+  }
+
+  private calcularUtilizacionGeneral(data: any[]): number {
     // Calcular duración para cada registro
     const datosConDuracion = data.map(item => {
       const inicio = this.parseHora(item.hora_inicio).getTime();
@@ -149,16 +165,16 @@ export class UtilizacionGeneralComponent implements OnChanges {
     const tiempoReserva = this.sumDuracionPorEstado(datosConDuracion, 'RESERVA');
     const tiempoFueraPlan = this.sumDuracionPorEstado(datosConDuracion, 'FUERA DE PLAN');
     
-    // Realizar cálculos según la fórmula
+    // Realizar cálculos según la fórmula de utilización
     const tiempoOperativoCalculo = tiempoOperativo + tiempoDemora + tiempoMantenimiento;
-    const tiempoDisponible = tiempoOperativoCalculo + tiempoReserva;
-    const nominal = tiempoDisponible + tiempoFueraPlan;
+    const tiempoUtilizable = tiempoOperativoCalculo + tiempoReserva;
+    const nominal = tiempoUtilizable + tiempoFueraPlan;
     
-    // Calcular disponibilidad mecánica
+    // Calcular utilización
     if (nominal === 0) return 0; // Evitar división por cero
     
-    const disponibilidad = (tiempoOperativo / nominal) * 100;
-    return parseFloat(disponibilidad.toFixed(2));
+    const utilizacion = (tiempoOperativo / nominal) * 100;
+    return parseFloat(utilizacion.toFixed(2));
   }
 
   private sumDuracionPorEstado(items: any[], estado: string): number {

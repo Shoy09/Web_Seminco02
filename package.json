@@ -1,12 +1,14 @@
 {
-  "name": "proyecto",
-  "version": "0.0.0",
+  "name": "I-MINER",
+  "version": "1.0.0",
+  "description": "Documentación técnica del sistema I-MINER",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+     "compodoc": "npx compodoc -p tsconfig.doc.json"
   },
   "private": true,
   "dependencies": {
@@ -27,6 +29,7 @@
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "xlsx": "^0.18.5",
+    "xlsx-js-style": "^1.2.0",
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
