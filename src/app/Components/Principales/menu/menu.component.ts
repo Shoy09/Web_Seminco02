@@ -32,6 +32,8 @@ export class MenuComponent {
         { title: 'Plan de Metraje', path: 'plan-metraje' },
         { title: 'Plan de Producción', path: 'plan-produccion' },
         { title: 'Metas', path: 'metas' },
+        { title: 'Semanas', path: 'semana-personali' },
+        { title: 'PDF', path: 'pdf' },
         
       ],
     },
