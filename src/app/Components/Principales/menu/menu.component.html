@@ -10,16 +10,23 @@
       <div class="user" *ngIf="!menuColapsado">
         <img src="lp.svg" alt="Logo de la empresa" class="logop">
         <div class="user-info">
-            <p class="nombre"></p>
-            <p class="rol">Administrador</p>
-
+          <p class="nombre"></p>
+          <p class="rol">Administrador</p>
         </div>
-        <img src="down.svg" alt="Logo de la empresa" class="logodow">
+        <img src="down.svg" alt="Abrir menú" class="logodow" (click)="toggleCerrarSesion()">
       </div>
+
+      <div class="cerrar-sesion" *ngIf="mostrarCerrarSesion">
+        <button class="bcs">Editar perfil</button>
+        <button (click)="cerrarSesion()" class="bcs">Cerrar sesión</button>
+
+      </div>
+
+
       <ul class="menu">
         <li *ngFor="let menu of menus; let i = index">
-          <div class="menuopc" 
-               [ngClass]="{'show': menuOpenIndex === i, 'active': menuOpenIndex === i, 'home-item': menu.title === 'Home'}" 
+          <div class="menuopc"
+               [ngClass]="{'show': menuOpenIndex === i, 'active': menuOpenIndex === i, 'home-item': menu.title === 'Home'}"
                (click)="AbrirCerrar(i, menu)">
             <img [src]="menu.icon" alt="Icono" class="logosm">
             <div class="menu-opci">
@@ -27,7 +34,7 @@
             </div>
             <img *ngIf="menu.title !== 'Home'" src="down.svg" alt="Flecha" class="logodow">
           </div>
-       
+
           <ul [ngClass]="{'submenu': true, 'show': menuOpenIndex === i && menu.title !== 'Home'}">
             <li *ngFor="let subItem of menu.subItems" (click)="selectSubItem(i, subItem)">
               <a [routerLink]="['/Dashboard', subItem.path]" routerLinkActive="selected">
@@ -42,7 +49,7 @@
     <!-- Botón flotante para colapsar/expandir -->
 <div class="floating-toggle" (click)="toggleMenu()">
   <img [src]="menuColapsado ? 'flecha.png' : 'flechai.png '" alt="Flecha">
-</div> 
+</div>
   <div class="main-container">
     <!-- Barra superior -->
     <header class="top-bar">

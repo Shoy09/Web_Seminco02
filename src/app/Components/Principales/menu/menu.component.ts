@@ -35,7 +35,7 @@ export class MenuComponent {
         { title: 'Metas', path: 'metas' },
         { title: 'Semanas', path: 'semana-personali' },
         { title: 'PDF', path: 'pdf' },
-        
+
       ],
     },
     {
@@ -54,7 +54,7 @@ export class MenuComponent {
     //   ],
     // },
   ];
-  
+
 
   menuOpenIndex: number | null = null;
   selectedSubItemIndex: number | null = null;
@@ -86,17 +86,25 @@ export class MenuComponent {
   selectSubItem(index: number, subItem: any) {
     this.selectedSubItemIndex = index;
     this.selectedSubItem = subItem.path;
-  
+
     const ruta = `/Dashboard/${subItem.path}`;
     this.router.navigate([ruta]);
   }
   convertirRuta(subItem: string): string {
     return subItem.toLowerCase().replace(/ /g, '-'); // Convierte espacios a guiones
   }
-
-  menuColapsado: boolean = false;
+mostrarCerrarSesion = false;
+  menuColapsado = false;
 
   toggleMenu() {
     this.menuColapsado = !this.menuColapsado;
+  }
+  toggleCerrarSesion() {
+    this.mostrarCerrarSesion = !this.mostrarCerrarSesion;
+  }
+
+  cerrarSesion() {
+    localStorage.clear();
+    this.router.navigate(['/login']);
   }
 }

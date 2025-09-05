@@ -17,99 +17,100 @@
       <div class="button-container" *ngFor="let button of buttonc" (click)="abrirModal(button)">
 
         <p class="button-nombre">{{ button.nombre }}</p>
-        <img [src]="button.icon" alt="Ícono" class="button-icon"> 
+        <img [src]="button.icon" alt="Ícono" class="button-icon">
       </div>
     </div>
   </div>
 
   <div class="modal-overlay" *ngIf="modalAbierto">
-  <div class="modal">
-    <button class="close-icon" (click)="cerrarModal()">✖</button>
+    <div class="modal">
+      <button class="close-icon" (click)="cerrarModal()">✖</button>
 
-    <div class="modal-content">
-      <div class="subtitu">
-        <h2>{{ modalContenido?.nombre }}</h2>
-        <p>{{ editando ? 'Editando ' : 'Creación del tipo de ' }}{{ modalContenido?.nombre }}</p>
-      </div>
+      <!-- Nuevo contenedor para dar espacio interno -->
+      <div class="modal-content">
+        <div class="subtitu">
+          <h2>{{ modalContenido?.nombre }}</h2>
+          <p>Creación del tipo de {{ modalContenido?.nombre }}</p>
+        </div>
 
-      <form (submit)="editando ? actualizarDatos() : guardarDatos()">
-        <div class="form-group" *ngFor="let campo of modalContenido?.campos">
-          <label>{{ campo.label }}</label>
-          <div class="input-container">
-            <ng-container *ngIf="campo.tipo === 'select'; else inputField">
-              <select [(ngModel)]="nuevoDato[campo.nombre]" [name]="campo.nombre" required class="form-input">
-                <option *ngFor="let opcion of campo.opciones" [value]="opcion">{{ opcion }}</option>
-              </select>
-            </ng-container>
-            <ng-template #inputField>
-              <input [type]="campo.tipo" [(ngModel)]="nuevoDato[campo.nombre]" [name]="campo.nombre" required class="form-input">
-            </ng-template>
+        <!-- Formulario dentro del modal -->
+        <!-- Formulario dentro del modal -->
+        <form (submit)="guardarDatos()" class="forme">
+          <div class="form-group" *ngFor="let campo of modalContenido?.campos">
+            <label>{{ campo.label }}</label>
+            <div class="input-container">
+              <ng-container *ngIf="campo.tipo === 'select'; else inputField">
+                <select [(ngModel)]="nuevoDato[campo.nombre]" [name]="campo.nombre" required class="form-input">
+                  <option *ngFor="let opcion of campo.opciones" [value]="opcion">{{ opcion }}</option>
+                </select>
+              </ng-container>
+              <ng-template #inputField>
+                <input [type]="campo.tipo" [(ngModel)]="nuevoDato[campo.nombre]" [name]="campo.nombre" required class="form-input">
+              </ng-template>
+            </div>
           </div>
-        </div>
 
-        <!-- Contenedor de botones -->
-        <div class="button-group">
-          <ng-container *ngIf="!editando; else editButtons">
+
+          <!-- Contenedor de botones -->
+          <div class="button-group">
             <button type="submit" class="btn-submit">Guardar</button>
-            <button type="button" class="btn-submit" (click)="triggerFileInput()">
-              Importar Excel <img src="archivo-excel.png" class="side-image" style="width: 20px; height: auto; margin-left: 5px;" />
-            </button>
-            <input type="file" id="fileInput" style="display: none;" (change)="procesarExcelGeneral($event)" accept=".xlsx, .xls" />
-          </ng-container>
-          
-          <ng-template #editButtons>
-            <button type="submit" class="btn-submit">Actualizar</button>
-            <button type="button" class="btn-submit" (click)="cancelarEdicion()">Cancelar</button>
-          </ng-template>
-        </div>
-      </form>
 
-      <!-- Tabla dentro del modal -->
-      <div class="tabla-scroll">
-        <table>
-          <thead>
+            <!-- Botón para importar Excel -->
+            <button type="button" class="btn-submit" (click)="triggerFileInput()">
+              Importar Excel <img src="excel.png" class="side-image" />
+            </button>
+
+            <!-- Input de archivo oculto -->
+            <input type="file" id="fileInput" style="display: none;" (change)="procesarExcelEquipo($event)" accept=".xlsx, .xls" />
+
+          </div>
+        </form>
+
+
+
+        <!-- Tabla dentro del modal -->
+        <div class="tabla-scroll">
+          <table>
+            <thead>
             <tr>
               <th>#</th>
               <th *ngFor="let campo of modalContenido?.campos">{{ campo.label }}</th>
               <th>Opciones</th>
             </tr>
-          </thead>
-          <tbody>
+            </thead>
+            <tbody>
             <tr *ngFor="let dato of modalContenido?.datos; let i = index">
               <td>{{ i + 1 }}</td>
               <td *ngFor="let campo of modalContenido?.campos">{{ dato[campo.nombre] }}</td>
-              <td>
-                <img src="boton-editar.png" alt="Editar" class="action-icon" (click)="editarDato(dato, i)">
-                <img src="dele.svg" alt="Eliminar" class="action-icon" (click)="eliminar(dato)">
-              </td>
+              <td><img src="dele.svg" alt="Eliminar" class="action-icon" (click)="eliminar(dato)"></td>
             </tr>
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
-</div>
-  
+
 
   <!-- Formulario de carga de documento -->
   <div *ngIf="formularioActivo === 'documento'" class="ventana">
     <form class="custom-form">
       <div class="form-row">
-        <div class="form-group">
+        <div class="form-groupu">
           <label for="year" class="titu">Año</label>
           <select id="year">
             <option selected>Seleccione un año</option>
             <option *ngFor="let year of years">{{ year }}</option>
           </select>
         </div>
-        <div class="form-group">
+        <div class="form-groupu">
           <label for="month" class="titu">Mes</label>
           <select id="month">
             <option selected>Seleccione un mes</option>
             <option *ngFor="let mes of meses">{{ mes }}</option>
           </select>
         </div>
-        <div class="form-group">
+        <div class="form-groupu">
           <label for="fileUpload" class="titu">Documento</label>
           <div class="file-upload">
             <label for="fileUpload" class="btn-upload">Subir documento</label>
