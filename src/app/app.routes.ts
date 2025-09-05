@@ -18,6 +18,7 @@ import { MetasComponent } from './Components/Crear datos/Metas/metas/metas.compo
 import { ExplosivosGraficosComponent } from './Components/Dashboard/Explosivos/explosivos-graficos/explosivos-graficos.component';
 import { SemanaListComponent } from './Components/prueba/semana-list/semana-list.component';
 import { ListPdfComponent } from './Components/pdf/list-pdf/list-pdf.component';
+import { MedicionHorizontalComponent } from './Components/Dashboard/mediciones/horizontal/medicion-horizontal/medicion-horizontal.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -44,6 +45,7 @@ export const routes: Routes = [
       { path: 'explosivos-graficos', component: ExplosivosGraficosComponent },
       { path: 'semana-personali', component: SemanaListComponent },
       { path: 'pdf', component: ListPdfComponent },
+      { path: 'medicion-horizontal', component: MedicionHorizontalComponent },
     ],
   },
 

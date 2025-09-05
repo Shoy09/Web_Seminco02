@@ -77,15 +77,6 @@ datoOriginal: any = null;
         'CARGUÍO'
       ]
     },
-    { 
-      nombre: 'permitido_medicion', 
-      label: '¿Permitido para medición?', 
-      tipo: 'select', 
-      opciones: [
-        'SI',
-        'NO'
-      ]
-    },
   ]
 },
     {
