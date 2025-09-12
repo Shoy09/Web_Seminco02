@@ -4,6 +4,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MedicionesHorizontal } from '../../../../../models/MedicionesHorizontal';
 import { MedicionesHorizontalService } from '../../../../../services/mediciones-horizontal.service';
+import { FactorAvanceComponent } from "../graficos/factor-avance/factor-avance.component";
+import { Tonelada } from '../../../../../models/tonelada';
+import { ToneladasService } from '../../../../../services/toneladas.service';
+import { FactorAvanceSegundoComponent } from "../graficos/factor-avance-segundo/factor-avance-segundo.component";
 
 @Component({
   selector: 'app-medicion-horizontal',
@@ -22,8 +26,10 @@ export class MedicionHorizontalComponent implements OnInit {
   turnoSeleccionado: string = '';
   turnos: string[] = ['DÍA', 'NOCHE'];
 
+  toneladas: Tonelada[] = [];
+
   constructor(private medicionService: MedicionesHorizontalService,
-  private excelService: ExcelMedicionesHorizontalService) {}
+  private excelService: ExcelMedicionesHorizontalService, private toneladasService: ToneladasService ) {}
 
   ngOnInit(): void {
     const fechaISO = this.obtenerFechaLocalISO();
@@ -32,6 +38,7 @@ export class MedicionHorizontalComponent implements OnInit {
     this.turnoSeleccionado = this.obtenerTurnoActual();
 
     this.obtenerDatos();
+    this.obtenerToneladas(); 
   }
 
   obtenerTurnoActual(): string {
@@ -95,6 +102,7 @@ export class MedicionHorizontalComponent implements OnInit {
   obtenerDatos(): void {
     this.medicionService.getMediciones().subscribe({
       next: (data: MedicionesHorizontal[]) => {
+        
         this.datosOperacionesOriginal = data;
         this.datosOperacionesExport = data;
 
@@ -105,9 +113,22 @@ export class MedicionHorizontalComponent implements OnInit {
         };
 
         this.datosOperaciones = this.filtrarDatos(this.datosOperacionesOriginal, filtros);
+console.log("✅ Datos recibidos del servicio:", data);
       },
       error: (err) => {
         console.error('❌ Error al obtener datos:', err);
+      }
+    });
+  }
+
+  obtenerToneladas(): void {
+    this.toneladasService.getToneladas().subscribe({
+      next: (data: Tonelada[]) => {
+        this.toneladas = data;
+        console.log("📦 Toneladas recibidas:", data);
+      },
+      error: (err) => {
+        console.error("❌ Error al obtener toneladas:", err);
       }
     });
   }

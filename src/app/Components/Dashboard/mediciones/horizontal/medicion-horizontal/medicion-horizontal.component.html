@@ -20,14 +20,23 @@
     </label>
     <button (click)="aplicarFiltrosLocales()">Filtrar</button>
     <button (click)="quitarFiltros()">Quitar filtros</button>
-<button (click)="exportarFiltrado()">Exportar a Excel</button>
-<button (click)="exportarCompleto()" class="btn btn-success">
-  <i class="fas fa-file-excel"></i> Exportar a Excel completo
-</button>
+    <button (click)="exportarFiltrado()">Exportar a Excel</button>
+    <button (click)="exportarCompleto()" class="btn btn-success">
+      <i class="fas fa-file-excel"></i> Exportar a Excel completo
+    </button>
   </div>
 
   <!-- Tarjetas con los gráficos -->
+  <!-- <div class="graficos-container">
+      <div class="card">
+        <h3>FACTOR DE AVANCE KG/M </h3>
+        <app-factor-avance [datos]="datosOperaciones"></app-factor-avance>
+      </div>
+  </div>
   <div class="graficos-container">
-    <div class="special-row">
-      
+      <div class="card">
+        <h3>FFACTOR DE POTENCIA kG/T</h3>
+        <app-factor-avance-segundo [datos]="datosOperaciones" [toneladas]="toneladas"></app-factor-avance-segundo>
+      </div>
+  </div> -->
 </div>
