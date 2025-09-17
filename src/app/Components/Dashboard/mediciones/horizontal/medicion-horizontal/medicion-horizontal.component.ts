@@ -13,7 +13,7 @@ import { FactorAvanceSegundoComponent } from "../graficos/factor-avance-segundo/
   selector: 'app-medicion-horizontal',
   templateUrl: './medicion-horizontal.component.html',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, FactorAvanceComponent, FactorAvanceSegundoComponent],
   styleUrls: ['./medicion-horizontal.component.css']
 })
 export class MedicionHorizontalComponent implements OnInit {

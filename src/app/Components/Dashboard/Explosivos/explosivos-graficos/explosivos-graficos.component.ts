@@ -19,8 +19,8 @@ import { Explosivo } from '../../../../models/Explosivo';
 })
 export class ExplosivosGraficosComponent implements OnInit {
     datosExplosivos: NubeDatosTrabajoExploraciones[] = [];
-  datosExplosivosOriginal: NubeDatosTrabajoExploraciones[] = [];
-    datosExplosivosExport: NubeDatosTrabajoExploraciones[] = [];
+datosExplosivosOriginal: NubeDatosTrabajoExploraciones[] = [];
+datosExplosivosExport: NubeDatosTrabajoExploraciones[] = [];
     accesorios: Accesorio[] = [];
     explosivos: Explosivo[] = [];
   fechaDesde: string = '';
@@ -87,20 +87,28 @@ cargarAccesorios(): void {
   );
 }
 
-  obtenerDatos(): void {
+obtenerDatos(): void {
   this.explosivosService.getExplosivos().subscribe({
     next: (data) => {
-      this.datosExplosivosOriginal = data;
-      this.datosExplosivosExport = data;
+      // Normaliza la respuesta: si viene un objeto con .data, usa eso;
+      // si ya es array, úsalo; si es nulo/otro, convierte a array vacío.
+      const arrayData = Array.isArray(data) ? data : (data && Array.isArray((data as any).data) ? (data as any).data : []);
 
-      // Aplicar filtros por fecha actual y turno automáticamente
+      console.log('RAW response from getExplosivos():', data);
+      console.log('Normalized arrayData:', arrayData);
+
+      this.datosExplosivosOriginal = arrayData;
+      // Haz una copia real (no referencia) para export/filtrado
+      this.datosExplosivosExport = arrayData.slice();
+      this.datosExplosivos = arrayData.slice();
+
+      // Aplicar filtros por fecha actual y turno automáticamente (si procede)
       const filtros = {
         fechaDesde: this.fechaDesde,
         fechaHasta: this.fechaHasta,
         turnoSeleccionado: this.turnoSeleccionado
       };
 
-      // Mostrar notificación de éxito
       this._toastr.success('Datos cargados correctamente', '✔ Éxito');
     },
     error: (err) => {
@@ -109,6 +117,7 @@ cargarAccesorios(): void {
     }
   });
 }
+
 
     quitarFiltros(): void {
     const fechaISO = this.obtenerFechaLocalISO();
@@ -148,28 +157,29 @@ cargarAccesorios(): void {
 
   
   filtrarDatos(datos: NubeDatosTrabajoExploraciones[], filtros: any): NubeDatosTrabajoExploraciones[] {
-    return datos.filter(operacion => {
-      const fechaOperacion = new Date(operacion.fecha);
-      const fechaDesde = filtros.fechaDesde ? new Date(filtros.fechaDesde) : null;
-      const fechaHasta = filtros.fechaHasta ? new Date(filtros.fechaHasta) : null;
-  
-      // Verificar si la fecha de operación está dentro del rango
-      if (fechaDesde && fechaOperacion < fechaDesde) {
-        return false;
-      }
-  
-      if (fechaHasta && fechaOperacion > fechaHasta) {
-        return false;
-      }
-  
-      // Verificar si el turno de la operación coincide con el turno seleccionado
-      if (filtros.turnoSeleccionado && operacion.turno !== filtros.turnoSeleccionado) {
-        return false;
-      }
-  
-      return true;
-    });
+  if (!Array.isArray(datos)) {
+    console.warn('filtrarDatos recibió datos que no son array:', datos);
+    return [];
   }
+
+  return datos.filter(operacion => {
+    const fechaOperacion = new Date(operacion.fecha);
+    const fechaDesde = filtros.fechaDesde ? new Date(filtros.fechaDesde) : null;
+    const fechaHasta = filtros.fechaHasta ? new Date(filtros.fechaHasta) : null;
+
+    if (fechaDesde && fechaOperacion < fechaDesde) {
+      return false;
+    }
+    if (fechaHasta && fechaOperacion > fechaHasta) {
+      return false;
+    }
+    if (filtros.turnoSeleccionado && operacion.turno !== filtros.turnoSeleccionado) {
+      return false;
+    }
+    return true;
+  });
+}
+
 
 exportarAExcelExplosivosfiltro(): void {
   const workbook = XLSX.utils.book_new();
@@ -347,15 +357,16 @@ exportarAExcelExplosivos(): void {
 private prepararDatosParaConsumo(): any[] {
   const consumoData: any[] = [];
   const materialHeaders = new Set<string>();
+
+  const datos = Array.isArray(this.datosExplosivosExport) ? this.datosExplosivosExport : [];
   
   // Recolectar todos los nombres de materiales únicos
-  this.datosExplosivosExport.forEach((dato) => {
+  datos.forEach((dato) => {
     dato.despachos.forEach((despacho) => {
       despacho.detalles.forEach((detalle) => {
         materialHeaders.add(detalle.nombre_material);
       });
     });
-    
     dato.devoluciones.forEach((devolucion) => {
       devolucion.detalles.forEach((detalle) => {
         materialHeaders.add(detalle.nombre_material);
@@ -363,24 +374,20 @@ private prepararDatosParaConsumo(): any[] {
     });
   });
 
-    // Ordenar materiales: explosivos A-Z primero, luego accesorios A-Z
   const materialesOrdenados = this.ordenarMateriales(Array.from(materialHeaders));
 
-  // Procesar cada registro principal
-  this.datosExplosivosExport.forEach((dato) => {
+  datos.forEach((dato) => {
     const row = this.crearFilaBaseConsumo(dato, Array.from(materialesOrdenados));
-    
-    // Procesar despachos y devoluciones para calcular consumos
-    this.procesarConsumos(dato, row, new Set (materialesOrdenados));
-    
+    this.procesarConsumos(dato, row, new Set(materialesOrdenados));
     consumoData.push(row);
   });
-  
+
   return consumoData;
 }
 
 private crearFilaBaseConsumo(dato: NubeDatosTrabajoExploraciones, materialHeaders: string[]): any {
-  // Crear fila con datos básicos (sin las columnas que se quitan)
+  const fechaMina = this.calcularFechaMina(dato.fecha, dato.turno);
+
   const row: any = {
     'ID': dato.id,
     'FECHA': dato.fecha,
@@ -396,7 +403,8 @@ private crearFilaBaseConsumo(dato: NubeDatosTrabajoExploraciones, materialHeader
     'NIVEL': dato.nivel,
     'TIPO DE PERFORACIÓN': dato.tipo_perforacion,
     'N° TALADROS DISPARADOS': dato.taladro,
-    'PIES POR TALADRO': dato.pies_por_taladro
+    'PIES POR TALADRO': dato.pies_por_taladro,
+    'Fecha_Mina': fechaMina
   };
 
   // Agregar columnas de materiales dinámicas inicializadas en 0
@@ -415,6 +423,20 @@ private crearFilaBaseConsumo(dato: NubeDatosTrabajoExploraciones, materialHeader
   }
 
   return row;
+}
+
+private calcularFechaMina(fechaOriginal: string, turno: string): string {
+  if (!fechaOriginal) return '';
+  
+  // Si el turno es "Noche", sumar un día a la fecha original
+  if (turno?.toLowerCase() === 'noche') {
+    const fecha = new Date(fechaOriginal);
+    fecha.setDate(fecha.getDate() + 1);
+    return fecha.toISOString().split('T')[0];
+  }
+  
+  // Para cualquier otro caso (incluyendo turno "Dia"), usar la fecha original
+  return fechaOriginal.split('T')[0];
 }
 
 private procesarConsumos(dato: NubeDatosTrabajoExploraciones, row: any, materialHeaders: Set<string>) {
@@ -574,6 +596,7 @@ private prepararDatosParaExcel(): { data: any[], headers: string[] } {
 
 private crearFilaBase(dato: NubeDatosTrabajoExploraciones, materialHeaders: string[]): any {
   // Primero creamos un objeto con todas las propiedades fijas
+   const fechaMina = this.calcularFechaMina(dato.fecha, dato.turno);
   const row: any = {
     'ID': dato.id,
     'FECHA': dato.fecha,
@@ -614,6 +637,7 @@ private crearFilaBase(dato: NubeDatosTrabajoExploraciones, materialHeaders: stri
   // Finalmente agregamos las últimas columnas
   row['VALE'] = '';
   row['OBSERVACIONES'] = '';
+  row['Fecha_Mina'] = fechaMina;
 
   return row;
 }
