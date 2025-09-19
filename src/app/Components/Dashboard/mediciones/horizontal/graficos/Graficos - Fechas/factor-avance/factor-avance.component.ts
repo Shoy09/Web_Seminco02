@@ -1,7 +1,7 @@
 import { Component, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { ApexAxisChartSeries, ApexChart, ChartComponent, ApexDataLabels, ApexPlotOptions, ApexYAxis, ApexLegend, ApexStroke, ApexXAxis, ApexFill, ApexTooltip, NgApexchartsModule } from "ng-apexcharts";
 import { CommonModule } from '@angular/common';
-import { MedicionesHorizontal } from '../../../../../../models/MedicionesHorizontal';
+import { MedicionesHorizontal } from '../../../../../../../models/MedicionesHorizontal';
 
 export type ChartOptions = {
   series: ApexAxisChartSeries;
@@ -35,7 +35,6 @@ export class FactorAvanceComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['datos'] && this.datos) {
-      console.log('📊 Datos recibidos en FactorAvanceComponent:', this.datos);
       this.updateChart();
     }
   }

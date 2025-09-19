@@ -1,8 +1,8 @@
 import { CommonModule } from "@angular/common";
 import { Component, Input, OnChanges, SimpleChanges, ViewChild } from "@angular/core";
 import { NgApexchartsModule, ChartComponent, ApexChart, ApexDataLabels, ApexPlotOptions, ApexYAxis, ApexXAxis, ApexFill, ApexTooltip, ApexStroke, ApexLegend } from "ng-apexcharts";
-import { MedicionesHorizontal } from "../../../../../../models/MedicionesHorizontal";
-import { Tonelada } from "../../../../../../models/tonelada";
+import { MedicionesHorizontal } from "../../../../../../../models/MedicionesHorizontal";
+import { Tonelada } from "../../../../../../../models/tonelada";
 
 export type ExtendedSeries = {
   name?: string;
@@ -26,12 +26,12 @@ export type ChartOptions = {
 };
 
 @Component({
-  selector: 'app-factor-avance-segundo',
+  selector: 'app-factor-avance-segundo-dias-semana',
   imports: [CommonModule, NgApexchartsModule],
-  templateUrl: './factor-avance-segundo.component.html',
-  styleUrl: './factor-avance-segundo.component.css'
+  templateUrl: './factor-avance-segundo-dias-semana.component.html',
+  styleUrl: './factor-avance-segundo-dias-semana.component.css'
 })
-export class FactorAvanceSegundoComponent implements OnChanges {
+export class FactorAvanceSegundoDiasSemanaComponent implements OnChanges {
   @Input() datos: MedicionesHorizontal[] = [];
   @Input() toneladas: Tonelada[] = [];
   @ViewChild("chart") chart!: ChartComponent;
@@ -42,8 +42,7 @@ export class FactorAvanceSegundoComponent implements OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['datos'] && this.datos) {
-      console.log('📊 Datos recibidos en FactorAvanceComponent:', this.datos);
+    if ((changes['datos'] || changes['toneladas']) && this.datos) {
       this.updateChart();
     }
   }
@@ -68,7 +67,7 @@ export class FactorAvanceSegundoComponent implements OnChanges {
       },
       dataLabels: {
         enabled: true,
-        enabledOnSeries: [0], // solo en barras de rendimiento
+        enabledOnSeries: [0], // solo en barras de kg explosivo
         formatter: (val: number) => val ? val.toFixed(2) : '',
         style: { fontSize: '12px', colors: ['#000'] },
         offsetY: -20
@@ -83,32 +82,24 @@ export class FactorAvanceSegundoComponent implements OnChanges {
       fill: { opacity: 1 },
       xaxis: {
         categories: [],
-        title: { text: 'Labores' },
+        title: { text: 'Días' },
         labels: { rotate: -45, style: { fontSize: '10px' } }
       },
       yaxis: [
         {
-          // 👈 Eje izquierdo (compartido)
-          title: { text: "Toneladas / Rendimiento (Kg/m)" },
-          labels: {
-            formatter: (val: number) => val.toFixed(2)
-          }
+          title: { text: "Kg Explosivo / Toneladas" },
+          labels: { formatter: (val: number) => val.toFixed(2) }
         },
         {
-          // 👈 Eje derecho (solo rendimiento/toneladas)
           opposite: true,
-          title: { text: "Rendimiento/Toneladas" },
-          labels: {
-            formatter: (val: number) => val.toFixed(2)
-          }
+          title: { text: "Kg Explosivo / Toneladas" },
+          labels: { formatter: (val: number) => val.toFixed(2) }
         }
       ],
       tooltip: {
         shared: true,
         intersect: false,
-        y: {
-          formatter: (val: number) => val ? val.toFixed(2) : ''
-        }
+        y: { formatter: (val: number) => val ? val.toFixed(2) : '' }
       },
       legend: {
         show: true,
@@ -118,6 +109,14 @@ export class FactorAvanceSegundoComponent implements OnChanges {
         }
       }
     };
+  }
+
+  private formatDateToDDMMMYY(dateString: string): string {
+    const date = new Date(dateString + 'T00:00:00-05:00');
+    const day = date.getDate();
+    const month = date.toLocaleString('es-PE', { month: 'short' });
+    const year = date.getFullYear().toString().slice(-2);
+    return `${day}-${month.toLowerCase()}-${year}`;
   }
 
   private updateChart(): void {
@@ -132,73 +131,57 @@ export class FactorAvanceSegundoComponent implements OnChanges {
       return;
     }
 
-    const categories = filtrados.map(d => d.labor || '');
-    const rendimiento = filtrados.map(d =>
-      d.avance_programado! > 0 ? (d.kg_explosivos! / d.avance_programado!) : 0
-    );
+    // 👉 Agrupar por día
+    const grupos: { [fecha: string]: { kg: number; toneladas: number; count: number } } = {};
 
-    const toneladasSeries = filtrados.map(d => {
+    filtrados.forEach(d => {
+      const fecha = d.fecha || "Sin fecha";
+      grupos[fecha] = grupos[fecha] || { kg: 0, toneladas: 0, count: 0 };
+      grupos[fecha].kg += d.kg_explosivos || 0;
+
       const t = this.toneladas.find(
         ton => ton.zona === d.zona && ton.labor === d.labor
       );
-      return t ? t.toneladas : 0;
+      grupos[fecha].toneladas += t ? t.toneladas : 0;
+
+      grupos[fecha].count += 1;
     });
 
-    const rendimientoPorTonelada = filtrados.map((d, i) => {
-      const ton = toneladasSeries[i];
-      return ton > 0 ? (rendimiento[i] / ton) : 0;
+    const categories: string[] = [];
+    const kgExplosivo: number[] = [];
+    const toneladasSeries: number[] = [];
+    const kgPorTonelada: number[] = [];
+
+    const fechasOrdenadas = Object.keys(grupos).sort((a, b) =>
+      new Date(a).getTime() - new Date(b).getTime()
+    );
+
+    fechasOrdenadas.forEach(fecha => {
+      const g = grupos[fecha];
+      categories.push(this.formatDateToDDMMMYY(fecha));
+      kgExplosivo.push(Number(g.kg.toFixed(2)));
+      toneladasSeries.push(Number(g.toneladas.toFixed(2)));
+      kgPorTonelada.push(g.toneladas > 0 ? Number((g.kg / g.toneladas).toFixed(2)) : 0);
     });
 
-    // Calcular promedios
-    const totalKg = filtrados.reduce((sum, d) => sum + (d.kg_explosivos || 0), 0);
-    const totalAvance = filtrados.reduce((sum, d) => sum + (d.avance_programado || 0), 0);
-    const promedioRendimiento = totalAvance > 0 ? (totalKg / totalAvance) : 0;
+    // 👉 Promedios por cantidad de días
+    const totalKg = fechasOrdenadas.reduce((sum, f) => sum + grupos[f].kg, 0);
+    const totalToneladas = fechasOrdenadas.reduce((sum, f) => sum + grupos[f].toneladas, 0);
+    const dias = fechasOrdenadas.length;
 
-    const totalToneladas = toneladasSeries.reduce((sum, t) => sum + (t || 0), 0);
-    const promedioToneladas = toneladasSeries.length > 0 ? totalToneladas / toneladasSeries.length : 0;
-
-    const totalRendimientoPorTonelada = rendimientoPorTonelada.reduce((sum, val) => sum + val, 0);
-    const promedioRendimientoPorTonelada = rendimientoPorTonelada.length > 0 ?
-      totalRendimientoPorTonelada / rendimientoPorTonelada.length : 0;
-
-    categories.push('PROMEDIO');
-    rendimiento.push(promedioRendimiento);
-    toneladasSeries.push(promedioToneladas);
-    rendimientoPorTonelada.push(promedioRendimientoPorTonelada);
+    categories.push("PROMEDIO");
+    kgExplosivo.push(Number((totalKg / dias).toFixed(2)));
+    toneladasSeries.push(Number((totalToneladas / dias).toFixed(2)));
+    kgPorTonelada.push(totalToneladas > 0 ? Number((totalKg / totalToneladas).toFixed(2)) : 0);
 
     this.chartOptions = {
       ...this.chartOptions,
       series: [
-  {
-    name: "Rendimiento (Kg/m)",
-    type: "bar",
-    data: rendimiento,
-    yAxisIndex: 0   // Usa el eje izquierdo
-  },
-  {
-    name: "Toneladas",
-    type: "bar",
-    data: toneladasSeries,
-    yAxisIndex: 0   // Usa el mismo eje izquierdo
-  },
-  {
-    name: "Rendimiento/Toneladas",
-    type: "line",
-    data: rendimientoPorTonelada,
-    yAxisIndex: 1   // Solo este va al eje derecho
-  }
-],
-
-      xaxis: {
-        ...this.chartOptions.xaxis,
-        categories
-      },
-      legend: {
-        ...this.chartOptions.legend,
-        markers: {
-          fillColors: ['#3B82F6', '#10B981', '#FF9800']
-        }
-      }
+        { name: "Kg Explosivo", type: "bar", data: kgExplosivo, yAxisIndex: 0 },
+        { name: "Toneladas", type: "bar", data: toneladasSeries, yAxisIndex: 0 },
+        { name: "Kg Explosivo/Toneladas", type: "line", data: kgPorTonelada, yAxisIndex: 1 }
+      ],
+      xaxis: { ...this.chartOptions.xaxis, categories }
     };
 
     setTimeout(() => {

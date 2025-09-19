@@ -29,13 +29,37 @@
   <!-- Tarjetas con los gráficos -->
   <div class="graficos-container">
       <div class="card">
-        <h3>FACTOR DE AVANCE KG/M </h3>
+        <h3>REPORTE DE FACTOR DE AVANCE - Resumen semanal </h3>
+        <app-factor-avance-semana [datos]="datosOperaciones"></app-factor-avance-semana>
+      </div>
+  </div>
+  <div class="graficos-container">
+      <div class="card">
+        <h3>REPORTE DE FACTOR DE POTENCIA - Resumen Semanal</h3>
+        <app-factor-avance-segundo-semana [datos]="datosOperaciones" [toneladas]="toneladas"></app-factor-avance-segundo-semana>
+      </div>
+  </div>
+  <div class="graficos-container">
+      <div class="card">
+        <h3>REPORTE DE FACTOR DE AVANCE - Semana </h3>
+        <app-factor-avance-dias-semana [datos]="datosOperaciones"></app-factor-avance-dias-semana>
+      </div>
+  </div>
+  <div class="graficos-container">
+      <div class="card">
+        <h3>REPORTE DE FACTOR DE POTENCIA - Semana</h3>
+        <app-factor-avance-segundo-dias-semana [datos]="datosOperaciones" [toneladas]="toneladas"></app-factor-avance-segundo-dias-semana>
+      </div>
+  </div>
+  <div class="graficos-container">
+      <div class="card">
+        <h3>REPORTE DE FACTOR DE AVANCE - Fechas </h3>
         <app-factor-avance [datos]="datosOperaciones"></app-factor-avance>
       </div>
   </div>
   <div class="graficos-container">
       <div class="card">
-        <h3>FACTOR DE POTENCIA KG/T</h3>
+        <h3>REPORTE DE FACTOR DE POTENCIA - Fechas</h3>
         <app-factor-avance-segundo [datos]="datosOperaciones" [toneladas]="toneladas"></app-factor-avance-segundo>
       </div>
   </div>
