@@ -24,40 +24,41 @@
     <button (click)="exportarCompleto()" class="btn btn-success">
       <i class="fas fa-file-excel"></i> Exportar a Excel completo
     </button>
+    <button (click)="exportarPdf()">Exportar PDF</button>
   </div>
 
   <!-- Tarjetas con los gráficos -->
-  <div class="graficos-container">
+  <div id="grafico1" class="graficos-container">
       <div class="card">
         <h3>REPORTE DE FACTOR DE AVANCE - Resumen semanal </h3>
         <app-factor-avance-semana [datos]="datosOperaciones"></app-factor-avance-semana>
       </div>
   </div>
-  <div class="graficos-container">
+  <div id="grafico2" class="graficos-container">
       <div class="card">
         <h3>REPORTE DE FACTOR DE POTENCIA - Resumen Semanal</h3>
         <app-factor-avance-segundo-semana [datos]="datosOperaciones" [toneladas]="toneladas"></app-factor-avance-segundo-semana>
       </div>
   </div>
-  <div class="graficos-container">
+  <div id="grafico3" class="graficos-container">
       <div class="card">
         <h3>REPORTE DE FACTOR DE AVANCE - Semana </h3>
         <app-factor-avance-dias-semana [datos]="datosOperaciones"></app-factor-avance-dias-semana>
       </div>
   </div>
-  <div class="graficos-container">
+  <div id="grafico4" class="graficos-container">
       <div class="card">
         <h3>REPORTE DE FACTOR DE POTENCIA - Semana</h3>
         <app-factor-avance-segundo-dias-semana [datos]="datosOperaciones" [toneladas]="toneladas"></app-factor-avance-segundo-dias-semana>
       </div>
   </div>
-  <div class="graficos-container">
+  <div id="grafico5" class="graficos-container">
       <div class="card">
         <h3>REPORTE DE FACTOR DE AVANCE - Fechas </h3>
         <app-factor-avance [datos]="datosOperaciones"></app-factor-avance>
       </div>
   </div>
-  <div class="graficos-container">
+  <div id="grafico6" class="graficos-container">
       <div class="card">
         <h3>REPORTE DE FACTOR DE POTENCIA - Fechas</h3>
         <app-factor-avance-segundo [datos]="datosOperaciones" [toneladas]="toneladas"></app-factor-avance-segundo>

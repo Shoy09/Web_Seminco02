@@ -10,7 +10,6 @@ import { Router, RouterModule } from '@angular/router';
 })
 export class MenuComponent {
   menus = [
-    { title: 'Home', icon: 'home.svg' },
     {
       title: 'Dashboard',
       icon: 'das.svg',
@@ -19,7 +18,8 @@ export class MenuComponent {
         { title: 'Perforación Horizontal', path: 'taladro-horizontal-grafico' },
         { title: 'Sostenimiento', path: 'sostenimiento' },
         { title: 'Explosivos', path: 'explosivos-graficos' },
-        { title: 'Mediciones Horizontal', path: 'medicion-horizontal' },
+        { title: 'KPI P&V', path: 'medicion-horizontal' },
+        { title: 'Aceros', path: 'acero-stock' },
       ],
     },
     {
@@ -61,15 +61,14 @@ export class MenuComponent {
   selectedSubItem: string | null = null;
 
   constructor(private router: Router) {
-    // Si no hay ninguna ruta activa, redirige a Home
     if (this.router.url === '/' || this.router.url === '/Dashboard') {
-      this.router.navigate(['/Dashboard/Home']);
+      this.router.navigate(['/Dashboard/taladro-largo-grafico']);
     }
   }
 
   AbrirCerrar(index: number, menu: any) {
     if (menu.title === 'Home') {
-      this.router.navigate(['/Dashboard/Home']); // Redirige directamente
+      this.router.navigate(['/Dashboard/taladro-largo-grafico']); // Redirige directamente
     } else if (this.menuColapsado) {
       // Si el menú está colapsado, redirige a la primera subruta de ese menú
       if (menu.subItems && menu.subItems.length > 0) {

@@ -61,7 +61,7 @@ export class FactorAvanceComponent implements OnChanges {
       },
       dataLabels: {
         enabled: true,
-        enabledOnSeries: [0], // solo en barras
+        enabledOnSeries: [0],
         formatter: (val: number) => val ? val.toFixed(2) : '',
         style: {
           fontSize: '12px',
@@ -74,7 +74,7 @@ export class FactorAvanceComponent implements OnChanges {
         colors: [undefined, '#BF4342'],
         curve: 'smooth'
       },
-      colors: ['#3B82F6', '#BF4342'], // azul barras, rojo línea
+      colors: ['#3B82F6', '#BF4342'],
       fill: {
         opacity: 1,
         colors: ['#3B82F6']
@@ -87,7 +87,6 @@ export class FactorAvanceComponent implements OnChanges {
           style: { fontSize: '10px' }
         }
       },
-      // 🔹 Ahora dos ejes Y (izquierda y derecha)
       yaxis: [
         {
           seriesName: "Rendimiento (Kg/m)",
@@ -99,7 +98,7 @@ export class FactorAvanceComponent implements OnChanges {
           }
         },
         {
-          opposite: true, // eje a la derecha
+          opposite: true,
           seriesName: "Avance Programado (m)",
           title: {
             text: "Avance Programado (m)"
@@ -144,13 +143,19 @@ export class FactorAvanceComponent implements OnChanges {
     );
     const avance = filtrados.map(d => d.avance_programado!);
 
+    // Calcular promedios
     const totalKg = filtrados.reduce((sum, d) => sum + (d.kg_explosivos || 0), 0);
     const totalAvance = filtrados.reduce((sum, d) => sum + (d.avance_programado || 0), 0);
-    const promedio = totalAvance > 0 ? (totalKg / totalAvance) : 0;
+    const promedioRendimiento = totalAvance > 0 ? (totalKg / totalAvance) : 0;
+    
+    // Calcular promedio de avance (promedio simple)
+    const promedioAvance = filtrados.length > 0 ? 
+      (totalAvance / filtrados.length) : 0;
 
+    // Agregar promedios
     categories.push('PROMEDIO');
-    rendimiento.push(promedio);
-    avance.push(null as any);
+    rendimiento.push(Number(promedioRendimiento.toFixed(2)));
+    avance.push(Number(promedioAvance.toFixed(2)));
 
     this.chartOptions = {
       ...this.chartOptions,

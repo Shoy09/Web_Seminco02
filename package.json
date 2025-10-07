@@ -8,7 +8,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-     "compodoc": "npx compodoc -p tsconfig.doc.json"
+    "compodoc": "npx compodoc -p tsconfig.doc.json"
   },
   "private": true,
   "dependencies": {
@@ -23,7 +23,9 @@
     "@angular/router": "^19.2.1",
     "apexcharts": "^4.5.0",
     "bootstrap": "^5.3.3",
+    "html2canvas": "^1.4.1",
     "install": "^0.13.0",
+    "jspdf": "^3.0.3",
     "ng-apexcharts": "^1.15.0",
     "ngx-toastr": "^19.0.0",
     "rxjs": "~7.8.0",

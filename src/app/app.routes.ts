@@ -19,6 +19,7 @@ import { ExplosivosGraficosComponent } from './Components/Dashboard/Explosivos/e
 import { SemanaListComponent } from './Components/prueba/semana-list/semana-list.component';
 import { ListPdfComponent } from './Components/pdf/list-pdf/list-pdf.component';
 import { MedicionHorizontalComponent } from './Components/Dashboard/mediciones/horizontal/medicion-horizontal/medicion-horizontal.component';
+import { AcerosGraficosComponent } from './Components/Dashboard/Aceros/aceros-graficos/aceros-graficos.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -28,7 +29,6 @@ export const routes: Routes = [
     path: 'Dashboard',
     component: PrincipalComponent, // Layout principal con menú
     children: [
-      { path: 'Home', component: HomeComponent },
       { path: 'estados', component: EstadosComponent },
       { path: 'crear-data', component: CrearDataComponent },
       { path: 'plan-avance', component: PlanMensualListComponent },
@@ -46,6 +46,7 @@ export const routes: Routes = [
       { path: 'semana-personali', component: SemanaListComponent },
       { path: 'pdf', component: ListPdfComponent },
       { path: 'medicion-horizontal', component: MedicionHorizontalComponent },
+      { path: 'acero-stock', component: AcerosGraficosComponent },
     ],
   },
 

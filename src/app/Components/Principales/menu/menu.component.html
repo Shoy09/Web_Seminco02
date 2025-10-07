@@ -1,6 +1,3 @@
-
-
-
 <div class="layout-container" [ngClass]="{ 'colapsado': menuColapsado }">
     <!-- Menú lateral -->
     <aside class="sidebar" [class.colapsado]="menuColapsado">
@@ -13,15 +10,8 @@
           <p class="nombre"></p>
           <p class="rol">Administrador</p>
         </div>
-        <img src="down.svg" alt="Abrir menú" class="logodow" (click)="toggleCerrarSesion()">
+        <!-- Eliminamos el toggleCerrarSesion del menú lateral -->
       </div>
-
-      <div class="cerrar-sesion" *ngIf="mostrarCerrarSesion">
-        <button class="bcs">Editar perfil</button>
-        <button (click)="cerrarSesion()" class="bcs">Cerrar sesión</button>
-
-      </div>
-
 
       <ul class="menu">
         <li *ngFor="let menu of menus; let i = index">
@@ -47,20 +37,32 @@
     </aside>
 
     <!-- Botón flotante para colapsar/expandir -->
-<div class="floating-toggle" (click)="toggleMenu()">
-  <img [src]="menuColapsado ? 'flecha.png' : 'flechai.png '" alt="Flecha">
-</div>
-  <div class="main-container">
-    <!-- Barra superior -->
-    <header class="top-bar">
-      <div class="notifications">
-        <img src="bell.png" alt="Notificaciones" class="bell-icon">
-      </div>
-    </header>
-
-    <!-- Contenido de la página -->
-    <main class="content">
-        <ng-content></ng-content>
-    </main>
+    <div class="floating-toggle" (click)="toggleMenu()">
+      <img [src]="menuColapsado ? 'flecha.png' : 'flechai.png '" alt="Flecha">
+    </div>
+    
+    <div class="main-container">
+      <!-- Barra superior -->
+      <header class="top-bar">
+        <div class="top-bar-right">
+          <div class="notifications">
+            <img src="bell.png" alt="Notificaciones" class="bell-icon">
+          </div>
+          <div class="user-menu-container">
+  <div class="user-icon" (click)="toggleCerrarSesion()">
+    <img src="lp.svg" alt="Usuario" class="user-image">
   </div>
+  <div class="cerrar-sesion" *ngIf="mostrarCerrarSesion">
+    <button class="bcs">Editar perfil</button>
+    <button (click)="cerrarSesion()" class="bcs">Cerrar sesión</button>
+  </div>
+</div>
+        </div>
+      </header>
+
+      <!-- Contenido de la página -->
+      <main class="content">
+          <ng-content></ng-content>
+      </main>
+    </div>
 </div>

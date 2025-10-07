@@ -12,6 +12,8 @@ import { FactorAvanceSemanaComponent } from "../graficos/Graficos - Mes Semana/f
 import { FactorAvanceSegundoSemanaComponent } from "../graficos/Graficos - Mes Semana/factor-avance-segundo-semana/factor-avance-segundo-semana.component";
 import { FactorAvanceDiasSemanaComponent } from "../graficos/Graficos - Dias Semanas/factor-avance-dias-semana/factor-avance-dias-semana.component";
 import { FactorAvanceSegundoDiasSemanaComponent } from "../graficos/Graficos - Dias Semanas/factor-avance-segundo-dias-semana/factor-avance-segundo-dias-semana.component";
+import { PdfExportService } from '../pdf-export.service';
+import { AuthService } from '../../../../../services/auth-service.service';
 
 
 @Component({
@@ -33,8 +35,8 @@ export class MedicionHorizontalComponent implements OnInit {
 
   toneladas: Tonelada[] = [];
 
-  constructor(private medicionService: MedicionesHorizontalService,
-  private excelService: ExcelMedicionesHorizontalService, private toneladasService: ToneladasService ) {}
+  constructor(private pdfService: PdfExportService, private medicionService: MedicionesHorizontalService,
+  private excelService: ExcelMedicionesHorizontalService, private toneladasService: ToneladasService, private authService: AuthService ) {}
 
   ngOnInit(): void {
     const fechaISO = this.obtenerFechaLocalISO();
@@ -190,4 +192,16 @@ console.log("✅ Datos recibidos del servicio:", data);
 exportarCompleto() {
   this.excelService.exportCompletaToExcel(this.datosOperacionesExport, 'MedicionesHorizontal');
 }
+
+exportarPdf() {
+    this.pdfService.exportChartsToPdf([
+      'grafico1',
+      'grafico2',
+      'grafico3',
+      'grafico4',
+      'grafico5',
+      'grafico6'
+    ], 'reporte-graficos.pdf');
+  }
+
 }

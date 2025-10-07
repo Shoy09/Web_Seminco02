@@ -9,6 +9,9 @@ import { EquipoService } from '../../../services/equipo.service';
 import { TipoPerforacionService } from '../../../services/tipo-perforacion.service';
 import { LoadingDialogComponent } from '../../Reutilizables/loading-dialog/loading-dialog.component';
 import { ToneladasService } from '../../../services/toneladas.service';
+import { ProcesoAceroService } from '../../../services/proceso-acero.service';
+import { OperadorAceroService } from '../../../services/operador-acero.service';
+import { JefeGuardiaAceroService } from '../../../services/jefe-guardia-acero.service';
 
 
 @Component({
@@ -36,9 +39,12 @@ datoOriginal: any = null;
   constructor(
     private tipoPerforacionService: TipoPerforacionService, 
     private equipoService: EquipoService,
+    private ProcesoAceroService: ProcesoAceroService,
     private empresaService: EmpresaService,
     private FechasPlanMensualService: FechasPlanMensualService,
     private toneladasService: ToneladasService,
+    private jefeGuardiaAceroService: JefeGuardiaAceroService,
+    private operadorAceroService: OperadorAceroService,
     public dialog: MatDialog
   ) {} // Inyecta los servicios
 
@@ -137,7 +143,69 @@ datoOriginal: any = null;
     { nombre: 'toneladas', label: 'Toneladas', tipo: 'number' }
   ]
 },
-
+{
+  nombre: 'Acero',
+  icon: 'mas.svg',
+  tipo: 'Acero',
+  datos: [],
+  campos: [
+    { 
+      nombre: 'proceso', 
+      label: 'Proceso', 
+      tipo: 'select', 
+      opciones: [
+        'PERFORACIÓN TALADROS LARGOS',
+        'PERFORACIÓN HORIZONTAL',
+        'SOSTENIMIENTO',
+      ]
+    },
+    { nombre: 'tipo_acero', label: 'Tipo de Acero', tipo: 'text' },
+    { nombre: 'descripcion', label: 'Descripción', tipo: 'text' },
+    { nombre: 'precio', label: 'Precio', tipo: 'number' }
+  ]
+},
+{
+  nombre: 'Jefe Guardia Acero',
+  icon: 'mas.svg',
+  tipo: 'JefeGuardiaAcero',
+  datos: [],
+  campos: [
+    { nombre: 'jefe_de_guardia', label: 'Nombre', tipo: 'text' },
+    { 
+      nombre: 'turno', 
+      label: 'Turno', 
+      tipo: 'select',
+      opciones: ['DIA', 'NOCHE']
+    },
+    { 
+      nombre: 'activo', 
+      label: 'Activo', 
+      tipo: 'select',
+      opciones: ['SI', 'NO']
+    }
+  ]
+},
+{
+  nombre: 'Operador Acero',
+  icon: 'mas.svg',
+  tipo: 'OperadorAcero',
+  datos: [],
+  campos: [
+    { nombre: 'operador', label: 'Nombre', tipo: 'text' },
+    { 
+      nombre: 'turno', 
+      label: 'Turno', 
+      tipo: 'select',
+      opciones: ['DIA', 'NOCHE']
+    },
+    { 
+      nombre: 'activo', 
+      label: 'Activo', 
+      tipo: 'select',
+      opciones: ['SI', 'NO']
+    }
+  ]
+}
     
   ];  
 
@@ -199,7 +267,15 @@ actualizarDatos() {
         },
         error: (err) => console.error('Error al actualizar:', err)
       });
+    }else if (this.modalContenido.tipo === 'Acero') {
+      this.ProcesoAceroService.updateProceso(id, datosActualizados).subscribe({
+        next: (data) => {
+          this.modalContenido.datos[this.indiceEditando] = data;
+          this.cancelarEdicion();
+        }
+      });
     }
+  
   }
 }
 
@@ -222,33 +298,129 @@ cancelarEdicion() {
       // this.procesarExcelEmpresa();
     } else if (nombre === 'Toneladas') {
        this.triggerFileInput();
-    }
+    }else if (nombre === 'Acero') {
+    this.triggerFileInput();
+  }else if (nombre === 'JefeGuardiaAcero') {
+    this.triggerFileInput();
+  } else if (nombre === 'OperadorAcero') {
+    this.triggerFileInput();
+  }
      else {
       
     }
   }
 
-procesarExcelGeneral(event: any) {
-  if (!this.modalContenido) {
-    return;
-  }
+  procesarExcelOperadorAcero(event: any) {
+  const file = event.target.files[0];
+  if (!file) return;
 
-  switch (this.modalContenido.tipo) {
-    case 'Equipo':
-      this.procesarExcelEquipo(event);
-      break;
+  const reader = new FileReader();
+  reader.onload = (e: any) => {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const excelData: any[] = XLSX.utils.sheet_to_json(sheet, { raw: false });
 
-    case 'Toneladas':
-      this.procesarExcelToneladas(event);
-      break;
+    const operadores = excelData.map(row => ({
+      operador: row["OPERADOR"] || '',
+      turno: row["TURNO"] || '', // valores esperados: "DIA" | "NOCHE"
+      activo: row["ACTIVO"] === "SI" ? 1 : 0
+    }));
 
-    // 🔹 Agrega aquí otros tipos cuando implementes sus funciones
-    default:
-      break;
-  }
+    this.cerrarModal();
+    const dialogRef = this.mostrarPantallaCarga();
+
+    operadores.forEach(nuevoRegistro => {
+      this.operadorAceroService.createOperador(nuevoRegistro).subscribe({
+        next: (data) => {
+          (data as any).activoTexto = data.activo === 1 ? 'SI' : 'NO';
+          this.modalContenido.datos.push(data);
+        }
+      });
+    });
+
+    this.dialog.closeAll();
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+procesarExcelJefeGuardia(event: any) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e: any) => {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const excelData: any[] = XLSX.utils.sheet_to_json(sheet, { raw: false });
+
+    const jefes = excelData.map(row => ({
+      jefe_de_guardia: row["JEFE DE GUARDIA"] || '',
+      turno: row["TURNO"] || '', // valores esperados: "DIA" | "NOCHE"
+      activo: row["ACTIVO"] === "SI" ? 1 : 0
+    }));
+
+    this.cerrarModal();
+    const dialogRef = this.mostrarPantallaCarga();
+
+    jefes.forEach(nuevoRegistro => {
+      this.jefeGuardiaAceroService.createJefe(nuevoRegistro).subscribe({
+        next: (data) => {
+          (data as any).activoTexto = data.activo === 1 ? 'SI' : 'NO';
+          this.modalContenido.datos.push(data);
+        }
+      });
+    });
+
+    this.dialog.closeAll();
+  };
+
+  reader.readAsArrayBuffer(file);
 }
 
 
+  procesarExcelProcesoAcero(event: any) {
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e: any) => {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+
+    const excelData: any[] = XLSX.utils.sheet_to_json(sheet, { raw: false });
+
+    const procesos = excelData.map(row => ({
+      proceso: row["PROCESO"] || '',
+      tipo_acero: row["TIPO DE ACERO"] || '',
+      descripcion: row["DESCRIPCIÓN"] || '',
+      precio: row["PRECIO"] ? Number(row["PRECIO"]) : 0
+    }));
+
+    this.cerrarModal();
+    const dialogRef = this.mostrarPantallaCarga();
+
+    procesos.forEach(nuevoRegistro => {
+      this.ProcesoAceroService.createProceso(nuevoRegistro).subscribe({
+        next: (data) => {
+          this.modalContenido.datos.push(data);
+        },
+        error: (err) => console.error('Error al guardar Proceso Acero:', err)
+      });
+    });
+
+    this.dialog.closeAll();
+  };
+
+  reader.readAsArrayBuffer(file);
+}
 
   procesarExcelToneladas(event: any) {
   const file = event.target.files[0];
@@ -435,7 +607,34 @@ procesarExcelGeneral(event: any) {
     },
     error: (err) => console.error('Error al cargar Toneladas:', err)
   });
-}
+}else if (button.tipo === 'Acero') {
+    this.ProcesoAceroService.getProcesos().subscribe({
+      next: (data) => {
+        this.modalContenido.datos = data;
+      },
+      error: (err) => console.error('Error al cargar Proceso Acero:', err)
+    });
+  }else if (button.tipo === 'OperadorAcero') {
+    this.operadorAceroService.getOperadores().subscribe({
+      next: (data) => {
+        this.modalContenido.datos = data.map(o => ({
+  ...o,
+  activo: o.activo == 1 ? 'SI' : 'NO'   // <= con == permite comparar "1" y 1
+}));
+
+      }
+    });
+  }else if (button.tipo === 'JefeGuardiaAcero') {
+    this.jefeGuardiaAceroService.getJefes().subscribe({
+      next: (data) => {
+        this.modalContenido.datos = data.map(j => ({
+  ...j,
+  activo: j.activo == 1 ? 'SI' : 'NO'   // <= con == permite comparar "1" y 1
+}));
+
+      }
+    });
+  }
 
   }
 
@@ -492,7 +691,41 @@ procesarExcelGeneral(event: any) {
     },
     error: (err) => console.error('Error al guardar Toneladas:', err)
   });
+}else if (this.modalContenido.tipo === 'Acero') {
+      this.ProcesoAceroService.createProceso(nuevoRegistro).subscribe({
+        next: (data) => {
+          this.modalContenido.datos.push(data);
+        }
+      });
+    }else if (this.modalContenido.tipo === 'JefeGuardiaAcero') {
+  // convertir antes de mandar a la API
+  nuevoRegistro.activo = nuevoRegistro.activo === 'SI' ? 1 : 0;
+
+  this.jefeGuardiaAceroService.createJefe(nuevoRegistro).subscribe({
+    next: (data) => {
+      // hacemos una copia SOLO para mostrar
+      const dataConTexto = {
+        ...data,
+        activo: data.activo === 1 ? 'SI' : 'NO'
+      };
+      this.modalContenido.datos.push(dataConTexto);
+    }
+  });
+} else if (this.modalContenido.tipo === 'OperadorAcero') {
+  nuevoRegistro.activo = nuevoRegistro.activo === 'SI' ? 1 : 0;
+
+  this.operadorAceroService.createOperador(nuevoRegistro).subscribe({
+    next: (data) => {
+      const dataConTexto = {
+        ...data,
+        activo: data.activo === 1 ? 'SI' : 'NO'
+      };
+      this.modalContenido.datos.push(dataConTexto);
+    }
+  });
 }
+
+
 
 
       this.nuevoDato = {};
@@ -541,7 +774,21 @@ procesarExcelGeneral(event: any) {
     },
     error: (err) => console.error('Error al eliminar Tonelada:', err)
   });
-}
+}else if (this.modalContenido.tipo === 'Acero') {
+    this.ProcesoAceroService.deleteProceso(item.id).subscribe({
+      next: () => {
+        this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
+      }
+    });
+  }else if (this.modalContenido.tipo === 'JefeGuardiaAcero') {
+    this.jefeGuardiaAceroService.deleteJefe(item.id).subscribe({
+      next: () => this.modalContenido.datos = this.modalContenido.datos.filter((d: any) => d.id !== item.id)
+    });
+  } else if (this.modalContenido.tipo === 'OperadorAcero') {
+    this.operadorAceroService.deleteOperador(item.id).subscribe({
+      next: () => this.modalContenido.datos = this.modalContenido.datos.filter((d: any) => d.id !== item.id)
+    });
+  }
 
   }
 
