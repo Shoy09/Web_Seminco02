@@ -287,30 +287,71 @@ cancelarEdicion() {
   this.datoOriginal = null;
 }
 
-  cargarExcel(nombre: string) {
-    
-  
-    if (nombre === 'Tipo de Perforación') {
-      // this.procesarExcelTipoPerforacion();
-    } else if (nombre === 'Equipo') {
-      this.triggerFileInput(); // Activa la selección de archivo
-    } else if (nombre === 'Empresa') {
-      // this.procesarExcelEmpresa();
-    } else if (nombre === 'Toneladas') {
-       this.triggerFileInput();
-    }else if (nombre === 'Acero') {
-    this.triggerFileInput();
-  }else if (nombre === 'JefeGuardiaAcero') {
-    this.triggerFileInput();
-  } else if (nombre === 'OperadorAcero') {
-    this.triggerFileInput();
+cargarExcel(nombre: string) {
+  if (nombre === 'Equipo' || nombre === 'Toneladas' || nombre === 'Acero' || 
+      nombre === 'Jefe Guardia Acero' || nombre === 'Operador Acero') {
+    this.triggerFileInput(); // Activa la selección de archivo
+  } else {
+    console.warn('Importación de Excel no implementada para:', nombre);
   }
-     else {
-      
+}
+
+  procesarArchivoExcel(event: any) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Determinar qué función de procesamiento usar basado en el contenido del modal
+  if (this.modalContenido) {
+    switch (this.modalContenido.nombre) {
+      case 'Equipo':
+        this.procesarExcelEquipo(event);
+        break;
+      case 'Toneladas':
+        this.procesarExcelToneladas(event);
+        break;
+      case 'Acero':
+        this.procesarExcelProcesoAcero(event);
+        break;
+      case 'Jefe Guardia Acero':
+        this.procesarExcelJefeGuardia(event);
+        break;
+      case 'Operador Acero':
+        this.procesarExcelOperadorAcero(event);
+        break;
+      default:
+        console.warn('No hay procesador definido para:', this.modalContenido.nombre);
+        break;
     }
   }
 
-  procesarExcelOperadorAcero(event: any) {
+  // Limpiar el input file para permitir subir el mismo archivo otra vez
+  event.target.value = '';
+}
+
+private buscarHojaExcel(workbook: any, nombresPosibles: string[]): string {
+  // Buscar por nombres exactos primero
+  for (const nombre of nombresPosibles) {
+    if (workbook.SheetNames.includes(nombre)) {
+      return nombre;
+    }
+  }
+  
+  // Buscar por nombres que contengan las palabras (case insensitive)
+  const nombresDisponibles = workbook.SheetNames;
+  for (const nombreBuscado of nombresPosibles) {
+    const hojaEncontrada = nombresDisponibles.find((nombreHoja: string) => 
+      nombreHoja.toLowerCase().includes(nombreBuscado.toLowerCase())
+    );
+    if (hojaEncontrada) {
+      return hojaEncontrada;
+    }
+  }
+  
+  // Si no encuentra ninguna, devolver la primera hoja como fallback
+  console.warn('No se encontró ninguna hoja con los nombres:', nombresPosibles, 'usando primera hoja');
+  return workbook.SheetNames[0];
+}
+procesarExcelOperadorAcero(event: any) {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -318,8 +359,16 @@ cancelarEdicion() {
   reader.onload = (e: any) => {
     const data = new Uint8Array(e.target.result);
     const workbook = XLSX.read(data, { type: 'array' });
-    const sheetName = workbook.SheetNames[0];
+    
+    // Buscar hoja por nombre específico
+    const sheetName = this.buscarHojaExcel(workbook, ['OPERADOR ACERO', 'OPERADORES', 'OPERADOR']);
     const sheet = workbook.Sheets[sheetName];
+    
+    if (!sheet) {
+      console.error('No se encontró la hoja "OPERADOR ACERO" en el archivo Excel');
+      return;
+    }
+
     const excelData: any[] = XLSX.utils.sheet_to_json(sheet, { raw: false });
 
     const operadores = excelData.map(row => ({
@@ -354,8 +403,16 @@ procesarExcelJefeGuardia(event: any) {
   reader.onload = (e: any) => {
     const data = new Uint8Array(e.target.result);
     const workbook = XLSX.read(data, { type: 'array' });
-    const sheetName = workbook.SheetNames[0];
+    
+    // Buscar hoja por nombre específico
+    const sheetName = this.buscarHojaExcel(workbook, ['JEFE GUARDIA', 'JEFES GUARDIA', 'JEFE DE GUARDIA', 'JEFES']);
     const sheet = workbook.Sheets[sheetName];
+    
+    if (!sheet) {
+      console.error('No se encontró la hoja "JEFE GUARDIA" en el archivo Excel');
+      return;
+    }
+
     const excelData: any[] = XLSX.utils.sheet_to_json(sheet, { raw: false });
 
     const jefes = excelData.map(row => ({
@@ -382,18 +439,23 @@ procesarExcelJefeGuardia(event: any) {
   reader.readAsArrayBuffer(file);
 }
 
-
-  procesarExcelProcesoAcero(event: any) {
+procesarExcelProcesoAcero(event: any) {
   const file = event.target.files[0];
-
   if (!file) return;
 
   const reader = new FileReader();
   reader.onload = (e: any) => {
     const data = new Uint8Array(e.target.result);
     const workbook = XLSX.read(data, { type: 'array' });
-    const sheetName = workbook.SheetNames[0];
+    
+    // Buscar hoja por nombre específico
+    const sheetName = this.buscarHojaExcel(workbook, ['PROCESO ACERO', 'ACERO', 'PROCESOS ACERO', 'PROCESOS']);
     const sheet = workbook.Sheets[sheetName];
+    
+    if (!sheet) {
+      console.error('No se encontró la hoja "PROCESO ACERO" en el archivo Excel');
+      return;
+    }
 
     const excelData: any[] = XLSX.utils.sheet_to_json(sheet, { raw: false });
 

@@ -59,9 +59,9 @@
             <button type="button" class="btn-submit" (click)="triggerFileInput()">
               Importar Excel <img src="excel.png" class="side-image" />
             </button>
-
+            
             <!-- Input de archivo oculto -->
-            <input type="file" id="fileInput" style="display: none;" (change)="procesarExcelEquipo($event)" accept=".xlsx, .xls" />
+            <input type="file" id="fileInput" style="display: none;" (change)="procesarArchivoExcel($event)" accept=".xlsx, .xls" />
 
           </div>
         </form>
