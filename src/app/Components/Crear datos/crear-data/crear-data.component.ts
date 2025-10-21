@@ -149,6 +149,7 @@ datoOriginal: any = null;
   tipo: 'Acero',
   datos: [],
   campos: [
+    { nombre: 'codigo', label: 'Código', tipo: 'text' }, 
     { 
       nombre: 'proceso', 
       label: 'Proceso', 
@@ -460,6 +461,7 @@ procesarExcelProcesoAcero(event: any) {
     const excelData: any[] = XLSX.utils.sheet_to_json(sheet, { raw: false });
 
     const procesos = excelData.map(row => ({
+      codigo: row["CÓDIGO"] || row["CODIGO"] || '', // <- Nuevo campo
       proceso: row["PROCESO"] || '',
       tipo_acero: row["TIPO DE ACERO"] || '',
       descripcion: row["DESCRIPCIÓN"] || '',
