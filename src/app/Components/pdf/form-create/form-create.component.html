@@ -41,12 +41,13 @@
 
   <div class="form-group">
     <label for="ala">ALA:</label>
-    <select id="ala" formControlName="ala" required [disabled]="alas.length === 0">
-      <option *ngIf="alas.length === 0" value="" disabled selected>Seleccione una labor</option>
+    <select id="ala" formControlName="ala" [disabled]="alas.length === 0">
+      <option value="">-- SELECCIONE O DEJE EN BLANCO --</option>
       <option *ngFor="let ala of alas" [value]="ala">
         {{ ala }}
       </option>
     </select>
+    <small class="optional-text">(Opcional)</small>
   </div>
 
   <div class="form-group">

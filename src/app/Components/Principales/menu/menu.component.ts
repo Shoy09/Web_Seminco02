@@ -20,6 +20,7 @@ export class MenuComponent {
         { title: 'Explosivos', path: 'explosivos-graficos' },
         { title: 'KPI P&V', path: 'medicion-horizontal' },
         { title: 'Aceros', path: 'acero-stock' },
+        { title: 'autocad', path: 'autocad' },
       ],
     },
     {

@@ -35,8 +35,10 @@ export class FormCreateComponent implements OnInit {
     'CARGUÍO', 
     'ACARREO'
   ];
-    anio: number | undefined;
+  
+  anio: number | undefined;
   mes: string | undefined;
+  
   // Datos dinámicos
   tiposLabor: string[] = [];
   labores: string[] = [];
@@ -58,7 +60,7 @@ export class FormCreateComponent implements OnInit {
     private router: Router,
     private planMensualService: PlanMensualService,
     private planMetrajeService: PlanMetrajeService,
-   private fechasPlanMensualService: FechasPlanMensualService
+    private fechasPlanMensualService: FechasPlanMensualService
   ) {}
 
   ngOnInit(): void {
@@ -92,21 +94,20 @@ export class FormCreateComponent implements OnInit {
       mes: [mesActual, Validators.required],
       tipo_labor: ['', Validators.required],
       labor: ['', Validators.required],
-      ala: ['', Validators.required],
+      ala: [''], // Removido Validators.required para hacerlo opcional
       pdf: [null, Validators.required]
     });
   }
 
-    obtenerUltimaFecha(): void {
+  obtenerUltimaFecha(): void {
     this.fechasPlanMensualService.getUltimaFecha().subscribe(
       (ultimaFecha) => {
         const anio: number | undefined = ultimaFecha.fecha_ingreso;
         const mes: string = ultimaFecha.mes;
   
-        // Verificar que 'anio' no sea undefined antes de llamar a la función
         if (anio !== undefined) {
           this.anio = anio;
-          this.mes = mes.trim().toUpperCase(); // Asegurar formato consistente
+          this.mes = mes.trim().toUpperCase();
           this.loadInitialData(anio, this.mes);
         } else {
           //console.error('Fecha de ingreso no válida');
@@ -225,10 +226,8 @@ export class FormCreateComponent implements OnInit {
     
     this.alas = Array.from(uniqueAlas).sort();
     
-    // Seleccionar primer valor si hay opciones
-    if (this.alas.length > 0) {
-      this.createForm.patchValue({ ala: this.alas[0] });
-    } else {
+    // Si no hay alas disponibles, establecer el valor como vacío
+    if (this.alas.length === 0) {
       this.createForm.patchValue({ ala: '' });
     }
   }
@@ -238,16 +237,18 @@ export class FormCreateComponent implements OnInit {
     if (file && file.type === 'application/pdf') {
       this.pdfFile = file;
       this.createForm.patchValue({ pdf: file });
+      this.createForm.get('pdf')?.setErrors(null); // Limpiar errores
     } else {
       alert('Por favor selecciona un archivo PDF válido.');
       this.createForm.get('pdf')?.setErrors({ invalidType: true });
+      this.pdfFile = null;
     }
   }
 
   onSubmit(): void {
     if (this.createForm.invalid || !this.pdfFile) {
       this.markFormAsTouched();
-      alert('Por favor completa todos los campos y selecciona un PDF.');
+      alert('Por favor completa todos los campos obligatorios y selecciona un PDF.');
       return;
     }
 
