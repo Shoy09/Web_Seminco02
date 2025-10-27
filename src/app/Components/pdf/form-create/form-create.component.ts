@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { PlanMensualService } from '../../../services/plan-mensual.service';
 import { PlanMetrajeService } from '../../../services/plan-metraje.service';
+import { PlanProduccionService } from '../../../services/plan-produccion.service'; // Importar el nuevo servicio
 import { PlanMensual } from '../../../models/plan-mensual.model';
 import { PlanMetraje } from '../../../models/plan_metraje.model';
 import { FechasPlanMensualService } from '../../../services/fechas-plan-mensual.service';
@@ -47,12 +48,16 @@ export class FormCreateComponent implements OnInit {
   // Almacenamiento de datos completos
   planesMensuales: PlanMensual[] = [];
   planesMetrajes: PlanMetraje[] = [];
+  planesProduccion: any[] = []; // Cambiar a tipo específico si tienes el modelo
   
   // Procesos que usan planes mensuales
   procesosMensuales = ['PERFORACIÓN HORIZONTAL', 'SOSTENIMIENTO'];
   
   // Procesos que usan planes de metraje
-  procesosMetrajes = ['PERFORACIÓN TALADROS LARGOS'];
+  procesosMetrajes = ['SERVICIOS AUXILIARES'];
+
+  // Procesos que usan planes de producción
+  procesosProduccion = ['PERFORACIÓN TALADROS LARGOS', 'CARGUÍO', 'ACARREO']; // Ajustar según necesites
 
   constructor(
     private fb: FormBuilder,
@@ -60,6 +65,7 @@ export class FormCreateComponent implements OnInit {
     private router: Router,
     private planMensualService: PlanMensualService,
     private planMetrajeService: PlanMetrajeService,
+    private planProduccionService: PlanProduccionService, // Inyectar el nuevo servicio
     private fechasPlanMensualService: FechasPlanMensualService
   ) {}
 
@@ -120,6 +126,7 @@ export class FormCreateComponent implements OnInit {
   }
 
   private loadInitialData(anio: number, mes: string): void {
+    // Cargar planes mensuales
     this.planMensualService.getPlanMensualByYearAndMonth(anio, mes).subscribe({
       next: (data) => {
         this.planesMensuales = data;
@@ -128,12 +135,22 @@ export class FormCreateComponent implements OnInit {
       error: (err) => console.error('Error cargando planes mensuales:', err)
     });
 
+    // Cargar planes de metraje
     this.planMetrajeService.getPlanMensualByYearAndMonth(anio, mes).subscribe({
       next: (data) => {
         this.planesMetrajes = data;
         this.updateTipoLaborOptions(this.createForm.get('proceso')?.value);
       },
       error: (err) => console.error('Error cargando planes de metraje:', err)
+    });
+
+    // Nueva llamada: Cargar planes de producción
+    this.planProduccionService.getPlanMensualByYearAndMonth(anio, mes).subscribe({
+      next: (data) => {
+        this.planesProduccion = data;
+        this.updateTipoLaborOptions(this.createForm.get('proceso')?.value);
+      },
+      error: (err) => console.error('Error cargando planes de producción:', err)
     });
   }
 
@@ -144,6 +161,8 @@ export class FormCreateComponent implements OnInit {
       return this.planesMensuales;
     } else if (this.procesosMetrajes.includes(proceso)) {
       return this.planesMetrajes;
+    } else if (this.procesosProduccion.includes(proceso)) {
+      return this.planesProduccion;
     }
     return [];
   }

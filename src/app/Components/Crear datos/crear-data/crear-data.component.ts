@@ -244,41 +244,65 @@ actualizarDatos() {
     const datosActualizados = {...this.nuevoDato};
     const id = this.modalContenido.datos[this.indiceEditando].id;
 
-    if (this.modalContenido.tipo === 'Tipo de Perforación') {
-      if (datosActualizados.permitido_medicion === 'SI') {
-        datosActualizados.permitido_medicion = 1;
-      } else if (datosActualizados.permitido_medicion === 'NO') {
-        datosActualizados.permitido_medicion = 0;
-      }
-
-      this.tipoPerforacionService.updateTipoPerforacion(id, datosActualizados).subscribe({
-        next: (data) => {
-          data.permitido_medicion = data.permitido_medicion === 1 ? 'SI' : 'NO';
-          this.modalContenido.datos[this.indiceEditando] = data;
-          this.cancelarEdicion();
-        },
-        error: (err) => console.error('Error al actualizar:', err)
-      });
+    switch (this.modalContenido.tipo) {
+      case 'Tipo de Perforación':
+        this.tipoPerforacionService.updateTipoPerforacion(id, datosActualizados).subscribe({
+          next: (data) => {
+            this.modalContenido.datos[this.indiceEditando] = data;
+            this.cancelarEdicion();
+          },
+          error: (err) => console.error('Error al actualizar:', err)
+        });
+        break;
+      case 'Equipo':
+        this.equipoService.updateEquipo(id, datosActualizados).subscribe({
+          next: (data) => {
+            this.modalContenido.datos[this.indiceEditando] = data;
+            this.cancelarEdicion();
+          },
+          error: (err) => console.error('Error al actualizar:', err)
+        });
+        break;
+      case 'Empresa':
+        this.empresaService.updateEmpresa(id, datosActualizados).subscribe({
+          next: (data) => {
+            this.modalContenido.datos[this.indiceEditando] = data;
+            this.cancelarEdicion();
+          },
+          error: (err) => console.error('Error al actualizar:', err)
+        });
+        break;
+      case 'Acero':
+        this.ProcesoAceroService.updateProceso(id, datosActualizados).subscribe({
+          next: (data) => {
+            this.modalContenido.datos[this.indiceEditando] = data;
+            this.cancelarEdicion();
+          },
+          error: (err) => console.error('Error al actualizar:', err)
+        });
+        break;
+      case 'JefeGuardiaAcero':
+        this.jefeGuardiaAceroService.updateJefe(id, datosActualizados).subscribe({
+          next: (data) => {
+            this.modalContenido.datos[this.indiceEditando] = data;
+            this.cancelarEdicion();
+          },
+          error: (err) => console.error('Error al actualizar:', err)
+        });
+        break;
+      case 'OperadorAcero':
+        this.operadorAceroService.updateOperador(id, datosActualizados).subscribe({
+          next: (data) => {
+            this.modalContenido.datos[this.indiceEditando] = data;
+            this.cancelarEdicion();
+          },
+          error: (err) => console.error('Error al actualizar:', err)
+        });
+        break;
     }
-    else if (this.modalContenido.tipo === 'Equipo') {
-      this.equipoService.updateEquipo(id, datosActualizados).subscribe({
-        next: (data) => {
-          this.modalContenido.datos[this.indiceEditando] = data;
-          this.cancelarEdicion();
-        },
-        error: (err) => console.error('Error al actualizar:', err)
-      });
-    }else if (this.modalContenido.tipo === 'Acero') {
-      this.ProcesoAceroService.updateProceso(id, datosActualizados).subscribe({
-        next: (data) => {
-          this.modalContenido.datos[this.indiceEditando] = data;
-          this.cancelarEdicion();
-        }
-      });
-    }
-  
   }
 }
+
 
 // Función para cancelar la edición
 cancelarEdicion() {
@@ -352,6 +376,7 @@ private buscarHojaExcel(workbook: any, nombresPosibles: string[]): string {
   console.warn('No se encontró ninguna hoja con los nombres:', nombresPosibles, 'usando primera hoja');
   return workbook.SheetNames[0];
 }
+
 procesarExcelOperadorAcero(event: any) {
   const file = event.target.files[0];
   if (!file) return;
