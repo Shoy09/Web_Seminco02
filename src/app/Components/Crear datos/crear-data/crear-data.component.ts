@@ -128,15 +128,6 @@ datoOriginal: any = null;
   datos: [],
   campos: [
     { nombre: 'fecha', label: 'Fecha', tipo: 'date' },
-    { 
-          nombre: 'turno', 
-          label: 'Turno', 
-          tipo: 'select', 
-          opciones: [
-            'Dia',
-            'Noche'
-          ]
-        },
     { nombre: 'zona', label: 'Zona', tipo: 'text' },
     { nombre: 'tipo', label: 'Tipo', tipo: 'text' },
     { nombre: 'labor', label: 'Labor', tipo: 'text' },
@@ -149,7 +140,6 @@ datoOriginal: any = null;
   tipo: 'Acero',
   datos: [],
   campos: [
-    { nombre: 'codigo', label: 'Código', tipo: 'text' }, 
     { 
       nombre: 'proceso', 
       label: 'Proceso', 
@@ -160,9 +150,28 @@ datoOriginal: any = null;
         'SOSTENIMIENTO',
       ]
     },
-    { nombre: 'tipo_acero', label: 'Tipo de Acero', tipo: 'text' },
+    { nombre: 'codigo', label: 'Código', tipo: 'text' },
+    { 
+      nombre: 'tipo_acero', 
+      label: 'Tipo de Acero', 
+      tipo: 'select', 
+      opciones: [
+        'A36',
+        'AISI 304',
+        'AISI 316',
+        'Inoxidable',
+        'Galvanizado'
+      ]
+    },
     { nombre: 'descripcion', label: 'Descripción', tipo: 'text' },
-    { nombre: 'precio', label: 'Precio', tipo: 'number' }
+    { nombre: 'precio', label: 'Precio', tipo: 'number' },
+    { 
+      nombre: 'rendimiento', 
+      label: 'Rendimiento', 
+      tipo: 'number',
+      step: '0.01',
+      placeholder: 'Ej: 98.75'
+    }
   ]
 },
 {
@@ -244,62 +253,94 @@ actualizarDatos() {
     const datosActualizados = {...this.nuevoDato};
     const id = this.modalContenido.datos[this.indiceEditando].id;
 
-    switch (this.modalContenido.tipo) {
-      case 'Tipo de Perforación':
-        this.tipoPerforacionService.updateTipoPerforacion(id, datosActualizados).subscribe({
-          next: (data) => {
-            this.modalContenido.datos[this.indiceEditando] = data;
-            this.cancelarEdicion();
-          },
-          error: (err) => console.error('Error al actualizar:', err)
-        });
-        break;
-      case 'Equipo':
-        this.equipoService.updateEquipo(id, datosActualizados).subscribe({
-          next: (data) => {
-            this.modalContenido.datos[this.indiceEditando] = data;
-            this.cancelarEdicion();
-          },
-          error: (err) => console.error('Error al actualizar:', err)
-        });
-        break;
-      case 'Empresa':
-        this.empresaService.updateEmpresa(id, datosActualizados).subscribe({
-          next: (data) => {
-            this.modalContenido.datos[this.indiceEditando] = data;
-            this.cancelarEdicion();
-          },
-          error: (err) => console.error('Error al actualizar:', err)
-        });
-        break;
-      case 'Acero':
-        this.ProcesoAceroService.updateProceso(id, datosActualizados).subscribe({
-          next: (data) => {
-            this.modalContenido.datos[this.indiceEditando] = data;
-            this.cancelarEdicion();
-          },
-          error: (err) => console.error('Error al actualizar:', err)
-        });
-        break;
-      case 'JefeGuardiaAcero':
-        this.jefeGuardiaAceroService.updateJefe(id, datosActualizados).subscribe({
-          next: (data) => {
-            this.modalContenido.datos[this.indiceEditando] = data;
-            this.cancelarEdicion();
-          },
-          error: (err) => console.error('Error al actualizar:', err)
-        });
-        break;
-      case 'OperadorAcero':
-        this.operadorAceroService.updateOperador(id, datosActualizados).subscribe({
-          next: (data) => {
-            this.modalContenido.datos[this.indiceEditando] = data;
-            this.cancelarEdicion();
-          },
-          error: (err) => console.error('Error al actualizar:', err)
-        });
-        break;
+    if (this.modalContenido.tipo === 'Tipo de Perforación') {
+      // Convertir SI/NO a 1/0 para la actualización
+      if (datosActualizados.permitido_medicion === 'SI') {
+        datosActualizados.permitido_medicion = 1;
+      } else if (datosActualizados.permitido_medicion === 'NO') {
+        datosActualizados.permitido_medicion = 0;
+      }
+
+      this.tipoPerforacionService.updateTipoPerforacion(id, datosActualizados).subscribe({
+        next: (data) => {
+          // Convertir de vuelta para mostrar en la tabla
+          data.permitido_medicion = data.permitido_medicion === 1 ? 'SI' : 'NO';
+          this.modalContenido.datos[this.indiceEditando] = data;
+          this.cancelarEdicion();
+        },
+        error: (err) => console.error('Error al actualizar:', err)
+      });
     }
+    else if (this.modalContenido.tipo === 'Equipo') {
+      this.equipoService.updateEquipo(id, datosActualizados).subscribe({
+        next: (data) => {
+          this.modalContenido.datos[this.indiceEditando] = data;
+          this.cancelarEdicion();
+        },
+        error: (err) => console.error('Error al actualizar:', err)
+      });
+    }
+    else if (this.modalContenido.tipo === 'Empresa') {
+      this.empresaService.updateEmpresa(id, datosActualizados).subscribe({
+        next: (data) => {
+          this.modalContenido.datos[this.indiceEditando] = data;
+          this.cancelarEdicion();
+        },
+        error: (err) => console.error('Error al actualizar:', err)
+      });
+    }
+    else if (this.modalContenido.tipo === 'Acero') {
+      this.ProcesoAceroService.updateProceso(id, datosActualizados).subscribe({
+        next: (data) => {
+          this.modalContenido.datos[this.indiceEditando] = data;
+          this.cancelarEdicion();
+        },
+        error: (err) => console.error('Error al actualizar:', err)
+      });
+    }
+    else if (this.modalContenido.tipo === 'JefeGuardiaAcero') {
+      // Convertir SI/NO a 1/0 para la actualización
+      if (datosActualizados.activo === 'SI') {
+        datosActualizados.activo = 1;
+      } else if (datosActualizados.activo === 'NO') {
+        datosActualizados.activo = 0;
+      }
+
+      this.jefeGuardiaAceroService.updateJefe(id, datosActualizados).subscribe({
+        next: (data) => {
+          // Convertir de vuelta para mostrar en la tabla
+          const dataConTexto = {
+            ...data,
+            activo: data.activo === 1 ? 'SI' : 'NO'
+          };
+          this.modalContenido.datos[this.indiceEditando] = dataConTexto;
+          this.cancelarEdicion();
+        },
+        error: (err) => console.error('Error al actualizar:', err)
+      });
+    }
+    else if (this.modalContenido.tipo === 'OperadorAcero') {
+      // Convertir SI/NO a 1/0 para la actualización
+      if (datosActualizados.activo === 'SI') {
+        datosActualizados.activo = 1;
+      } else if (datosActualizados.activo === 'NO') {
+        datosActualizados.activo = 0;
+      }
+
+      this.operadorAceroService.updateOperador(id, datosActualizados).subscribe({
+        next: (data) => {
+          // Convertir de vuelta para mostrar en la tabla
+          const dataConTexto = {
+            ...data,
+            activo: data.activo === 1 ? 'SI' : 'NO'
+          };
+          this.modalContenido.datos[this.indiceEditando] = dataConTexto;
+          this.cancelarEdicion();
+        },
+        error: (err) => console.error('Error al actualizar:', err)
+      });
+    }
+    // Agregar más casos según necesites, como 'Fechas Plan Mensual', 'Toneladas', etc.
   }
 }
 
