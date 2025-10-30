@@ -17,6 +17,8 @@ export interface DiferenciaAceros {
   desglosado: boolean;
   ingresos: IngresoAceros[];
   salidas: SalidasAceros[];
+  ultimoIngreso?: IngresoAceros;
+  ultimaSalida?: SalidasAceros;
 }
 
 @Component({
@@ -32,7 +34,8 @@ export class AcerosGraficosComponent implements OnInit {
   ingresos: IngresoAceros[] = [];
   ingresosOriginal: IngresoAceros[] = [];
   ingresosOriginalExport: IngresoAceros[] = [];
-
+  itemSeleccionado: any = null;
+  
   // 🔹 SALIDAS
   salidas: SalidasAceros[] = [];
   salidasOriginal: SalidasAceros[] = [];
@@ -45,15 +48,15 @@ export class AcerosGraficosComponent implements OnInit {
   fechaDesde: string = '';
   fechaHasta: string = '';
   turnoSeleccionado: string = '';
-  turnos: string[] = ['DÍA', 'NOCHE'];
+  turnos: string[] = ['DIA', 'NOCHE'];
 
   constructor(private acerosService: AcerosService, private excelService: ExcelAceroExportService) {}
 
   ngOnInit(): void {
-    const fechaISO = this.obtenerFechaLocalISO();
-    this.fechaDesde = fechaISO;
-    this.fechaHasta = fechaISO;
-    this.turnoSeleccionado = this.obtenerTurnoActual();
+    // Inicializar sin filtros de fecha para mostrar todos los datos
+    this.fechaDesde = '';
+    this.fechaHasta = '';
+    this.turnoSeleccionado = '';
 
     this.cargarDatos();
   }
@@ -86,7 +89,7 @@ export class AcerosGraficosComponent implements OnInit {
   obtenerTurnoActual(): string {
     const ahora = new Date();
     const hora = ahora.getHours();
-    return (hora >= 7 && hora < 19) ? 'DÍA' : 'NOCHE';
+    return (hora >= 7 && hora < 19) ? 'DIA' : 'NOCHE';
   }
 
   // ========================
@@ -96,13 +99,13 @@ export class AcerosGraficosComponent implements OnInit {
     this.acerosService.getIngresos().subscribe({
       next: (ingresosData) => {
         this.ingresosOriginal = ingresosData;
-        this.ingresosOriginalExport = [...ingresosData]; // Guardar copia para exportación
+        this.ingresosOriginalExport = [...ingresosData];
         this.ingresos = [...ingresosData];
         
         this.acerosService.getSalidas().subscribe({
           next: (salidasData) => {
             this.salidasOriginal = salidasData;
-            this.salidasOriginalExport = [...salidasData]; // Guardar copia para exportación
+            this.salidasOriginalExport = [...salidasData];
             this.salidas = [...salidasData];
             this.calcularDiferencias();
           },
@@ -114,7 +117,7 @@ export class AcerosGraficosComponent implements OnInit {
   }
 
   // ========================
-  // 🔹 CÁLCULO DE DIFERENCIAS
+  // 🔹 CÁLCULO DE DIFERENCIAS CON ÚLTIMAS TRANSACCIONES
   // ========================
   calcularDiferencias(): void {
     const diferenciasMap = new Map<string, DiferenciaAceros>();
@@ -133,13 +136,20 @@ export class AcerosGraficosComponent implements OnInit {
           diferencia: 0,
           desglosado: false,
           ingresos: [],
-          salidas: []
+          salidas: [],
+          ultimoIngreso: undefined,
+          ultimaSalida: undefined
         });
       }
       
       const diferencia = diferenciasMap.get(key)!;
       diferencia.cantidadIngresos += ingreso.cantidad;
       diferencia.ingresos.push(ingreso);
+      
+      // Actualizar último ingreso
+      if (!diferencia.ultimoIngreso || this.compararFechas(ingreso.fecha, diferencia.ultimoIngreso.fecha) > 0) {
+        diferencia.ultimoIngreso = ingreso;
+      }
     });
 
     // Procesar salidas
@@ -156,13 +166,20 @@ export class AcerosGraficosComponent implements OnInit {
           diferencia: 0,
           desglosado: false,
           ingresos: [],
-          salidas: []
+          salidas: [],
+          ultimoIngreso: undefined,
+          ultimaSalida: undefined
         });
       }
       
       const diferencia = diferenciasMap.get(key)!;
       diferencia.cantidadSalidas += salida.cantidad;
       diferencia.salidas.push(salida);
+      
+      // Actualizar última salida
+      if (!diferencia.ultimaSalida || this.compararFechas(salida.fecha, diferencia.ultimaSalida.fecha) > 0) {
+        diferencia.ultimaSalida = salida;
+      }
     });
 
     // Calcular diferencias finales
@@ -173,6 +190,16 @@ export class AcerosGraficosComponent implements OnInit {
     this.diferencias = Array.from(diferenciasMap.values());
   }
 
+  // Método para comparar fechas (retorna 1 si fecha1 > fecha2, -1 si fecha1 < fecha2, 0 si iguales)
+  private compararFechas(fecha1: string, fecha2: string): number {
+    const date1 = new Date(fecha1);
+    const date2 = new Date(fecha2);
+    
+    if (date1 > date2) return 1;
+    if (date1 < date2) return -1;
+    return 0;
+  }
+
   // ========================
   // 🔹 TOGGLE DESGLOSE
   // ========================
@@ -181,14 +208,18 @@ export class AcerosGraficosComponent implements OnInit {
   }
 
   // ========================
-  // 🔹 FILTROS
+  // 🔹 FILTROS - CORREGIDO
   // ========================
   quitarFiltros(): void {
-    const fechaISO = this.obtenerFechaLocalISO();
-    this.fechaDesde = fechaISO;
-    this.fechaHasta = fechaISO;
-    this.turnoSeleccionado = this.obtenerTurnoActual();
-    this.aplicarFiltros();
+    // Limpiar todos los filtros
+    this.fechaDesde = '';
+    this.fechaHasta = '';
+    this.turnoSeleccionado = '';
+    
+    // Restaurar datos originales sin filtros
+    this.ingresos = [...this.ingresosOriginal];
+    this.salidas = [...this.salidasOriginal];
+    this.calcularDiferencias();
   }
 
   aplicarFiltros(): void {
@@ -198,8 +229,16 @@ export class AcerosGraficosComponent implements OnInit {
       turnoSeleccionado: this.turnoSeleccionado
     };
 
-    this.ingresos = this.filtrarDatos(this.ingresosOriginal, filtros);
-    this.salidas = this.filtrarDatos(this.salidasOriginal, filtros);
+    // Solo aplicar filtros si hay valores seleccionados
+    if (filtros.fechaDesde || filtros.fechaHasta || filtros.turnoSeleccionado) {
+      this.ingresos = this.filtrarDatos(this.ingresosOriginal, filtros);
+      this.salidas = this.filtrarDatos(this.salidasOriginal, filtros);
+    } else {
+      // Si no hay filtros, mostrar todos los datos
+      this.ingresos = [...this.ingresosOriginal];
+      this.salidas = [...this.salidasOriginal];
+    }
+    
     this.calcularDiferencias();
   }
 
@@ -209,12 +248,33 @@ export class AcerosGraficosComponent implements OnInit {
   ): T[] {
     return datos.filter(item => {
       const fechaItem = new Date(item.fecha);
-      const fechaDesde = filtros.fechaDesde ? new Date(filtros.fechaDesde) : null;
-      const fechaHasta = filtros.fechaHasta ? new Date(filtros.fechaHasta) : null;
+      
+      // Filtro por fecha desde
+      if (filtros.fechaDesde) {
+        const fechaDesde = new Date(filtros.fechaDesde);
+        // Comparar solo la fecha (sin hora)
+        fechaDesde.setHours(0, 0, 0, 0);
+        const fechaItemComparar = new Date(fechaItem);
+        fechaItemComparar.setHours(0, 0, 0, 0);
+        
+        if (fechaItemComparar < fechaDesde) return false;
+      }
 
-      if (fechaDesde && fechaItem < fechaDesde) return false;
-      if (fechaHasta && fechaItem > fechaHasta) return false;
-      if (filtros.turnoSeleccionado && item.turno !== filtros.turnoSeleccionado) return false;
+      // Filtro por fecha hasta
+      if (filtros.fechaHasta) {
+        const fechaHasta = new Date(filtros.fechaHasta);
+        // Comparar solo la fecha (sin hora)
+        fechaHasta.setHours(23, 59, 59, 999);
+        const fechaItemComparar = new Date(fechaItem);
+        fechaItemComparar.setHours(23, 59, 59, 999);
+        
+        if (fechaItemComparar > fechaHasta) return false;
+      }
+
+      // Filtro por turno
+      if (filtros.turnoSeleccionado && item.turno !== filtros.turnoSeleccionado) {
+        return false;
+      }
 
       return true;
     });
@@ -226,7 +286,6 @@ export class AcerosGraficosComponent implements OnInit {
 
   // Método para exportar datos COMPLETOS (sin filtrar)
   exportarAExcelExplosivos(): void {
-    // Calcular diferencias completas para el stock
     const stockCompleto = this.calcularStockCompleto();
     
     this.excelService.exportarAExcelCompleto(
@@ -238,7 +297,6 @@ export class AcerosGraficosComponent implements OnInit {
 
   // Método para exportar datos FILTRADOS
   exportarAExcelExplosivosfiltro(): void {
-    // Calcular diferencias filtradas para el stock
     const stockFiltrado = this.calcularStockFiltrado();
     
     this.excelService.exportarAExcelFiltrado(
@@ -300,14 +358,23 @@ export class AcerosGraficosComponent implements OnInit {
 
   // Calcular stock filtrado
   private calcularStockFiltrado(): any[] {
-    // Usamos las diferencias ya calculadas que están filtradas
     return this.diferencias.map(diff => ({
       proceso: diff.proceso,
       tipo_acero: diff.tipo_acero,
       descripcion: diff.descripcion,
       cantidadIngresos: diff.cantidadIngresos,
       cantidadSalidas: diff.cantidadSalidas,
-      diferencia: diff.diferencia
+      diferencia: diff.diferencia,
+      ultimoIngreso: diff.ultimoIngreso,
+      ultimaSalida: diff.ultimaSalida
     }));
+  }
+
+  mostrarDetalles(item: any) {
+    this.itemSeleccionado = item;
+  }
+
+  cerrarModal() {
+    this.itemSeleccionado = null;
   }
 }

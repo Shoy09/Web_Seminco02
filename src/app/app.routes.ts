@@ -21,6 +21,7 @@ import { ListPdfComponent } from './Components/pdf/list-pdf/list-pdf.component';
 import { MedicionHorizontalComponent } from './Components/Dashboard/mediciones/horizontal/medicion-horizontal/medicion-horizontal.component';
 import { AcerosGraficosComponent } from './Components/Dashboard/Aceros/aceros-graficos/aceros-graficos.component';
 import { AutocadMineroComponent } from './Components/autocad-minero/autocad-minero.component';
+import { MedicionHorizontalProgramadoComponent } from './Components/Dashboard/Mediciones programadas/horizontal/medicion-horizontal/medicion-horizontal.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -49,6 +50,7 @@ export const routes: Routes = [
       { path: 'medicion-horizontal', component: MedicionHorizontalComponent },
       { path: 'acero-stock', component: AcerosGraficosComponent },
       { path: 'autocad', component: AutocadMineroComponent },
+      { path: 'medicion-horizontal-programado', component: MedicionHorizontalProgramadoComponent },
     ],
   },
 

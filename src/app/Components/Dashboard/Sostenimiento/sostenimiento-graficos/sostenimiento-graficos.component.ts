@@ -404,6 +404,7 @@ exportToExcelSostenimiento() {
 }
 
 exportToExcelSostenimientoFiltro() {
+  
   this.excelSostenimientoExportServiceFiltro.exportOperacionesToExcel(
     this.datosOperaciones,
     'Reporte_Operaciones'

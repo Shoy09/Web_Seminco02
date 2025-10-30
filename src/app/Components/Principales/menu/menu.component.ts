@@ -19,7 +19,7 @@ export class MenuComponent {
         { title: 'Sostenimiento', path: 'sostenimiento' },
         { title: 'Explosivos', path: 'explosivos-graficos' },
         { title: 'KPI P&V', path: 'medicion-horizontal' },
-        { title: 'Aceros', path: 'acero-stock' },
+        { title: 'Medicion Programado', path: 'medicion-horizontal-programado' },
         { title: 'autocad', path: 'autocad' },
       ],
     },
@@ -36,6 +36,7 @@ export class MenuComponent {
         { title: 'Metas', path: 'metas' },
         { title: 'Semanas', path: 'semana-personali' },
         { title: 'PDF', path: 'pdf' },
+        { title: 'Aceros', path: 'acero-stock' },
 
       ],
     },

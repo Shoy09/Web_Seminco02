@@ -465,6 +465,12 @@ exportToExcelHorizontal() {
 }
 
 exportToExcelHorizontalfiltro() {
+  // Mostrar los datos crudos
+  console.log('📊 Datos de operaciones:', this.datosOperaciones);
+
+  // Mostrar los datos formateados como JSON
+  console.log('🧩 Datos en formato JSON:\n', JSON.stringify(this.datosOperaciones, null, 2));
+
   this.excelHorizontalExportServicefiltro.exportOperacionesToExcel(
     this.datosOperaciones,
     'Reporte_Operaciones'

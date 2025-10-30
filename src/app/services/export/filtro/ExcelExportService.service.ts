@@ -31,98 +31,127 @@ exportOperacionesToExcel(datosOperaciones: NubeOperacion[], fileName: string) {
 }
 
 private prepareEjecutadoData(operaciones: NubeOperacion[]): any[] {
-    const data: any[] = [];
+  const data: any[] = [];
 
-    // Orden de prioridad para Taladro Largo
-    const ordenPrioridad = ['Diesel', 'Electrico', 'Percusion'];
+  // Orden de prioridad para Taladro Largo
+  const ordenPrioridad = ['Diesel', 'Electrico', 'Percusion'];
 
-    operaciones.forEach(op => {
-      // Datos base de la operación
-      const rowData: any = {
-        'ID Operación': op.id,
-        'Turno': op.turno,
-        'Equipo': op.equipo,
-        'Código': op.codigo,
-        'Empresa': op.empresa,
-        'Fecha': op.fecha,
-        'Tipo Operación': op.tipo_operacion,
-        'Estado': op.estado,
+  operaciones.forEach(op => {
+    // Procesar horómetros (esto se repite para cada fila)
+    let horometrosData: any = {};
+    if (op.horometros && op.horometros.length > 0) {
+      const horometrosOrdenados = [...op.horometros].sort((a, b) => {
+        const idxA = ordenPrioridad.indexOf(a.nombre);
+        const idxB = ordenPrioridad.indexOf(b.nombre);
+
+        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+        if (idxA !== -1) return -1;
+        if (idxB !== -1) return 1;
+        return a.nombre.localeCompare(b.nombre);
+      });
+
+      horometrosOrdenados.forEach(horometro => {
+        const nombreNormalizado = horometro.nombre.replace(/\s+/g, '_');
+
+        horometrosData[`Horómetro ${nombreNormalizado} - Inicial`] = horometro.inicial;
+        horometrosData[`Horómetro ${nombreNormalizado} - Final`] = horometro.final;
+        horometrosData[`Diferencia ${nombreNormalizado}`] = horometro.final - horometro.inicial;
+
+        let estadoOperativo;
+        if (horometro.EstaOP && !horometro.EstaINOP) {
+          estadoOperativo = 'Sí';
+        } else if (!horometro.EstaOP && horometro.EstaINOP) {
+          estadoOperativo = 'No';
+        } else {
+          estadoOperativo = 'Sin definir';
+        }
+
+        horometrosData[`Horómetro ${nombreNormalizado} - Operativo`] = estadoOperativo;
+      });
+    }
+
+    // Datos base de la operación (se repiten en cada fila)
+    const baseData: any = {
+      'ID Operación': op.id,
+      'Turno': op.turno,
+      'Equipo': op.equipo,
+      'Código': op.codigo,
+      'Empresa': op.empresa,
+      'Fecha': op.fecha,
+      'Tipo Operación': op.tipo_operacion,
+      'Estado': op.estado,
+      ...horometrosData
+    };
+
+    // Procesar perforaciones taladro largo
+    if (op.perforaciones && op.perforaciones.length > 0) {
+      op.perforaciones.forEach((perf: NubePerforacionTaladroLargo) => {
+        // Datos de perforación (se repiten para cada inter_perforacion)
+        const perforacionData: any = {
+          'Perf. - Zona': perf.zona || '',
+          'Perf. - Tipo Labor': perf.tipo_labor || '',
+          'Perf. - Labor': perf.labor || '',
+          'Perf. - Veta': perf.veta || '',
+          'Perf. - Nivel': perf.nivel || '',
+          'Perf. - Tipo Perforación': perf.tipo_perforacion || ''
+        };
+
+        // Procesar interperforaciones - UNA FILA POR CADA INTER_PERFORACION
+        if (perf.inter_perforaciones && perf.inter_perforaciones.length > 0) {
+          perf.inter_perforaciones.forEach((inter: NubeInterPerforacionTaladroLargo) => {
+            const nTaladro = inter.ntaladro || 0;
+            const longitud = inter.longitud_perforacion || 0;
+            const metrosPerforados = nTaladro * longitud;
+
+            // Datos específicos de cada inter_perforacion
+            const interPerforacionData: any = {
+              'Ejecutado - Código Actividad': inter.codigo_actividad || '',
+              'Ejecutado - Nivel': inter.nivel || '',
+              'Ejecutado - Tajo': inter.tajo || '',
+              'Ejecutado - N° Broca': inter.nbroca || '',
+              'Ejecutado - N° Taladro': inter.ntaladro || '',
+              'Ejecutado - N° Barras': inter.nbarras || '',
+              'Ejecutado - Longitud': inter.longitud_perforacion || '',
+              'Ejecutado - Ángulo': inter.angulo_perforacion || '',
+              'Ejecutado - N° Filas': inter.nfilas_de_hasta || '',
+              'Ejecutado - Detalles': inter.detalles_trabajo_realizado || '',
+              'Metros perforados': metrosPerforados
+            };
+
+            // Combinar todos los datos para crear una fila completa
+            const rowData = {
+              ...baseData,
+              ...perforacionData,
+              ...interPerforacionData,
+              'Fecha_Mina': this.calcularFechaMina(op.fecha, op.turno)
+            };
+
+            data.push(rowData);
+          });
+        } else {
+          // Si no hay inter_perforaciones, crear una fila con datos básicos
+          const rowData = {
+            ...baseData,
+            ...perforacionData,
+            'Fecha_Mina': this.calcularFechaMina(op.fecha, op.turno),
+            'Mensaje': 'No hay interperforaciones registradas'
+          };
+          data.push(rowData);
+        }
+      });
+    } else {
+      // Si no hay perforaciones, crear una fila solo con datos base
+      const rowData = {
+        ...baseData,
+        'Fecha_Mina': this.calcularFechaMina(op.fecha, op.turno),
+        'Mensaje': 'No hay perforaciones registradas'
       };
-
-      // Procesar horómetros
-      if (op.horometros && op.horometros.length > 0) {
-        // Ordenar horómetros según Diesel, Electrico, Percusion y luego los demás
-        const horometrosOrdenados = [...op.horometros].sort((a, b) => {
-          const idxA = ordenPrioridad.indexOf(a.nombre);
-          const idxB = ordenPrioridad.indexOf(b.nombre);
-
-          if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-          if (idxA !== -1) return -1;
-          if (idxB !== -1) return 1;
-          return a.nombre.localeCompare(b.nombre); // otros alfabéticamente
-        });
-
-        horometrosOrdenados.forEach(horometro => {
-          const nombreNormalizado = horometro.nombre.replace(/\s+/g, '_');
-
-          rowData[`Horómetro ${nombreNormalizado} - Inicial`] = horometro.inicial;
-          rowData[`Horómetro ${nombreNormalizado} - Final`] = horometro.final;
-          rowData[`Diferencia ${nombreNormalizado}`] = horometro.final - horometro.inicial;
-
-          let estadoOperativo;
-          if (horometro.EstaOP && !horometro.EstaINOP) {
-            estadoOperativo = 'Sí';
-          } else if (!horometro.EstaOP && horometro.EstaINOP) {
-            estadoOperativo = 'No';
-          } else {
-            estadoOperativo = 'Sin definir';
-          }
-
-          rowData[`Horómetro ${nombreNormalizado} - Operativo`] = estadoOperativo;
-        });
-      }
-
-      // Procesar perforaciones taladro largo
-      if (op.perforaciones && op.perforaciones.length > 0) {
-        op.perforaciones.forEach((perf: NubePerforacionTaladroLargo) => {
-          // Agregar datos de perforación
-          rowData['Perf. - Zona'] = perf.zona || '';
-          rowData['Perf. - Tipo Labor'] = perf.tipo_labor || '';
-          rowData['Perf. - Labor'] = perf.labor || '';
-          rowData['Perf. - Veta'] = perf.veta || '';
-          rowData['Perf. - Nivel'] = perf.nivel || '';
-          rowData['Perf. - Tipo Perforación'] = perf.tipo_perforacion || '';
-
-          // Procesar interperforaciones
-          if (perf.inter_perforaciones && perf.inter_perforaciones.length > 0) {
-            perf.inter_perforaciones.forEach((inter: NubeInterPerforacionTaladroLargo) => {
-              const nTaladro = inter.ntaladro || 0;
-              const longitud = inter.longitud_perforacion || 0;
-              const metrosPerforados = nTaladro * longitud;
-
-              rowData['Ejecutado - Código Actividad'] = inter.codigo_actividad || '';
-              rowData['Ejecutado - Nivel'] = inter.nivel || '';
-              rowData['Ejecutado - Tajo'] = inter.tajo || '';
-              rowData['Ejecutado - N° Broca'] = inter.nbroca || '';
-              rowData['Ejecutado - N° Taladro'] = inter.ntaladro || '';
-              rowData['Ejecutado - N° Barras'] = inter.nbarras || '';
-              rowData['Ejecutado - Longitud'] = inter.longitud_perforacion || '';
-              rowData['Ejecutado - Ángulo'] = inter.angulo_perforacion || '';
-              rowData['Ejecutado - N° Filas'] = inter.nfilas_de_hasta || '';
-              rowData['Ejecutado - Detalles'] = inter.detalles_trabajo_realizado || '';
-              rowData['Metros perforados'] = metrosPerforados;
-            });
-          }
-        });
-      }
-
-      const fechaMina = this.calcularFechaMina(op.fecha, op.turno);
-      rowData['Fecha_Mina'] = fechaMina;
       data.push(rowData);
-    });
+    }
+  });
 
-    return data;
-  }
+  return data;
+}
 
   private prepareEstadosData(operaciones: NubeOperacion[]): any[] {
     const data: any[] = [];

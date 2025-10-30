@@ -12,6 +12,7 @@ import { ToneladasService } from '../../../services/toneladas.service';
 import { ProcesoAceroService } from '../../../services/proceso-acero.service';
 import { OperadorAceroService } from '../../../services/operador-acero.service';
 import { JefeGuardiaAceroService } from '../../../services/jefe-guardia-acero.service';
+import { TipoAceroService } from '../../../services/tipo-acero.service';
 
 
 @Component({
@@ -26,6 +27,8 @@ export class CrearDataComponent implements OnInit {
   nuevoDato: any = {}
   formularioActivo: string = 'botones';  
   years: number[] = []; 
+  tiposAceroData: any[] = [];
+
   editando: boolean = false;
 indiceEditando: number = -1;
 datoOriginal: any = null;
@@ -45,6 +48,7 @@ datoOriginal: any = null;
     private toneladasService: ToneladasService,
     private jefeGuardiaAceroService: JefeGuardiaAceroService,
     private operadorAceroService: OperadorAceroService,
+    private tipoAceroService: TipoAceroService,
     public dialog: MatDialog
   ) {} // Inyecta los servicios
 
@@ -135,9 +139,9 @@ datoOriginal: any = null;
   ]
 },
 {
-  nombre: 'Acero',
+  nombre: 'Tipo de Acero',
   icon: 'mas.svg',
-  tipo: 'Acero',
+  tipo: 'Tipo de Acero',
   datos: [],
   campos: [
     { 
@@ -148,6 +152,28 @@ datoOriginal: any = null;
         'PERFORACIÓN TALADROS LARGOS',
         'PERFORACIÓN HORIZONTAL',
         'SOSTENIMIENTO',
+        'SERVICIOS AUXILIARES',
+        'CARGUÍO'
+      ]
+    },
+    { 
+      nombre: 'tipo_acero', 
+      label: 'Tipo de Acero', 
+      tipo: 'text'
+    }
+  ]
+},
+{
+  nombre: 'Acero',
+  icon: 'mas.svg',
+  tipo: 'Acero',
+  datos: [],
+  campos: [
+    { 
+      nombre: 'proceso', 
+      label: 'Proceso', 
+      tipo: 'select', 
+      opciones: [
       ]
     },
     { nombre: 'codigo', label: 'Código', tipo: 'text' },
@@ -156,11 +182,6 @@ datoOriginal: any = null;
       label: 'Tipo de Acero', 
       tipo: 'select', 
       opciones: [
-        'A36',
-        'AISI 304',
-        'AISI 316',
-        'Inoxidable',
-        'Galvanizado'
       ]
     },
     { nombre: 'descripcion', label: 'Descripción', tipo: 'text' },
@@ -339,6 +360,34 @@ actualizarDatos() {
         },
         error: (err) => console.error('Error al actualizar:', err)
       });
+    }else if (this.modalContenido.tipo === 'Tipo de Acero') {
+      // 👇 Nuevo bloque para actualizar Tipo de Acero
+      this.tipoAceroService.updateTipoAcero(id, datosActualizados).subscribe({
+        next: (data) => {
+          this.modalContenido.datos[this.indiceEditando] = data;
+          this.cancelarEdicion();
+        },
+        error: (err) => console.error('Error al actualizar Tipo de Acero:', err)
+      });
+
+    } else if (this.modalContenido.tipo === 'Fechas Plan Mensual') {
+      this.FechasPlanMensualService.updateFecha(id, datosActualizados).subscribe({
+        next: (data) => {
+          this.modalContenido.datos[this.indiceEditando] = data;
+          this.cancelarEdicion();
+        },
+        error: (err) => console.error('Error al actualizar Fecha Plan Mensual:', err)
+      });
+    }
+
+    else if (this.modalContenido.tipo === 'Toneladas') {
+      this.toneladasService.updateTonelada(id, datosActualizados).subscribe({
+        next: (data) => {
+          this.modalContenido.datos[this.indiceEditando] = data;
+          this.cancelarEdicion();
+        },
+        error: (err) => console.error('Error al actualizar Toneladas:', err)
+      });
     }
     // Agregar más casos según necesites, como 'Fechas Plan Mensual', 'Toneladas', etc.
   }
@@ -384,6 +433,9 @@ cargarExcel(nombre: string) {
       case 'Operador Acero':
         this.procesarExcelOperadorAcero(event);
         break;
+      case 'Tipo de Acero': // 👈 nuevo caso
+        this.procesarExcelTipoAcero(event);
+        break;
       default:
         console.warn('No hay procesador definido para:', this.modalContenido.nombre);
         break;
@@ -417,6 +469,60 @@ private buscarHojaExcel(workbook: any, nombresPosibles: string[]): string {
   console.warn('No se encontró ninguna hoja con los nombres:', nombresPosibles, 'usando primera hoja');
   return workbook.SheetNames[0];
 }
+
+procesarExcelTipoAcero(event: any) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e: any) => {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+
+    // Buscar hoja con posibles nombres
+    const sheetName = this.buscarHojaExcel(workbook, ['TIPO ACERO', 'ACEROS', 'TIPO DE ACERO']);
+    const sheet = workbook.Sheets[sheetName];
+
+    if (!sheet) {
+      console.error('❌ No se encontró la hoja "TIPO ACERO" en el archivo Excel');
+      return;
+    }
+
+    const excelData: any[] = XLSX.utils.sheet_to_json(sheet, { raw: false });
+
+    // Solo mapear los campos válidos del modelo
+    const tiposAcero = excelData.map(row => ({
+      proceso: row["PROCESO"]?.trim() || '',
+      tipo_acero: row["TIPO DE ACERO"]?.trim() || row["ACERO"]?.trim() || ''
+    })).filter(item => item.proceso && item.tipo_acero); // Solo guardar filas válidas
+
+    if (tiposAcero.length === 0) {
+      console.warn('⚠️ No se encontraron filas válidas con columnas PROCESO y TIPO DE ACERO.');
+      return;
+    }
+
+    // Cerrar modal y mostrar pantalla de carga
+    this.cerrarModal();
+    const dialogRef = this.mostrarPantallaCarga();
+
+    // Guardar cada registro
+    tiposAcero.forEach(nuevoRegistro => {
+      this.tipoAceroService.createTipoAcero(nuevoRegistro).subscribe({
+        next: (data) => {
+          this.modalContenido.datos.push(data);
+        },
+        error: (err) => console.error('Error al guardar Tipo de Acero desde Excel:', err)
+      });
+    });
+
+    // Cerrar el diálogo de carga
+    this.dialog.closeAll();
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+
 
 procesarExcelOperadorAcero(event: any) {
   const file = event.target.files[0];
@@ -738,13 +844,38 @@ procesarExcelProcesoAcero(event: any) {
     error: (err) => console.error('Error al cargar Toneladas:', err)
   });
 }else if (button.tipo === 'Acero') {
-    this.ProcesoAceroService.getProcesos().subscribe({
-      next: (data) => {
-        this.modalContenido.datos = data;
-      },
-      error: (err) => console.error('Error al cargar Proceso Acero:', err)
-    });
-  }else if (button.tipo === 'OperadorAcero') {
+  this.tipoAceroService.getTipoAcero().subscribe({
+    next: (data) => {
+      // Guardamos todos los tipos de acero
+      this.tiposAceroData = data;
+
+      // Extraemos los procesos únicos para el select
+      const procesosUnicos = [...new Set(data.map(item => item.proceso))];
+
+      // Buscamos el objeto del botón 'Acero'
+      const aceroBtn = this.buttonc.find(b => b.tipo === 'Acero');
+      if (aceroBtn) {
+        // Reemplazamos las opciones del select 'proceso'
+        const campoProceso = aceroBtn.campos.find(c => c.nombre === 'proceso');
+        if (campoProceso) campoProceso.opciones = procesosUnicos;
+
+        // Dejamos vacío el select de tipo_acero (se llenará al seleccionar proceso)
+        const campoTipoAcero = aceroBtn.campos.find(c => c.nombre === 'tipo_acero');
+        if (campoTipoAcero) campoTipoAcero.opciones = [];
+      }
+
+      // Cargamos los registros existentes de acero
+      this.ProcesoAceroService.getProcesos().subscribe({
+        next: (procesos) => {
+          this.modalContenido.datos = procesos;
+        },
+        error: (err) => console.error('Error al cargar Proceso Acero:', err)
+      });
+    },
+    error: (err) => console.error('Error al cargar TipoAcero:', err)
+  });
+}
+else if (button.tipo === 'OperadorAcero') {
     this.operadorAceroService.getOperadores().subscribe({
       next: (data) => {
         this.modalContenido.datos = data.map(o => ({
@@ -764,9 +895,40 @@ procesarExcelProcesoAcero(event: any) {
 
       }
     });
+  }else if (button.tipo === 'Tipo de Acero') {
+    // 🔹 Nuevo bloque para Tipo de Acero
+    this.tipoAceroService.getTipoAcero().subscribe({
+      next: (data) => {
+        this.modalContenido.datos = data; // Asigna los datos directamente
+      },
+      error: (err) => console.error('Error al cargar Tipo de Acero:', err)
+    });
+
   }
 
   }
+
+  onCampoChange(nombreCampo: string) {
+  // Solo actuamos si el campo modificado es 'proceso'
+  if (nombreCampo === 'proceso' && this.modalContenido.tipo === 'Acero') {
+    const procesoSeleccionado = this.nuevoDato['proceso'];
+
+    // Filtrar tipos de acero que pertenecen a ese proceso
+    const tiposFiltrados = this.tiposAceroData
+      .filter(t => t.proceso === procesoSeleccionado)
+      .map(t => t.tipo_acero);
+
+    // Actualizar dinámicamente el select de tipo_acero
+    const campoTipoAcero = this.modalContenido.campos.find((c: { nombre: string; }) => c.nombre === 'tipo_acero');
+    if (campoTipoAcero) {
+      campoTipoAcero.opciones = tiposFiltrados;
+    }
+
+    // Limpiar selección previa
+    this.nuevoDato['tipo_acero'] = '';
+  }
+}
+
 
   guardarDatos() {
     if (Object.values(this.nuevoDato).some(val => val !== '')) {
@@ -853,7 +1015,16 @@ procesarExcelProcesoAcero(event: any) {
       this.modalContenido.datos.push(dataConTexto);
     }
   });
-}
+} else if (this.modalContenido.tipo === 'Tipo de Acero') {
+      // 👇 Nuevo bloque para guardar Tipo de Acero
+      this.tipoAceroService.createTipoAcero(nuevoRegistro).subscribe({
+        next: (data) => {
+          this.modalContenido.datos.push(data);
+        },
+        error: (err) => console.error('Error al guardar Tipo de Acero:', err)
+      });
+
+    }
 
 
 
@@ -918,7 +1089,17 @@ procesarExcelProcesoAcero(event: any) {
     this.operadorAceroService.deleteOperador(item.id).subscribe({
       next: () => this.modalContenido.datos = this.modalContenido.datos.filter((d: any) => d.id !== item.id)
     });
-  }
+  } else if (this.modalContenido.tipo === 'Tipo de Acero') {
+    // 🔹 Nuevo bloque para Tipo de Acero
+    this.tipoAceroService.deleteTipoAcero(item.id).subscribe({
+      next: () => {
+        // Quitamos el registro eliminado del arreglo local
+        this.modalContenido.datos = this.modalContenido.datos.filter((dato: any) => dato.id !== item.id);
+      },
+      error: (err) => console.error('Error al eliminar Tipo de Acero:', err)
+    });
+
+  } 
 
   }
 
