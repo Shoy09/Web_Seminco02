@@ -27,13 +27,14 @@ export class SeleccionProcesoEstatosDialogComponent {
   cerrarDialogo() {
     this.dialogRef.close();
   }
-  
+
   abrirDialogo(proceso: string) {
     const dialogRef = this.dialog.open(OpcionesDialogComponent, {
       data: { proceso } // 🟢 Pasamos el proceso seleccionado
+
     });
-  
+
     this.dialogRef.close(); // 🔴 Cerramos el diálogo actual después de abrir el nuevo
   }
-  
+
 }
